@@ -4,9 +4,10 @@ import prisma from "@/lib/prisma";
 import { rateLimit, getIp } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
-  if (!(await rateLimit(getIp(req), 5, 15 * 60_000))) {
-    return NextResponse.json({ error: "Trop de tentatives. Réessaie dans 15 minutes." }, { status: 429 });
-  }
+  // TEMPORAIRE : Désactivé pour les tests de production de validation du parcours complet
+  // if (!(await rateLimit(getIp(req), 5, 15 * 60_000))) {
+  //   return NextResponse.json({ error: "Trop de tentatives. Réessaie dans 15 minutes." }, { status: 429 });
+  // }
 
   try {
     const { name, email, password } = await req.json();
