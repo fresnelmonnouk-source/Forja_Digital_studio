@@ -1,0 +1,368 @@
+"use client";
+import { useState, useRef, useEffect } from "react";
+import { useSession, signOut } from "next-auth/react";
+import MarkdownRenderer from "@/components/chat/MarkdownRenderer";
+import ExportModal from "@/components/chat/ExportModal";
+import { FV, FVMark, FVSGrid } from "@/components/ui/fonderie";
+
+interface Message {
+  role: string;
+  content: string;
+}
+
+interface Conversation {
+  id: string;
+  title: string;
+  updatedAt: string;
+  messages?: Message[];
+}
+
+const QUICK_PROMPTS = [
+  { icon: "🎓", label: "Créer une formation", text: "Je veux créer une formation en ligne. Guide-moi à travers les 12 étapes." },
+  { icon: "📖", label: "Créer un Ebook", text: "Je veux créer un ebook rentable. Aide-moi à trouver le bon sujet, la structure et l'offre." },
+  { icon: "⚙️", label: "Lancer un SaaS", text: "J'ai une idée de SaaS. Aide-moi à valider le marché, définir le MVP et construire le plan de lancement." },
+  { icon: "🤖", label: "Automatisation IA", text: "Je veux automatiser des processus avec l'IA. Guide-moi avec la logique d'automatisation." },
+];
+
+const STEPS = ['Signal', 'Offre', 'Promesse', 'Avatar', 'Douleurs', 'Pédagogie', 'Fil Rouge', 'Outils', 'Auto.', 'Livrables', 'Copy', 'ROI', 'WOW'];
+
+export default function ChatPage() {
+  const { data: session } = useSession();
+  const userName = session?.user?.name || "Forgeron";
+  const userInitial = userName.charAt(0).toUpperCase();
+
+  const initialMessage: Message = {
+    role: "assistant",
+    content: "Bonjour, je suis **FORJA** — 30 ans de terrain dans les produits digitaux, le SaaS et l'automatisation IA.\n\nMon rôle : transformer ton idée en produit concret, rentable et bien construit.\n\nMéthodes disponibles : **ORACLE** · **Triangle d'Or** · **Matrice de Valeur** · **Framework 12 Étapes** · **Flywheel Digitale**\n\n**Sur quoi travaillons-nous aujourd'hui ?**"
+  };
+
+  const [messages, setMessages] = useState<Message[]>([initialMessage]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showPrompts, setShowPrompts] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [activeConv, setActiveConv] = useState<string | null>(null);
+  const [showExport, setShowExport] = useState(false);
+  const [history, setHistory] = useState<Conversation[]>([]);
+  const [activeStep, setActiveStep] = useState(0);
+
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (session?.user) {
+      fetch("/api/conversations")
+        .then(res => {
+          if (!res.ok) throw new Error("Erreur réseau");
+          return res.json();
+        })
+        .then((data: unknown) => {
+          if (Array.isArray(data)) setHistory(data as Conversation[]);
+        })
+        .catch((err: Error) => console.error("Erreur chargement historique:", err.message));
+    }
+  }, [session]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
+
+  const sendMessage = async (text?: string) => {
+    const userText = text || input.trim();
+    if (!userText || loading) return;
+    setShowPrompts(false);
+    setInput("");
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
+    const newMessages: Message[] = [...messages, { role: "user", content: userText }];
+    setMessages(newMessages);
+    setLoading(true);
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: newMessages })
+      });
+      const data = await response.json();
+      let reply: string =
+        (data.content as { text?: string }[] | undefined)?.map(b => b.text || "").join("") ||
+        data.error ||
+        "Erreur de réponse.";
+      const pdfTagMatch = reply.match(/\[GENERATE_PDF:(ebook|formation|vente|blueprint)\]/);
+      if (pdfTagMatch) {
+        reply = reply.replace(/\[GENERATE_PDF:(ebook|formation|vente|blueprint)\]/, "").trim();
+        setTimeout(() => setShowExport(true), 800);
+      }
+      setActiveStep(s => Math.min(s + 1, STEPS.length - 1));
+      const finalMessages: Message[] = [...newMessages, { role: "assistant", content: reply }];
+      setMessages(finalMessages);
+      if (session?.user) {
+        let convId = activeConv;
+        if (!convId) {
+          const title = userText.length > 30 ? userText.substring(0, 30) + "…" : userText;
+          const resConv = await fetch("/api/conversations", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title, initialMessages: finalMessages })
+          });
+          if (!resConv.ok) throw new Error("Impossible de créer la conversation");
+          const newConv: Conversation = await resConv.json();
+          convId = newConv.id;
+          setActiveConv(convId);
+          setHistory(prev => [newConv, ...prev]);
+        } else {
+          await fetch(`/api/conversations/${convId}/messages`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ messages: [{ role: "user", content: userText }, { role: "assistant", content: reply }] })
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Erreur envoi message:", err);
+      setMessages([...newMessages, { role: "assistant", content: "⚠️ Une erreur s'est produite. Vérifie ta connexion et réessaie." }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKey = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  };
+
+  const newConversation = () => {
+    setMessages([initialMessage]);
+    setShowPrompts(true);
+    setInput("");
+    setActiveConv(null);
+    setActiveStep(0);
+  };
+
+  const loadConversation = async (conv: Conversation) => {
+    setActiveConv(conv.id);
+    setShowPrompts(false);
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/conversations/${conv.id}`);
+      if (!res.ok) throw new Error("Conversation introuvable");
+      const data: { messages?: Message[] } = await res.json();
+      setMessages(data.messages?.length ? data.messages : [initialMessage]);
+    } catch (err) {
+      console.error("Erreur chargement conversation:", err);
+      setMessages([initialMessage]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ width: '100%', height: '100vh', background: FV.black, fontFamily: FV.sans, color: FV.ink, display: 'flex', overflow: 'hidden', position: 'relative' }}>
+      <div style={{ position: 'absolute', top: -200, right: -200, width: 600, height: 600, background: `radial-gradient(circle, ${FV.ember}15 0%, transparent 60%)`, pointerEvents: 'none' }} />
+
+      {/* ── SIDEBAR ── */}
+      <div style={{ width: sidebarOpen ? 260 : 0, background: FV.black2, borderRight: sidebarOpen ? `1px solid ${FV.rule}` : 'none', display: 'flex', flexDirection: 'column', flexShrink: 0, overflow: 'hidden', transition: 'width 0.3s ease', position: 'relative', zIndex: 1 }}>
+        {/* Logo */}
+        <div style={{ padding: '18px', borderBottom: `1px solid ${FV.rule}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <FVMark size={28} />
+            <div>
+              <div style={{ fontFamily: FV.serif, fontSize: 17, fontWeight: 700, letterSpacing: '0.16em' }}>FORJA</div>
+              <div style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.12em' }}>v.4 · LIBRE</div>
+            </div>
+          </div>
+          <button onClick={() => setSidebarOpen(false)} style={{ background: 'transparent', border: 'none', color: FV.smoke, cursor: 'pointer', fontSize: 18, padding: 4, lineHeight: 1 }}>×</button>
+        </div>
+
+        {/* New session btn */}
+        <div style={{ padding: '14px' }}>
+          <button onClick={newConversation} style={{ width: '100%', background: FV.ember, color: FV.black, border: 'none', padding: '10px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, letterSpacing: '0.04em', cursor: 'pointer', textTransform: 'uppercase', boxShadow: `0 0 16px ${FV.ember}55` }}>
+            + Nouvelle session
+          </button>
+        </div>
+
+        {/* History label */}
+        <div style={{ padding: '14px 18px 6px', fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.18em' }}>JOURNAL DE FORGE</div>
+
+        {/* History list */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px' }}>
+          {history.length === 0 ? (
+            <div style={{ padding: '20px 14px', fontFamily: FV.serif, fontStyle: 'italic', fontSize: 13, color: FV.smokeDim, textAlign: 'center', lineHeight: 1.5 }}>
+              Ton journal est vide.<br />Lance ta première session.
+            </div>
+          ) : history.map((conv) => {
+            const active = activeConv === conv.id;
+            return (
+              <div key={conv.id} onClick={() => loadConversation(conv)} style={{ padding: '10px 12px', borderRadius: 7, background: active ? 'rgba(238,90,36,0.08)' : 'transparent', border: active ? '1px solid rgba(238,90,36,0.22)' : '1px solid transparent', marginBottom: 3, cursor: 'pointer' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                  {active && <div style={{ width: 6, height: 6, borderRadius: '50%', background: FV.ember, boxShadow: `0 0 6px ${FV.ember}`, flexShrink: 0 }} />}
+                  <div style={{ fontSize: 12, color: active ? FV.ember : FV.ink, fontWeight: active ? 600 : 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{conv.title || "Session sans titre"}</div>
+                </div>
+                <div style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.08em', paddingLeft: active ? 14 : 0 }}>{new Date(conv.updatedAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }).toUpperCase()}</div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* User bottom */}
+        <div style={{ padding: '12px 14px', borderTop: `1px solid ${FV.rule}`, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 28, height: 28, borderRadius: 6, background: `linear-gradient(135deg, ${FV.amber}, ${FV.emberDeep})`, color: FV.black, fontFamily: FV.serif, fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{userInitial}</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 12, color: FV.ink, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userName}</div>
+            <div style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.1em' }}>LIBRE</div>
+          </div>
+          <button onClick={() => signOut({ callbackUrl: "/" })} title="Déconnexion" style={{ background: 'transparent', border: 'none', color: FV.smoke, cursor: 'pointer', fontSize: 14, padding: 4, lineHeight: 1 }}>↩</button>
+        </div>
+      </div>
+
+      {/* ── MAIN ── */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1, minWidth: 0 }}>
+
+        {/* Header */}
+        <div style={{ borderBottom: `1px solid ${FV.rule}`, padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(11,9,8,0.7)', backdropFilter: 'blur(12px)', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0, flex: 1 }}>
+            {!sidebarOpen && (
+              <button onClick={() => setSidebarOpen(true)} style={{ background: 'transparent', border: 'none', color: FV.smoke, cursor: 'pointer', fontSize: 18, padding: 4, lineHeight: 1, flexShrink: 0 }}>☰</button>
+            )}
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 9px', background: 'rgba(238,90,36,0.1)', border: '1px solid rgba(238,90,36,0.25)', borderRadius: 999, flexShrink: 0 }}>
+              <div style={{ width: 5, height: 5, borderRadius: '50%', background: FV.ember, boxShadow: `0 0 8px ${FV.ember}` }} />
+              <span style={{ fontFamily: FV.mono, fontSize: 9, color: FV.ember, letterSpacing: '0.12em' }}>EN COURS</span>
+            </div>
+            <div style={{ minWidth: 0, overflow: 'hidden' }}>
+              <div style={{ fontSize: 13, color: FV.ink, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {activeConv ? history.find(h => h.id === activeConv)?.title || "Session active" : "Nouvelle session"}
+              </div>
+              <div style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.08em', marginTop: 1 }}>ÉTAPE {String(activeStep + 1).padStart(2, '0')} / {STEPS.length}</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+            <button onClick={newConversation} title="Nouvelle session" style={{ width: 32, height: 32, background: 'rgba(241,233,218,0.04)', color: FV.ink2, border: `1px solid ${FV.ruleStrong}`, borderRadius: 7, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>↺</button>
+            <button onClick={() => setShowExport(true)} style={{ background: FV.ember, color: FV.black, border: 'none', padding: '8px 14px', borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: 'pointer', letterSpacing: '0.04em', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontFamily: FV.serif, fontStyle: 'italic' }}>✦</span>
+              FORGER PDF
+            </button>
+          </div>
+        </div>
+
+        {/* Steps bar */}
+        <div style={{ padding: '10px 20px', borderBottom: `1px solid ${FV.rule}`, background: FV.black2, display: 'flex', alignItems: 'center', gap: 10, overflowX: 'auto' }}>
+          <span style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.15em', flexShrink: 0 }}>SÉQUENCE</span>
+          <div style={{ flex: 1, display: 'flex', gap: 3, overflow: 'hidden' }}>
+            {STEPS.map((s, i) => {
+              const isActive = i === activeStep;
+              const isDone = i < activeStep;
+              return (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 999, background: isActive ? FV.ember : isDone ? 'rgba(238,90,36,0.08)' : 'transparent', color: isActive ? FV.black : isDone ? FV.ember : FV.smoke, border: isActive ? 'none' : `1px solid ${isDone ? 'rgba(238,90,36,0.18)' : FV.rule}`, fontSize: 9, fontFamily: FV.mono, letterSpacing: '0.08em', whiteSpace: 'nowrap', fontWeight: isActive || isDone ? 600 : 400, transition: 'all 0.3s' }}>
+                  <span>{String(i).padStart(2, '0')}</span>
+                  {s.toUpperCase()}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Messages */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '32px 40px' }}>
+          <div style={{ maxWidth: 720, margin: '0 auto' }}>
+
+            {/* Quick prompts on start */}
+            {showPrompts && (
+              <div style={{ marginBottom: 32 }}>
+                <div style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.18em', marginBottom: 16 }}>DÉMARRAGE RAPIDE</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                  {QUICK_PROMPTS.map((q, i) => (
+                    <button key={i} onClick={() => sendMessage(q.text)} style={{ background: FV.black2, border: `1px solid ${FV.rule}`, borderRadius: 10, padding: '14px 16px', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 14, transition: 'all 0.2s' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(238,90,36,0.3)'; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = FV.rule; }}
+                    >
+                      <span style={{ fontSize: 22, flexShrink: 0 }}>{q.icon}</span>
+                      <span style={{ fontSize: 13, color: FV.ink, fontWeight: 500 }}>{q.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Messages list */}
+            {messages.map((m, i) => {
+              const isUser = m.role === "user";
+              return (
+                <div key={i} style={{ display: 'flex', gap: 14, marginBottom: 22, flexDirection: isUser ? 'row-reverse' : 'row' }}>
+                  {/* Avatar */}
+                  {isUser ? (
+                    <div style={{ width: 32, height: 32, borderRadius: 6, background: `linear-gradient(135deg, ${FV.amber}, ${FV.emberDeep})`, color: FV.black, fontFamily: FV.serif, fontWeight: 700, fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{userInitial}</div>
+                  ) : (
+                    <FVMark size={32} />
+                  )}
+                  <div style={{ maxWidth: '80%' }}>
+                    {!isUser && (
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 8 }}>
+                        <span style={{ fontFamily: FV.serif, fontWeight: 600, fontSize: 14, color: FV.ember, letterSpacing: '0.12em' }}>FORJA</span>
+                      </div>
+                    )}
+                    <div style={{ background: isUser ? 'rgba(238,90,36,0.08)' : FV.black2, border: `1px solid ${isUser ? 'rgba(238,90,36,0.22)' : FV.rule}`, borderRadius: isUser ? '14px 3px 14px 14px' : '3px 14px 14px 14px', padding: '14px 18px', fontSize: 14, lineHeight: 1.7, color: isUser ? FV.ink : FV.ink2 }}>
+                      {isUser ? (
+                        <p style={{ margin: 0 }}>{m.content}</p>
+                      ) : (
+                        <MarkdownRenderer text={m.content} />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Loading */}
+            {loading && (
+              <div style={{ display: 'flex', gap: 14, marginBottom: 22 }}>
+                <FVMark size={32} />
+                <div style={{ background: FV.black2, border: `1px solid ${FV.rule}`, borderRadius: '3px 14px 14px 14px', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {[0, 150, 300].map((delay, i) => (
+                    <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: FV.ember, animation: 'bounce 1.2s infinite', animationDelay: `${delay}ms` }} />
+                  ))}
+                  <span style={{ fontFamily: FV.serif, fontStyle: 'italic', fontSize: 13, color: FV.smoke, marginLeft: 6 }}>FORJA forge…</span>
+                </div>
+              </div>
+            )}
+            <div ref={bottomRef} style={{ height: 16 }} />
+          </div>
+        </div>
+
+        {/* Composer */}
+        <div style={{ borderTop: `1px solid ${FV.rule}`, padding: '14px 20px 18px', background: FV.black2 }}>
+          <div style={{ maxWidth: 720, margin: '0 auto' }}>
+            <div style={{ background: FV.black, border: `1px solid ${FV.ruleStrong}`, borderRadius: 12, padding: '10px 12px', display: 'flex', alignItems: 'flex-end', gap: 10 }}>
+              <button onClick={() => setShowExport(true)} style={{ background: 'transparent', border: 'none', color: FV.ember, cursor: 'pointer', fontSize: 18, padding: 6, lineHeight: 1, flexShrink: 0, marginBottom: 2 }} title="Générer un document">✦</button>
+              <textarea
+                ref={textareaRef}
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={handleKey}
+                disabled={loading}
+                placeholder="Réponds, ou pose ta question…"
+                rows={1}
+                style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontSize: 14, color: FV.ink, resize: 'none', maxHeight: 150, overflowY: 'auto', padding: '6px 0', fontFamily: FV.sans, lineHeight: 1.6 }}
+                onInput={e => {
+                  const t = e.target as HTMLTextAreaElement;
+                  t.style.height = "auto";
+                  t.style.height = Math.min(t.scrollHeight, 150) + "px";
+                }}
+              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                <kbd style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, padding: '2px 6px', border: `1px solid ${FV.rule}`, borderRadius: 4 }}>⏎</kbd>
+                <button
+                  onClick={() => sendMessage()}
+                  disabled={loading || !input.trim()}
+                  style={{ background: (loading || !input.trim()) ? FV.rule : FV.ember, color: (loading || !input.trim()) ? FV.smoke : FV.black, border: 'none', width: 34, height: 34, borderRadius: 8, cursor: (loading || !input.trim()) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, boxShadow: (!loading && input.trim()) ? `0 0 12px ${FV.ember}66` : 'none', transition: 'all 0.2s' }}
+                >
+                  →
+                </button>
+              </div>
+            </div>
+            <div style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smokeDim, textAlign: 'center', marginTop: 8, letterSpacing: '0.1em' }}>
+              ENTRÉE POUR ENVOYER · MAJ+ENTRÉE POUR NOUVELLE LIGNE
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {showExport && <ExportModal onClose={() => setShowExport(false)} conversation={messages} />}
+    </div>
+  );
+}
