@@ -92,25 +92,12 @@ export default function LoginPage() {
           </div>
         ))}
 
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, marginBottom: 4, fontSize: 12, color: FV.ink2, cursor: 'pointer' }}>
-          <span style={{ width: 16, height: 16, border: `1px solid ${FV.ruleStrong}`, borderRadius: 4, background: FV.ember, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: FV.black, fontSize: 10, fontWeight: 700 }}>✓</span>
-          Rester connecté sur cet appareil
-        </label>
-
         <button
           type="submit"
           disabled={loading}
           style={{ width: '100%', background: loading ? FV.smokeDim : FV.ember, color: loading ? FV.smoke : FV.black, border: 'none', padding: '14px', fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', cursor: loading ? 'not-allowed' : 'pointer', marginTop: 18, borderRadius: 8, boxShadow: loading ? 'none' : `0 0 24px ${FV.ember}66`, textTransform: 'uppercase', transition: 'all 0.2s' }}
         >
           {loading ? "Connexion en cours…" : "Reprendre ma session →"}
-        </button>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 22, color: FV.smoke, fontFamily: FV.mono, fontSize: 9, letterSpacing: '0.2em' }}>
-          <div style={{ flex: 1, height: 1, background: FV.rule }} />OU<div style={{ flex: 1, height: 1, background: FV.rule }} />
-        </div>
-
-        <button type="button" style={{ width: '100%', background: 'transparent', color: FV.ink, border: `1px solid ${FV.ruleStrong}`, padding: '12px', fontSize: 13, fontWeight: 500, cursor: 'pointer', marginTop: 14, borderRadius: 8 }}>
-          Continuer avec Google
         </button>
 
         <div style={{ marginTop: 28, fontSize: 12, color: FV.smoke }}>

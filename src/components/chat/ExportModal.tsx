@@ -37,8 +37,11 @@ export default function ExportModal({ onClose, conversation }: { onClose: () => 
     setError(null);
     try {
       const markdownContent = conversation
-        .filter((m) => m.role === "assistant")
-        .map((m) => m.content)
+        .filter((m) => m.role === "user" || m.role === "assistant")
+        .map((m) => {
+          if (m.role === "user") return `> **Question :** ${m.content}`;
+          return m.content;
+        })
         .join("\n\n---\n\n");
 
       if (!markdownContent.trim()) {

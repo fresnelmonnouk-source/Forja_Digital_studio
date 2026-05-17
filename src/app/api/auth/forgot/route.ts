@@ -3,6 +3,9 @@ import crypto from "crypto";
 import prisma from "@/lib/prisma";
 import { Resend } from "resend";
 
+const escapeHtml = (s: string) =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
@@ -121,7 +124,7 @@ export async function POST(req: Request) {
           <div class="logo">✦ FORJA ✦</div>
           <div class="title">Rallumer le <em>fourneau</em>.</div>
           <p class="description">
-            Bonjour ${user.name || "Créateur"},<br><br>
+            Bonjour ${escapeHtml(user.name || "Créateur")},<br><br>
             Une demande de réinitialisation de mot de passe a été faite pour ton compte. Click sur le bouton ci-dessous pour forger un nouveau mot de passe robuste.
           </p>
           <a href="${resetLink}" class="btn">Forger un nouveau mot de passe →</a>

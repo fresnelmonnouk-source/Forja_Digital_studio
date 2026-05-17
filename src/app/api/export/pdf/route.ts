@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import puppeteer from "puppeteer";
+import chromium from "@sparticuz/chromium";
+import puppeteer from "puppeteer-core";
 import { marked } from "marked";
 import { rateLimit, getIp } from "@/lib/rate-limit";
 
@@ -8,7 +9,7 @@ const ALLOWED_TYPES = ["ebook", "formation", "vente", "blueprint"] as const;
 type DocType = (typeof ALLOWED_TYPES)[number];
 
 export async function POST(req: Request) {
-  if (!rateLimit(getIp(req), 5, 60_000)) {
+  if (!(await rateLimit(getIp(req), 5, 60_000))) {
     return NextResponse.json({ error: "Trop de requêtes. Attends une minute." }, { status: 429 });
   }
 
@@ -134,8 +135,10 @@ export async function POST(req: Request) {
     let browser;
     try {
       browser = await puppeteer.launch({
-        headless: true,
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+        args: chromium.args,
+        defaultViewport: chromium.defaultViewport,
+        executablePath: await chromium.executablePath(),
+        headless: chromium.headless,
       });
       const page = await browser.newPage();
       await page.setContent(htmlTemplate, { waitUntil: "load" });

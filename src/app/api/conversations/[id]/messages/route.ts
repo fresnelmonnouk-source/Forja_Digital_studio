@@ -19,7 +19,12 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }
 
     const validMessages: MessageInput[] = messages
-      .filter((m) => typeof m?.role === "string" && typeof m?.content === "string")
+      .filter(
+        (m) =>
+          (m?.role === "user" || m?.role === "assistant") &&
+          typeof m?.content === "string" &&
+          m.content.length <= 50_000
+      )
       .map((m) => ({ role: m.role, content: m.content }));
 
     if (validMessages.length === 0) {
@@ -32,18 +37,19 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     if (!conversation) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
-    await prisma.message.createMany({
-      data: validMessages.map((m) => ({
-        role: m.role,
-        content: m.content,
-        conversationId: params.id,
-      })),
-    });
-
-    await prisma.conversation.update({
-      where: { id: params.id },
-      data: { updatedAt: new Date() },
-    });
+    await prisma.$transaction([
+      prisma.message.createMany({
+        data: validMessages.map((m) => ({
+          role: m.role,
+          content: m.content,
+          conversationId: params.id,
+        })),
+      }),
+      prisma.conversation.update({
+        where: { id: params.id },
+        data: { updatedAt: new Date() },
+      }),
+    ]);
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -9,7 +9,7 @@ interface ChatMessage {
 }
 
 export async function POST(req: Request) {
-  if (!rateLimit(getIp(req), 20, 60_000)) {
+  if (!(await rateLimit(getIp(req), 20, 60_000))) {
     return NextResponse.json({ error: "Trop de requêtes. Attends une minute." }, { status: 429 });
   }
 
@@ -31,6 +31,9 @@ export async function POST(req: Request) {
       if (m.role !== "user" && m.role !== "assistant") {
         throw new Error("Rôle de message invalide");
       }
+      if (m.content.length > 50_000) {
+        throw new Error("Contenu de message trop long");
+      }
       return { role: m.role, content: m.content };
     });
 
@@ -50,7 +53,7 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify({
         model: process.env.LLM_MODEL || "claude-3-5-sonnet-20241022",
-        max_tokens: 1500,
+        max_tokens: 4096,
         system: SYSTEM_PROMPT,
         messages: validMessages
       })

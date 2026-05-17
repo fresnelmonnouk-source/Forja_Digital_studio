@@ -1,5 +1,4 @@
 "use client";
-import { useSession } from "next-auth/react";
 import { SessionProvider } from "next-auth/react";
 
 // Wrapper qui force le layout dashboard à avoir le SessionProvider

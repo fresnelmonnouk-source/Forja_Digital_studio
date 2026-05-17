@@ -38,7 +38,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  if (!rateLimit(getIp(req), 30, 60_000)) {
+  if (!(await rateLimit(getIp(req), 30, 60_000))) {
     return NextResponse.json({ error: "Trop de requêtes." }, { status: 429 });
   }
 
@@ -58,7 +58,12 @@ export async function POST(req: Request) {
 
     const validMessages: MessageInput[] = Array.isArray(initialMessages)
       ? initialMessages
-          .filter((m) => typeof m?.role === "string" && typeof m?.content === "string")
+          .filter(
+            (m) =>
+              (m?.role === "user" || m?.role === "assistant") &&
+              typeof m?.content === "string" &&
+              m.content.length <= 50_000
+          )
           .map((m) => ({ role: m.role, content: m.content }))
       : [];
 

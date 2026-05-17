@@ -87,11 +87,18 @@ export default function FonderieV2Landing() {
 
       {/* Marquee */}
       <div style={{ borderTop: `1px solid ${FV.rule}`, borderBottom: `1px solid ${FV.rule}`, padding: '20px 0', overflow: 'hidden', background: FV.black2 }}>
-        <div style={{ display: 'flex', gap: 48, whiteSpace: 'nowrap', fontFamily: FV.serif, fontSize: 26, color: FV.smoke, fontStyle: 'italic', fontWeight: 400 }}>
-          {['ORACLE', '✦', 'TRIANGLE D\'OR', '✦', 'MATRICE DE VALEUR', '✦', '4 PILIERS', '✦', '12 ÉTAPES', '✦', 'FLYWHEEL', '✦', 'ORACLE', '✦', 'TRIANGLE D\'OR', '✦'].map((w, i) => (
-            <span key={i} style={{ color: i % 2 === 1 ? FV.ember : FV.ink2 }}>{w}</span>
-          ))}
-        </div>
+        {(() => {
+          const items = ['ORACLE', '✦', "TRIANGLE D'OR", '✦', 'MATRICE DE VALEUR', '✦', '4 PILIERS', '✦', '12 ÉTAPES', '✦', 'FLYWHEEL', '✦', 'BLUEPRINT SAAS', '✦', 'FLYWHEEL DIGITALE', '✦'];
+          const rendered = items.map((w, i) => (
+            <span key={i} style={{ fontFamily: FV.serif, fontSize: 26, fontStyle: 'italic', fontWeight: 400, color: i % 2 === 1 ? FV.ember : FV.ink2 }}>{w}</span>
+          ));
+          return (
+            <div className="marquee-track">
+              {rendered}
+              {rendered.map((el, i) => ({ ...el, key: `dup-${i}` }))}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Methods */}

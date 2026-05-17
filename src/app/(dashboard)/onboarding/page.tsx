@@ -26,6 +26,12 @@ export default function OnboardingPage() {
   const [name, setName] = useState("");
 
   const handleFinish = () => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(
+        "forja_onboarding",
+        JSON.stringify({ name, goal: selectedGoal, level: selectedLevel })
+      );
+    }
     router.push("/chat");
   };
 

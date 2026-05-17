@@ -126,14 +126,6 @@ export default function RegisterPage() {
           {loading ? "Allumage en cours…" : "Allumer le four →"}
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 22, color: FV.smoke, fontFamily: FV.mono, fontSize: 9, letterSpacing: '0.2em' }}>
-          <div style={{ flex: 1, height: 1, background: FV.rule }} />OU<div style={{ flex: 1, height: 1, background: FV.rule }} />
-        </div>
-
-        <button type="button" style={{ width: '100%', background: 'transparent', color: FV.ink, border: `1px solid ${FV.ruleStrong}`, padding: '12px', fontSize: 13, fontWeight: 500, cursor: 'pointer', marginTop: 14, borderRadius: 8 }}>
-          Continuer avec Google
-        </button>
-
         <div style={{ marginTop: 28, fontSize: 12, color: FV.smoke }}>
           Déjà un compte ? <Link href="/login" style={{ color: FV.ember, fontWeight: 600, textDecoration: 'none' }}>Se connecter →</Link>
         </div>

@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import MarkdownRenderer from "@/components/chat/MarkdownRenderer";
 import ExportModal from "@/components/chat/ExportModal";
-import { FV, FVMark, FVSGrid } from "@/components/ui/fonderie";
+import { FV, FVMark } from "@/components/ui/fonderie";
 
 interface Message {
   role: string;
@@ -26,14 +26,80 @@ const QUICK_PROMPTS = [
 
 const STEPS = ['Signal', 'Offre', 'Promesse', 'Avatar', 'Douleurs', 'Pédagogie', 'Fil Rouge', 'Outils', 'Auto.', 'Livrables', 'Copy', 'ROI', 'WOW'];
 
+const STEP_KEYWORDS: Record<number, string[]> = {
+  0: ['signal', 'marché', 'oracle', 'valider', 'validation'],
+  1: ['offre', 'core', 'bump', 'upsell', 'prix', 'tarif'],
+  2: ['promesse', 'résultat', 'mesurable', 'transformation'],
+  3: ['avatar', 'cible', 'client idéal', 'persona'],
+  4: ['douleur', 'problème', 'frustration', 'chronophage'],
+  5: ['module', 'pédagogie', 'structure', 'plan de formation'],
+  6: ['fil rouge', 'projet', 'exercice pratique'],
+  7: ['outil', 'stack', 'technologie', 'logiciel'],
+  8: ['automatisation', 'workflow', 'déclencheur', 'make', 'zapier'],
+  9: ['livrable', 'template', 'ressource'],
+  10: ['copywriting', 'page de vente', 'accroche', 'headline'],
+  11: ['roi', 'retour sur investissement', 'résultat chiffré'],
+  12: ['bonus', 'wow', 'surprise'],
+};
+
+function detectStep(text: string): number | null {
+  const lower = text.toLowerCase();
+  for (const [step, keywords] of Object.entries(STEP_KEYWORDS)) {
+    if (keywords.some((kw) => lower.includes(kw))) return Number(step);
+  }
+  return null;
+}
+
+interface OnboardingData {
+  name?: string;
+  goal?: string;
+  level?: string;
+}
+
+const GOAL_LABELS: Record<string, string> = {
+  formation: "créer une formation en ligne",
+  ebook: "lancer un ebook",
+  saas: "lancer un SaaS",
+  vente: "construire une offre/page de vente",
+  automatisation: "mettre en place de l'automatisation IA",
+  marque: "bâtir ma marque personnelle",
+};
+
+const LEVEL_LABELS: Record<string, string> = {
+  debutant: "débutant (je commence de zéro)",
+  intermediaire: "intermédiaire (j'ai déjà lancé quelque chose)",
+  avance: "avancé (je veux scaler ou optimiser)",
+};
+
+function buildWelcomeMessage(onboarding: OnboardingData | null): string {
+  if (!onboarding?.goal && !onboarding?.level) {
+    return "Bonjour, je suis **FORJA** — 30 ans de terrain dans les produits digitaux, le SaaS et l'automatisation IA.\n\nMon rôle : transformer ton idée en produit concret, rentable et bien construit.\n\nMéthodes disponibles : **ORACLE** · **Triangle d'Or** · **Matrice de Valeur** · **Framework 12 Étapes** · **Flywheel Digitale**\n\n**Sur quoi travaillons-nous aujourd'hui ?**";
+  }
+  const goalLabel = onboarding.goal ? GOAL_LABELS[onboarding.goal] ?? onboarding.goal : null;
+  const levelLabel = onboarding.level ? LEVEL_LABELS[onboarding.level] ?? onboarding.level : null;
+  const firstName = onboarding.name ? ` **${onboarding.name}**` : "";
+  let msg = `Bonjour${firstName}, je suis **FORJA**.\n\nJ'ai bien noté ton profil :`;
+  if (goalLabel) msg += `\n— **Objectif :** ${goalLabel}`;
+  if (levelLabel) msg += `\n— **Niveau :** ${levelLabel}`;
+  msg += "\n\nJe vais adapter chaque étape à ta situation. Décris-moi ton idée ou ton projet — on attaque directement.";
+  return msg;
+}
+
 export default function ChatPage() {
   const { data: session } = useSession();
   const userName = session?.user?.name || "Forgeron";
   const userInitial = userName.charAt(0).toUpperCase();
 
+  const [onboarding] = useState<OnboardingData | null>(() => {
+    if (typeof window === "undefined") return null;
+    const raw = localStorage.getItem("forja_onboarding");
+    if (!raw) return null;
+    try { return JSON.parse(raw) as OnboardingData; } catch { return null; }
+  });
+
   const initialMessage: Message = {
     role: "assistant",
-    content: "Bonjour, je suis **FORJA** — 30 ans de terrain dans les produits digitaux, le SaaS et l'automatisation IA.\n\nMon rôle : transformer ton idée en produit concret, rentable et bien construit.\n\nMéthodes disponibles : **ORACLE** · **Triangle d'Or** · **Matrice de Valeur** · **Framework 12 Étapes** · **Flywheel Digitale**\n\n**Sur quoi travaillons-nous aujourd'hui ?**"
+    content: buildWelcomeMessage(onboarding),
   };
 
   const [messages, setMessages] = useState<Message[]>([initialMessage]);
@@ -95,7 +161,8 @@ export default function ChatPage() {
         reply = reply.replace(/\[GENERATE_PDF:(ebook|formation|vente|blueprint)\]/, "").trim();
         setTimeout(() => setShowExport(true), 800);
       }
-      setActiveStep(s => Math.min(s + 1, STEPS.length - 1));
+      const detected = detectStep(reply);
+      if (detected !== null) setActiveStep(detected);
       const finalMessages: Message[] = [...newMessages, { role: "assistant", content: reply }];
       setMessages(finalMessages);
       if (session?.user) {
@@ -131,7 +198,7 @@ export default function ChatPage() {
   };
 
   const newConversation = () => {
-    setMessages([initialMessage]);
+    setMessages([{ role: "assistant", content: buildWelcomeMessage(onboarding) }]);
     setShowPrompts(true);
     setInput("");
     setActiveConv(null);
