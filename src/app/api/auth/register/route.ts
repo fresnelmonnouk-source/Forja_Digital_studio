@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
+import { rateLimit, getIp } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
+  if (!rateLimit(getIp(req), 5, 15 * 60_000)) {
+    return NextResponse.json({ error: "Trop de tentatives. Réessaie dans 15 minutes." }, { status: 429 });
+  }
+
   try {
     const { name, email, password } = await req.json();
 
@@ -14,6 +19,12 @@ export async function POST(req: Request) {
     }
     if (password.length < 8) {
       return NextResponse.json({ error: "Le mot de passe doit contenir au moins 8 caractères." }, { status: 400 });
+    }
+    if (!/[A-Z]/.test(password)) {
+      return NextResponse.json({ error: "Le mot de passe doit contenir au moins une majuscule." }, { status: 400 });
+    }
+    if (!/[0-9]/.test(password)) {
+      return NextResponse.json({ error: "Le mot de passe doit contenir au moins un chiffre." }, { status: 400 });
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: "Format d'email invalide." }, { status: 400 });

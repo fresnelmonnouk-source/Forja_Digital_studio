@@ -44,6 +44,7 @@ export default function ChatPage() {
   const [activeConv, setActiveConv] = useState<string | null>(null);
   const [showExport, setShowExport] = useState(false);
   const [history, setHistory] = useState<Conversation[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
 
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -51,6 +52,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (session?.user) {
+      setIsLoadingHistory(true);
       fetch("/api/conversations")
         .then(res => {
           if (!res.ok) throw new Error("Erreur réseau");
@@ -59,7 +61,8 @@ export default function ChatPage() {
         .then((data: unknown) => {
           if (Array.isArray(data)) setHistory(data as Conversation[]);
         })
-        .catch((err: Error) => console.error("Erreur chargement historique:", err.message));
+        .catch((err: Error) => console.error("Erreur chargement historique:", err.message))
+        .finally(() => setIsLoadingHistory(false));
     }
   }, [session]);
 
@@ -83,10 +86,10 @@ export default function ChatPage() {
         body: JSON.stringify({ messages: newMessages })
       });
       const data = await response.json();
-      let reply: string =
-        (data.content as { text?: string }[] | undefined)?.map(b => b.text || "").join("") ||
-        data.error ||
-        "Erreur de réponse.";
+      const contentText = Array.isArray(data.content)
+        ? (data.content as { text?: string }[]).map(b => b.text || "").join("")
+        : "";
+      let reply: string = contentText || data.error || "Erreur de réponse.";
       const pdfTagMatch = reply.match(/\[GENERATE_PDF:(ebook|formation|vente|blueprint)\]/);
       if (pdfTagMatch) {
         reply = reply.replace(/\[GENERATE_PDF:(ebook|formation|vente|blueprint)\]/, "").trim();
@@ -182,7 +185,11 @@ export default function ChatPage() {
 
         {/* History list */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px' }}>
-          {history.length === 0 ? (
+          {isLoadingHistory ? (
+            <div style={{ padding: '20px 14px', fontFamily: FV.mono, fontSize: 9, color: FV.smoke, textAlign: 'center', letterSpacing: '0.12em' }}>
+              CHARGEMENT…
+            </div>
+          ) : history.length === 0 ? (
             <div style={{ padding: '20px 14px', fontFamily: FV.serif, fontStyle: 'italic', fontSize: 13, color: FV.smokeDim, textAlign: 'center', lineHeight: 1.5 }}>
               Ton journal est vide.<br />Lance ta première session.
             </div>

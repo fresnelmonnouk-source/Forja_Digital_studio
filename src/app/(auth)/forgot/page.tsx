@@ -8,6 +8,7 @@ export default function ForgotPage() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,7 +17,24 @@ export default function ForgotPage() {
       setError("Saisis une adresse email valide.");
       return;
     }
-    setSubmitted(true);
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/forgot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Une erreur est survenue.");
+      } else {
+        setSubmitted(true);
+      }
+    } catch (err) {
+      setError("Impossible de contacter le serveur.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -65,9 +83,10 @@ export default function ForgotPage() {
 
           <button
             type="submit"
-            style={{ width: '100%', background: FV.ember, color: FV.black, border: 'none', padding: '14px', fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', cursor: 'pointer', marginTop: 18, borderRadius: 8, boxShadow: `0 0 24px ${FV.ember}66`, textTransform: 'uppercase' }}
+            disabled={loading}
+            style={{ width: '100%', background: loading ? FV.ruleStrong : FV.ember, color: loading ? FV.smoke : FV.black, border: 'none', padding: '14px', fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', cursor: loading ? 'not-allowed' : 'pointer', marginTop: 18, borderRadius: 8, boxShadow: loading ? 'none' : `0 0 24px ${FV.ember}66`, textTransform: 'uppercase' }}
           >
-            Envoyer le lien de réinitialisation →
+            {loading ? "Rallumage du fourneau..." : "Envoyer le lien de réinitialisation →"}
           </button>
 
           <div style={{ marginTop: 24, padding: '14px 16px', background: 'rgba(243,156,44,0.06)', border: `1px solid rgba(243,156,44,0.18)`, borderRadius: 8, fontSize: 12, color: FV.amberPale, lineHeight: 1.6, display: 'flex', gap: 12 }}>

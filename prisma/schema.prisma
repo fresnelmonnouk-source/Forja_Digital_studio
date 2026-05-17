@@ -11,6 +11,8 @@ model User {
   email         String         @unique
   name          String?
   password      String
+  resetToken    String?        @unique
+  resetExpires  DateTime?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   conversations Conversation[]

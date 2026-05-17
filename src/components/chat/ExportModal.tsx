@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FV, FVMark, FVHook } from "@/components/ui/fonderie";
 
 interface Message {
@@ -26,6 +26,12 @@ export default function ExportModal({ onClose, conversation }: { onClose: () => 
   const [docType, setDocType] = useState("ebook");
   const [opts, setOpts] = useState([true, true, false]);
 
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
+  }, [onClose]);
+
   const handleExport = async () => {
     setExporting(true);
     setError(null);
@@ -43,7 +49,7 @@ export default function ExportModal({ onClose, conversation }: { onClose: () => 
       const res = await fetch("/api/export/pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ markdown: markdownContent, type: docType })
+        body: JSON.stringify({ markdown: markdownContent, type: docType, opts })
       });
 
       if (!res.ok) {
@@ -57,8 +63,11 @@ export default function ExportModal({ onClose, conversation }: { onClose: () => 
       a.href = url;
       a.download = `FORJA_${docType}_${Date.now()}.pdf`;
       document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      try {
+        a.click();
+      } finally {
+        document.body.removeChild(a);
+      }
       window.URL.revokeObjectURL(url);
       setDone(true);
     } catch (e) {

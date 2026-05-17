@@ -2,16 +2,21 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import puppeteer from "puppeteer";
 import { marked } from "marked";
+import { rateLimit, getIp } from "@/lib/rate-limit";
 
 const ALLOWED_TYPES = ["ebook", "formation", "vente", "blueprint"] as const;
 type DocType = (typeof ALLOWED_TYPES)[number];
 
 export async function POST(req: Request) {
+  if (!rateLimit(getIp(req), 5, 60_000)) {
+    return NextResponse.json({ error: "Trop de requêtes. Attends une minute." }, { status: 429 });
+  }
+
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
   try {
-    const { markdown, type } = await req.json();
+    const { markdown, type, opts } = await req.json();
 
     if (!markdown || typeof markdown !== "string") {
       return NextResponse.json({ error: "Aucun contenu fourni" }, { status: 400 });
@@ -20,7 +25,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Type de document invalide" }, { status: 400 });
     }
 
+    const [includeCover = true, includeSignature = true, printerMode = false] = Array.isArray(opts)
+      ? opts.map((v) => Boolean(v))
+      : [true, true, false];
+
     const htmlContent = await marked.parse(markdown);
+    const titleMatch = markdown.match(/^#\s+(.+)$/m);
+    const escapeHtml = (s: string) =>
+      s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    const docTitle = escapeHtml(titleMatch ? titleMatch[1].trim() : (type as string).toUpperCase());
+
+    const coverPage = includeCover
+      ? `<div style="page-break-after: always; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(297mm - 40mm); text-align: center; padding: 40px;">
+          <div style="font-family: 'Cormorant Garamond', serif; font-size: 42pt; font-weight: 700; color: #0A0804; line-height: 1.2; margin-bottom: 30px;">${docTitle}</div>
+          <div style="background: #E8C547; height: 3px; width: 80px; margin: 0 auto 30px;"></div>
+          <div style="font-family: 'DM Sans', sans-serif; font-size: 10pt; color: #5A4A28; text-transform: uppercase; letter-spacing: 4px;">${(type as string).toUpperCase()}</div>
+          ${includeSignature ? `<div style="margin-top: 80px; font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 14pt; color: #A07820;">FORJA Digital Studio</div>` : ""}
+        </div>`
+      : "";
 
     const htmlTemplate = `
       <!DOCTYPE html>
@@ -39,7 +61,7 @@ export async function POST(req: Request) {
               color: #1a1a1a;
               background: #ffffff;
               line-height: 1.6;
-              font-size: 11pt;
+              font-size: ${printerMode ? "10.5pt" : "11pt"};
               padding: 20mm;
             }
             .header {
@@ -101,6 +123,7 @@ export async function POST(req: Request) {
           </style>
         </head>
         <body>
+          ${coverPage}
           <div class="header">FORJA Digital Studio</div>
           <div class="type-badge">Document : ${(type as string).toUpperCase()}</div>
           ${htmlContent}

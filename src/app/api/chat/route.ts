@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { SYSTEM_PROMPT } from "@/lib/llm/prompts";
+import { rateLimit, getIp } from "@/lib/rate-limit";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -8,6 +9,10 @@ interface ChatMessage {
 }
 
 export async function POST(req: Request) {
+  if (!rateLimit(getIp(req), 20, 60_000)) {
+    return NextResponse.json({ error: "Trop de requêtes. Attends une minute." }, { status: 429 });
+  }
+
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
+import { rateLimit, getIp } from "@/lib/rate-limit";
 
 interface MessageInput {
   role: string;
@@ -37,10 +38,19 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  if (!rateLimit(getIp(req), 30, 60_000)) {
+    return NextResponse.json({ error: "Trop de requêtes." }, { status: 429 });
+  }
+
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
   try {
+    const convCount = await prisma.conversation.count({ where: { userId: session.user.id } });
+    if (convCount >= 200) {
+      return NextResponse.json({ error: "Limite de 200 conversations atteinte." }, { status: 429 });
+    }
+
     const { title, initialMessages } = await req.json();
 
     const sanitizedTitle =

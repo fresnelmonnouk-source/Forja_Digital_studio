@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import AuthShell from "@/components/ui/AuthShell";
 import { FV, FVHook } from "@/components/ui/fonderie";
 
@@ -16,13 +16,17 @@ function getStrength(pwd: string): number {
 const STRENGTH_LABELS = ["", "Faible", "Moyen", "Fort", "Excellent"];
 const STRENGTH_COLORS = ["", FV.ember, FV.amber, FV.amber, "#7EC8A0"];
 
-export default function ResetPage() {
+function ResetForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
+
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [error, setError] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const strength = getStrength(password);
 
@@ -36,12 +40,48 @@ export default function ResetPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (password.length < 10) { setError("Le mot de passe doit contenir au moins 10 caractères."); return; }
-    if (!/\d/.test(password)) { setError("Le mot de passe doit contenir au moins un chiffre."); return; }
-    if (!/[A-Z]/.test(password)) { setError("Le mot de passe doit contenir au moins une majuscule."); return; }
-    if (password !== confirm) { setError("Les mots de passe ne correspondent pas."); return; }
-    setSubmitted(true);
-    setTimeout(() => router.push("/login"), 2000);
+
+    if (!token) {
+      setError("Token de réinitialisation manquant dans l'adresse URL.");
+      return;
+    }
+
+    if (password.length < 10) {
+      setError("Le mot de passe doit contenir au moins 10 caractères.");
+      return;
+    }
+    if (!/\d/.test(password)) {
+      setError("Le mot de passe doit contenir au moins un chiffre.");
+      return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      setError("Le mot de passe doit contenir au moins une majuscule.");
+      return;
+    }
+    if (password !== confirm) {
+      setError("Les mots de passe ne correspondent pas.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Une erreur est survenue.");
+      } else {
+        setSubmitted(true);
+        setTimeout(() => router.push("/login"), 2000);
+      }
+    } catch (err) {
+      setError("Impossible de contacter le serveur.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -72,6 +112,12 @@ export default function ResetPage() {
             Au moins 10 caractères. Plus c'est long, plus c'est solide.
           </p>
 
+          {!token && (
+            <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(238,90,36,0.08)', border: `1px solid rgba(238,90,36,0.3)`, borderRadius: 8, fontSize: 12, color: FV.ember }}>
+              Attention : Aucun jeton (token) de réinitialisation n'a été détecté dans l'URL. Veuillez utiliser le lien reçu par e-mail.
+            </div>
+          )}
+
           {/* Password field */}
           <div style={{ marginBottom: 14 }}>
             <div style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.18em', marginBottom: 6, textTransform: 'uppercase' }}>Nouveau mot de passe</div>
@@ -81,6 +127,7 @@ export default function ResetPage() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 autoComplete="new-password"
+                disabled={!token || loading}
                 style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontFamily: FV.sans, fontSize: 14, color: FV.ink }}
               />
               <button type="button" onClick={() => setShowPwd(v => !v)} style={{ background: 'transparent', border: 'none', color: FV.smoke, cursor: 'pointer', fontFamily: FV.mono, fontSize: 10, flexShrink: 0 }}>
@@ -97,6 +144,7 @@ export default function ResetPage() {
               value={confirm}
               onChange={e => setConfirm(e.target.value)}
               autoComplete="new-password"
+              disabled={!token || loading}
               style={{ width: '100%', boxSizing: 'border-box', background: FV.black2, border: `1px solid ${confirm && confirm !== password ? 'rgba(238,90,36,0.6)' : FV.ruleStrong}`, borderRadius: 8, padding: '12px 14px', fontFamily: FV.sans, fontSize: 14, color: FV.ink, outline: 'none' }}
             />
           </div>
@@ -134,12 +182,25 @@ export default function ResetPage() {
 
           <button
             type="submit"
-            style={{ width: '100%', background: FV.ember, color: FV.black, border: 'none', padding: '14px', fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', cursor: 'pointer', marginTop: 8, borderRadius: 8, boxShadow: `0 0 24px ${FV.ember}66`, textTransform: 'uppercase' }}
+            disabled={!token || loading}
+            style={{ width: '100%', background: (!token || loading) ? FV.ruleStrong : FV.ember, color: (!token || loading) ? FV.smoke : FV.black, border: 'none', padding: '14px', fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', cursor: (!token || loading) ? 'not-allowed' : 'pointer', marginTop: 8, borderRadius: 8, boxShadow: (!token || loading) ? 'none' : `0 0 24px ${FV.ember}66`, textTransform: 'uppercase' }}
           >
-            Sceller le nouveau mot de passe →
+            {loading ? "Gravure en cours..." : "Sceller le nouveau mot de passe →"}
           </button>
         </form>
       )}
     </AuthShell>
+  );
+}
+
+export default function ResetPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', backgroundColor: FV.black, color: FV.ink, fontFamily: FV.mono, fontSize: 12 }}>
+        CHARGEMENT DU SCEAU...
+      </div>
+    }>
+      <ResetForm />
+    </Suspense>
   );
 }

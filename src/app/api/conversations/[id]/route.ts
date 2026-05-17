@@ -21,6 +21,34 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   }
 }
 
+export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+
+  try {
+    const { title } = await req.json();
+    if (typeof title !== "string" || !title.trim()) {
+      return NextResponse.json({ error: "Titre invalide" }, { status: 400 });
+    }
+
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: params.id, userId: session.user.id },
+    });
+
+    if (!conversation) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+
+    const updated = await prisma.conversation.update({
+      where: { id: params.id },
+      data: { title: title.trim().substring(0, 100) },
+    });
+
+    return NextResponse.json(updated);
+  } catch (error) {
+    console.error("Erreur conversation PATCH:", error);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+  }
+}
+
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
