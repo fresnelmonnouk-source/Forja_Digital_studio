@@ -36,23 +36,20 @@ export default function ExportModal({ onClose, conversation }: { onClose: () => 
     setExporting(true);
     setError(null);
     try {
-      const markdownContent = conversation
-        .filter((m) => m.role === "user" || m.role === "assistant")
-        .map((m) => {
-          if (m.role === "user") return `> **Question :** ${m.content}`;
-          return m.content;
-        })
-        .join("\n\n---\n\n");
+      const validMessages = conversation.filter(
+        (m) => (m.role === "user" || m.role === "assistant") && m.content.trim()
+      );
 
-      if (!markdownContent.trim()) {
-        setError("Aucun contenu à exporter. Lance une conversation d'abord.");
+      if (validMessages.length < 2) {
+        setError("Lance une conversation avec FORJA avant de générer un document.");
+        setExporting(false);
         return;
       }
 
       const res = await fetch("/api/export/pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ markdown: markdownContent, type: docType, opts })
+        body: JSON.stringify({ conversation: validMessages, type: docType, opts })
       });
 
       if (!res.ok) {
@@ -152,9 +149,9 @@ export default function ExportModal({ onClose, conversation }: { onClose: () => 
               style={{ width: '100%', background: exporting ? FV.smokeDim : FV.ember, color: exporting ? FV.smoke : FV.black, border: 'none', padding: '14px', fontSize: 13, fontWeight: 700, cursor: exporting ? 'not-allowed' : 'pointer', borderRadius: 8, boxShadow: exporting ? 'none' : `0 0 24px ${FV.ember}66`, letterSpacing: '0.04em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, transition: 'all 0.2s' }}
             >
               <span style={{ fontFamily: FV.serif, fontStyle: 'italic', fontSize: 16 }}>{exporting ? '⏳' : '✦'}</span>
-              {exporting ? "GRAVURE EN COURS…" : "FORGER LE PDF MAINTENANT →"}
+              {exporting ? "FORJA RÉDIGE LE DOCUMENT…" : "FORGER LE PDF MAINTENANT →"}
             </button>
-            <div style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.12em', textAlign: 'center', marginTop: 10 }}>~ 8 SECONDES · GÉNÉRÉ ET TÉLÉCHARGÉ DIRECTEMENT</div>
+            <div style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.12em', textAlign: 'center', marginTop: 10 }}>~ 20 SECONDES · FORJA GÉNÈRE UN VRAI LIVRABLE, PAS UN EXPORT</div>
           </>
         ) : (
           // Success state

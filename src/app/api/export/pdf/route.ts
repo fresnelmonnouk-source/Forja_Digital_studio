@@ -4,9 +4,94 @@ import chromium from "@sparticuz/chromium";
 import puppeteer from "puppeteer-core";
 import { marked } from "marked";
 import { rateLimit, getIp } from "@/lib/rate-limit";
+import { callLLM, LLMMessage } from "@/lib/llm/client";
 
 const ALLOWED_TYPES = ["ebook", "formation", "vente", "blueprint"] as const;
 type DocType = (typeof ALLOWED_TYPES)[number];
+
+const DOC_PROMPTS: Record<DocType, string> = {
+  ebook: `Tu es FORJA, expert en création de produits digitaux. À partir de la conversation ci-dessous, génère un ebook complet et professionnel en Markdown.
+
+Structure obligatoire :
+# [Titre accrocheur basé sur le sujet]
+## Introduction
+## Chapitre 1 : [...]
+## Chapitre 2 : [...]
+## Chapitre 3 : [...]
+(autant de chapitres que nécessaire)
+## Conclusion
+## Plan d'action
+
+Règles :
+- Rédige un vrai contenu développé, pas des titres vides
+- Intègre les informations, idées et décisions de la conversation
+- Ton professionnel, actionnable, structuré
+- Minimum 1500 mots
+- Réponds UNIQUEMENT avec le Markdown, sans commentaire`,
+
+  formation: `Tu es FORJA, expert en ingénierie pédagogique. À partir de la conversation ci-dessous, génère un plan de formation complet en Markdown.
+
+Structure obligatoire :
+# [Titre de la formation]
+## Objectifs pédagogiques
+## Public cible & prérequis
+## Module 1 : [Titre]
+### Objectifs du module
+### Contenu
+### Exercice pratique
+## Module 2 : [Titre]
+...
+## Évaluation & certification
+## Ressources complémentaires
+
+Règles :
+- Développe chaque module avec un vrai contenu
+- Inclus des exercices pratiques concrets
+- Basé sur les informations de la conversation
+- Minimum 1500 mots
+- Réponds UNIQUEMENT avec le Markdown, sans commentaire`,
+
+  vente: `Tu es FORJA, expert en copywriting et pages de vente. À partir de la conversation ci-dessous, génère une page de vente complète en Markdown.
+
+Structure obligatoire :
+# [Headline principale — accroche puissante]
+## Le problème que tu résous
+## La solution : [Nom du produit/offre]
+## Ce que tu vas obtenir
+## Pour qui c'est fait
+## Ce qui est inclus
+## Témoignages & preuves
+## L'offre complète & le prix
+## Garantie
+## FAQ
+## Appel à l'action final
+
+Règles :
+- Copywriting direct, émotionnel, orienté bénéfices
+- Basé sur les informations, l'avatar et l'offre de la conversation
+- Minimum 1200 mots
+- Réponds UNIQUEMENT avec le Markdown, sans commentaire`,
+
+  blueprint: `Tu es FORJA, expert en architecture digitale et SaaS. À partir de la conversation ci-dessous, génère un blueprint technique complet en Markdown.
+
+Structure obligatoire :
+# [Titre du projet/produit]
+## Résumé exécutif
+## Problème & opportunité de marché
+## Architecture de la solution
+## Stack technique recommandé
+## Roadmap de développement (phases)
+## Modèle économique
+## KPIs & métriques de succès
+## Risques & mitigation
+## Prochaines étapes immédiates
+
+Règles :
+- Contenu concret, chiffré, actionnable
+- Basé sur les informations techniques de la conversation
+- Minimum 1200 mots
+- Réponds UNIQUEMENT avec le Markdown, sans commentaire`,
+};
 
 export async function POST(req: Request) {
   if (!(await rateLimit(getIp(req), 5, 60_000))) {
@@ -17,10 +102,10 @@ export async function POST(req: Request) {
   if (!session?.user?.id) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
   try {
-    const { markdown, type, opts } = await req.json();
+    const { conversation, type, opts } = await req.json();
 
-    if (!markdown || typeof markdown !== "string") {
-      return NextResponse.json({ error: "Aucun contenu fourni" }, { status: 400 });
+    if (!Array.isArray(conversation) || conversation.length === 0) {
+      return NextResponse.json({ error: "Aucune conversation fournie" }, { status: 400 });
     }
     if (!ALLOWED_TYPES.includes(type as DocType)) {
       return NextResponse.json({ error: "Type de document invalide" }, { status: 400 });
@@ -29,6 +114,21 @@ export async function POST(req: Request) {
     const [includeCover = true, includeSignature = true, printerMode = false] = Array.isArray(opts)
       ? opts.map((v) => Boolean(v))
       : [true, true, false];
+
+    // Génération du document par le LLM
+    const llmMessages: LLMMessage[] = conversation
+      .filter((m: { role: string; content: string }) => m.role === "user" || m.role === "assistant")
+      .map((m: { role: string; content: string }) => ({
+        role: m.role as "user" | "assistant",
+        content: m.content,
+      }));
+
+    const llmResult = await callLLM(llmMessages, DOC_PROMPTS[type as DocType]);
+    const markdown = llmResult.content.map((b) => b.text).join("");
+
+    if (!markdown.trim()) {
+      return NextResponse.json({ error: "Le document généré est vide." }, { status: 500 });
+    }
 
     const htmlContent = await marked.parse(markdown);
     const titleMatch = markdown.match(/^#\s+(.+)$/m);
@@ -136,9 +236,8 @@ export async function POST(req: Request) {
     try {
       browser = await puppeteer.launch({
         args: chromium.args,
-        defaultViewport: chromium.defaultViewport,
         executablePath: await chromium.executablePath(),
-        headless: chromium.headless,
+        headless: true,
       });
       const page = await browser.newPage();
       await page.setContent(htmlTemplate, { waitUntil: "load" });
