@@ -240,24 +240,12 @@ const VISUAL_INSTRUCTIONS = `
 
 N'abuse pas de ces éléments : qualité > quantité.`;
 
-const IMAGE_MANDATE = `⚠️ RÈGLE N°1 — IMAGE OBLIGATOIRE (ne pas ignorer) :
-Ton document DOIT contenir exactement ce tag sur sa propre ligne, immédiatement après le premier ## :
-[IMAGE:high:description en anglais, max 20 mots, précise et visuelle]
-Exemples valides :
-[IMAGE:high:confident entrepreneur at modern laptop, professional office, warm lighting]
-[IMAGE:standard:online learning dashboard UI, blue and white, clean minimal design]
-[IMAGE:premium:luxury digital product launch, cinematic, ultra realistic, premium brand]
-Sans ce tag dans ta réponse, le document est considéré comme incomplet. C'est NON NÉGOCIABLE.
-
-`;
-
 const DOC_PROMPTS: Record<DocType, string> = {
-  ebook: `${IMAGE_MANDATE}Tu es FORJA, expert en création de produits digitaux. À partir de la conversation ci-dessous, génère un ebook complet et professionnel en Markdown.
+  ebook: `Tu es FORJA, expert en création de produits digitaux. À partir de la conversation ci-dessous, génère un ebook complet et professionnel en Markdown.
 
 Structure obligatoire :
 # [Titre accrocheur basé sur le sujet]
 ## Introduction
-[IMAGE:high:description précise en anglais, max 20 mots]
 ## Chapitre 1 : [...]
 ## Chapitre 2 : [...]
 ## Chapitre 3 : [...]
@@ -274,12 +262,11 @@ ${VISUAL_INSTRUCTIONS}
 
 Réponds UNIQUEMENT avec le Markdown, sans commentaire.`,
 
-  formation: `${IMAGE_MANDATE}Tu es FORJA, expert en ingénierie pédagogique. À partir de la conversation ci-dessous, génère un plan de formation complet en Markdown.
+  formation: `Tu es FORJA, expert en ingénierie pédagogique. À partir de la conversation ci-dessous, génère un plan de formation complet en Markdown.
 
 Structure obligatoire :
 # [Titre de la formation]
 ## Objectifs pédagogiques
-[IMAGE:standard:description précise en anglais, max 20 mots]
 ## Public cible & prérequis
 ## Module 1 : [Titre]
 ### Objectifs du module
@@ -299,12 +286,11 @@ ${VISUAL_INSTRUCTIONS}
 
 Réponds UNIQUEMENT avec le Markdown, sans commentaire.`,
 
-  vente: `${IMAGE_MANDATE}Tu es FORJA, expert en copywriting et pages de vente. À partir de la conversation ci-dessous, génère une page de vente complète en Markdown.
+  vente: `Tu es FORJA, expert en copywriting et pages de vente. À partir de la conversation ci-dessous, génère une page de vente complète en Markdown.
 
 Structure obligatoire :
 # [Headline principale — accroche puissante]
 ## Le problème que tu résous
-[IMAGE:premium:description précise en anglais, max 20 mots]
 ## La solution : [Nom du produit/offre]
 ## Ce que tu vas obtenir
 ## Pour qui c'est fait
@@ -323,12 +309,11 @@ ${VISUAL_INSTRUCTIONS}
 
 Réponds UNIQUEMENT avec le Markdown, sans commentaire.`,
 
-  blueprint: `${IMAGE_MANDATE}Tu es FORJA, expert en architecture digitale et SaaS. À partir de la conversation ci-dessous, génère un blueprint technique complet en Markdown.
+  blueprint: `Tu es FORJA, expert en architecture digitale et SaaS. À partir de la conversation ci-dessous, génère un blueprint technique complet en Markdown.
 
 Structure obligatoire :
 # [Titre du projet/produit]
 ## Résumé exécutif
-[IMAGE:standard:description précise en anglais, max 20 mots]
 ## Problème & opportunité de marché
 ## Architecture de la solution
 ## Stack technique recommandé
