@@ -85,6 +85,37 @@ async function processImageTags(md: string): Promise<string> {
   return result;
 }
 
+// Convertit [CHART:bar:Titre:Label1=Val1,Label2=Val2] en graphique CSS
+function buildBarChart(title: string, dataStr: string): string {
+  const items = dataStr.split(",").map((item) => {
+    const [label, rawVal] = item.split("=").map((s) => s.trim());
+    return { label: label || "", value: parseFloat(rawVal) || 0 };
+  }).filter((i) => i.label);
+
+  if (items.length === 0) return "";
+  const max = Math.max(...items.map((i) => i.value));
+
+  const rows = items.map(({ label, value }) => {
+    const pct = max > 0 ? (value / max) * 100 : 0;
+    return `<div class="chart-row">
+      <div class="chart-label">${label}</div>
+      <div class="chart-bar-wrap">
+        <div class="chart-bar" style="width:${pct.toFixed(1)}%"></div>
+        <span class="chart-value">${value}</span>
+      </div>
+    </div>`;
+  }).join("");
+
+  return `<div class="chart-container"><div class="chart-title">${title}</div>${rows}</div>`;
+}
+
+function processCharts(html: string): string {
+  // Remplace <p>[CHART:...]</p> ou [CHART:...] inline
+  return html
+    .replace(/<p>\s*\[CHART:bar:([^:]+):([^\]]+)\]\s*<\/p>/g, (_, t, d) => buildBarChart(t, d))
+    .replace(/\[CHART:bar:([^:]+):([^\]]+)\]/g, (_, t, d) => buildBarChart(t, d));
+}
+
 // Convertit les blocs ```mermaid en <div class="mermaid"> pour Mermaid.js
 function processMermaidBlocks(html: string): string {
   return html.replace(
@@ -117,7 +148,12 @@ const VISUAL_INSTRUCTIONS = `
    La description doit être en anglais, précise et professionnelle.
    Exemple : [IMAGE: modern entrepreneur working on laptop in a minimalist studio, warm lighting, professional]
 
-3. MÉTRIQUES CLÉS — mets les chiffres importants en blockquote :
+3. GRAPHIQUES EN BARRES — insère [CHART:bar:Titre:Label1=Valeur1,Label2=Valeur2] pour les données chiffrées.
+   Syntaxe exacte (respecte les = et les ,) :
+   [CHART:bar:Croissance mensuelle:Janvier=30,Février=65,Mars=90,Avril=120]
+   [CHART:bar:Comparaison stack:Next.js=90,Laravel=70,Django=60]
+
+4. MÉTRIQUES CLÉS — mets les chiffres importants en blockquote :
    > **Métrique :** valeur | **Autre métrique :** valeur
 
 N'abuse pas de ces éléments : qualité > quantité.`;
@@ -259,8 +295,9 @@ export async function POST(req: Request) {
     // 3. Markdown → HTML
     let htmlContent = await marked.parse(markdown);
 
-    // 4. Convertit les blocs Mermaid pour le rendu navigateur
+    // 4. Convertit les blocs Mermaid et les graphiques CSS
     htmlContent = processMermaidBlocks(htmlContent);
+    htmlContent = processCharts(htmlContent);
 
     const titleMatch = markdown.match(/^#\s+(.+)$/m);
     const escapeHtml = (s: string) =>
@@ -408,6 +445,58 @@ export async function POST(req: Request) {
             ul, ol { margin-bottom: 15px; padding-left: 20px; }
             li { margin-bottom: 5px; }
             hr { border: 0; border-top: 1px solid #e0e0e0; margin: 30px 0; }
+
+            /* Graphiques CSS */
+            .chart-container {
+              margin: 24px 0;
+              padding: 20px 24px;
+              background: #faf7f0;
+              border: 1px solid #e8e0d0;
+              border-radius: 8px;
+              page-break-inside: avoid;
+            }
+            .chart-title {
+              font-family: 'Cormorant Garamond', serif;
+              font-size: 13pt;
+              font-weight: 700;
+              color: #0A0804;
+              margin-bottom: 14px;
+            }
+            .chart-row {
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              margin-bottom: 8px;
+            }
+            .chart-label {
+              width: 110px;
+              font-size: 9pt;
+              color: #5A4A28;
+              flex-shrink: 0;
+              text-align: right;
+            }
+            .chart-bar-wrap {
+              flex: 1;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              background: #ede8de;
+              border-radius: 4px;
+              padding: 2px;
+            }
+            .chart-bar {
+              height: 18px;
+              background: linear-gradient(90deg, #E8C547, #EE5A24);
+              border-radius: 3px;
+              min-width: 4px;
+            }
+            .chart-value {
+              font-family: 'JetBrains Mono', monospace;
+              font-size: 8.5pt;
+              color: #8A7040;
+              white-space: nowrap;
+              padding-right: 6px;
+            }
 
             .type-badge {
               display: inline-block;
