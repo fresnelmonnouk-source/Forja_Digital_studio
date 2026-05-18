@@ -11,77 +11,131 @@ export const maxDuration = 60;
 const ALLOWED_TYPES = ["ebook", "formation", "vente", "blueprint"] as const;
 type DocType = (typeof ALLOWED_TYPES)[number];
 
-// ── Image generation (HuggingFace → DALL-E fallback) ─────────────────────────
+// ── Système de génération d'images multi-providers avec niveaux de qualité ────
+//
+// Niveaux :
+//   standard → Pollinations → HF FLUX.1-schnell → HF SDXL      (tout gratuit)
+//   high     → HF SD3-Medium → HF FLUX.1-schnell → HF SDXL     (gratuit HF)
+//   premium  → DALL-E 3 → HF SD3-Medium → HF FLUX.1-schnell    (payant en tête)
+//
+// FORJA choisit le niveau dans le tag [IMAGE:niveau:description]
 
-async function generateHFImage(prompt: string): Promise<string | null> {
+type ImageQuality = "standard" | "high" | "premium";
+
+const PROVIDER_ORDER: Record<ImageQuality, string[]> = {
+  standard: ["pollinations", "hf-flux-schnell", "hf-sdxl"],
+  high:     ["hf-sd3", "hf-flux-schnell", "hf-sdxl", "dalle"],
+  premium:  ["dalle", "hf-sd3", "hf-flux-schnell"],
+};
+
+async function fetchWithTimeout(url: string, opts: RequestInit, ms: number): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    return await fetch(url, { ...opts, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function generatePollinations(prompt: string): Promise<string | null> {
+  try {
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1200&height=675&nologo=true&model=flux`;
+    const res = await fetchWithTimeout(url, {}, 20_000);
+    if (!res.ok) return null;
+    const buf = await res.arrayBuffer();
+    return `data:image/jpeg;base64,${Buffer.from(buf).toString("base64")}`;
+  } catch { return null; }
+}
+
+async function generateHF(prompt: string, model: string, params: Record<string, unknown>): Promise<string | null> {
   const hfKey = process.env.HUGGINGFACE_API_KEY;
   if (!hfKey || hfKey === "hf_...") return null;
   try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 20_000);
-    const res = await fetch(
-      "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
+    const res = await fetchWithTimeout(
+      `https://api-inference.huggingface.co/models/${model}`,
       {
         method: "POST",
         headers: { Authorization: `Bearer ${hfKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ inputs: prompt, parameters: { num_inference_steps: 4 } }),
-        signal: controller.signal,
-      }
+        body: JSON.stringify({ inputs: prompt, parameters: params }),
+      },
+      25_000
     );
-    clearTimeout(timer);
     if (!res.ok) return null;
     const buf = await res.arrayBuffer();
     const ct = res.headers.get("content-type") || "image/jpeg";
     return `data:${ct};base64,${Buffer.from(buf).toString("base64")}`;
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
-async function generateDalleImage(prompt: string): Promise<string | null> {
-  const dalleKey = process.env.DALLE_API_KEY;
-  if (!dalleKey || dalleKey === "sk-...") return null;
+async function generateDalle(prompt: string): Promise<string | null> {
+  const key = process.env.DALLE_API_KEY;
+  if (!key || key === "sk-...") return null;
   try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 25_000);
-    const res = await fetch("https://api.openai.com/v1/images/generations", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${dalleKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: "dall-e-3", prompt, n: 1, size: "1792x1024", response_format: "b64_json" }),
-      signal: controller.signal,
-    });
-    clearTimeout(timer);
+    const res = await fetchWithTimeout(
+      "https://api.openai.com/v1/images/generations",
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ model: "dall-e-3", prompt, n: 1, size: "1792x1024", response_format: "b64_json" }),
+      },
+      30_000
+    );
     if (!res.ok) return null;
     const data = await res.json();
     const b64 = data?.data?.[0]?.b64_json;
     return b64 ? `data:image/png;base64,${b64}` : null;
-  } catch {
-    return null;
+  } catch { return null; }
+}
+
+async function generateByProvider(provider: string, prompt: string): Promise<string | null> {
+  switch (provider) {
+    case "pollinations":    return generatePollinations(prompt);
+    case "hf-flux-schnell": return generateHF(prompt, "black-forest-labs/FLUX.1-schnell", { num_inference_steps: 4 });
+    case "hf-sdxl":        return generateHF(prompt, "stabilityai/stable-diffusion-xl-base-1.0", {});
+    case "hf-sd3":         return generateHF(prompt, "stabilityai/stable-diffusion-3-medium-diffusers", {});
+    case "dalle":          return generateDalle(prompt);
+    default:               return null;
   }
 }
 
-async function generateImage(prompt: string): Promise<string | null> {
-  return (await generateHFImage(prompt)) ?? (await generateDalleImage(prompt));
+async function generateImage(prompt: string, quality: ImageQuality = "standard"): Promise<string | null> {
+  for (const provider of PROVIDER_ORDER[quality]) {
+    const result = await generateByProvider(provider, prompt);
+    if (result) return result;
+  }
+  return null;
 }
 
-// Remplace le premier [IMAGE: ...] par une vraie image (les autres sont supprimés)
+// Remplace le premier [IMAGE:qualité:description] (les autres sont supprimés)
 async function processImageTags(md: string): Promise<string> {
-  const regex = /\[IMAGE:\s*([^\]]+)\]/g;
-  const matches = Array.from(md.matchAll(regex));
-  let result = md.replace(regex, "");
-  if (matches.length === 0) return result;
+  const qualityRegex = /\[IMAGE:(standard|high|premium):\s*([^\]]+)\]/g;
+  const simpleRegex  = /\[IMAGE:\s*([^\]]+)\]/g;
 
-  const description = matches[0][1].trim();
-  const imgData = await generateImage(description);
-  if (!imgData) return result;
+  const qualityMatches = Array.from(md.matchAll(qualityRegex));
+  const simpleMatches  = Array.from(md.matchAll(simpleRegex));
+
+  let result = md.replace(qualityRegex, "").replace(simpleRegex, "");
+
+  let imgData: string | null = null;
+  let description = "";
+
+  if (qualityMatches.length > 0) {
+    const [, quality, desc] = qualityMatches[0];
+    description = desc.trim();
+    imgData = await generateImage(description, quality as ImageQuality);
+  } else if (simpleMatches.length > 0) {
+    description = simpleMatches[0][1].trim();
+    imgData = await generateImage(description, "standard");
+  }
+
+  if (!imgData || !description) return result;
 
   const h2Match = result.match(/^## .+$/m);
   const figure = `\n\n<figure class="ai-figure"><img src="${imgData}" alt="${description}" /><figcaption>${description}</figcaption></figure>\n\n`;
-  if (h2Match) {
-    result = result.replace(h2Match[0], h2Match[0] + figure);
-  } else {
-    result = figure + result;
-  }
+  result = h2Match
+    ? result.replace(h2Match[0], h2Match[0] + figure)
+    : figure + result;
   return result;
 }
 
@@ -144,9 +198,17 @@ const VISUAL_INSTRUCTIONS = `
      A[Idée] --> B[Validation] --> C[MVP] --> D[Lancement]
    \`\`\`
 
-2. ILLUSTRATION IA — insère exactement UNE FOIS [IMAGE: detailed english prompt] juste après l'introduction.
+2. ILLUSTRATION IA — insère exactement UNE FOIS après l'introduction avec le niveau de qualité adapté :
+
+   [IMAGE:standard:description] → blueprint, formation, ebook technique (gratuit, rapide)
+   [IMAGE:high:description]     → ebook premium, contenu visuel fort (gratuit HF, meilleure qualité)
+   [IMAGE:premium:description]  → page de vente, document commercial haut de gamme (DALL-E 3)
+
    La description doit être en anglais, précise et professionnelle.
-   Exemple : [IMAGE: modern entrepreneur working on laptop in a minimalist studio, warm lighting, professional]
+   Exemples :
+   [IMAGE:standard:software architecture diagram with API nodes and database, clean minimal style, blue tones]
+   [IMAGE:high:confident entrepreneur presenting business plan, professional photography, warm office lighting]
+   [IMAGE:premium:luxury digital product launch, cinematic composition, ultra realistic, premium brand aesthetic]
 
 3. GRAPHIQUES EN BARRES — insère [CHART:bar:Titre:Label1=Valeur1,Label2=Valeur2] pour les données chiffrées.
    Syntaxe exacte (respecte les = et les ,) :
