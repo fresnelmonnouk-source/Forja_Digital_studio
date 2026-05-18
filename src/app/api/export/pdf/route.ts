@@ -109,39 +109,76 @@ async function generateImage(prompt: string, quality: ImageQuality = "standard")
   }
 }
 
-// Remplace le premier [IMAGE:qualité:description] (les autres sont supprimés)
-async function processImageTags(md: string): Promise<string> {
-  const qualityRegex = /\[IMAGE:(standard|high|premium):\s*([^\]]+)\]/g;
-  const simpleRegex  = /\[IMAGE:\s*([^\]]+)\]/g;
+interface ImagePlan {
+  section_index: number;
+  quality: ImageQuality;
+  description: string;
+}
 
-  const qualityMatches = Array.from(md.matchAll(qualityRegex));
-  const simpleMatches  = Array.from(md.matchAll(simpleRegex));
+// Passe 2 : LLM focalisé qui lit le markdown généré et planifie les images
+const IMAGE_PLANNER_PROMPT = `Tu es un designer de documents. Analyse le markdown fourni et retourne UNIQUEMENT un tableau JSON (rien d'autre, pas de commentaire, pas de markdown).
 
-  let result = md.replace(qualityRegex, "").replace(simpleRegex, "");
+Chaque objet du tableau représente une image à insérer dans le document.
+Format strict :
+[
+  {
+    "section_index": 0,
+    "quality": "standard",
+    "description": "description en anglais, précise et visuelle"
+  }
+]
 
-  let imgData: string | null = null;
-  let description = "";
+section_index = index 0-based du titre ## dans le document (0 = premier ##, 1 = deuxième ##, etc.)
+quality = "standard" (schémas, diagrammes) | "high" (illustrations de concepts) | "premium" (couvertures ebook uniquement)
 
-  if (qualityMatches.length > 0) {
-    const [, quality, desc] = qualityMatches[0];
-    description = desc.trim();
-    imgData = await generateImage(description, quality as ImageQuality);
-  } else if (simpleMatches.length > 0) {
-    description = simpleMatches[0][1].trim();
-    imgData = await generateImage(description, "standard");
+Règles :
+- Maximum 2 images par document
+- Choisis des sections où une image apporte vraiment de la valeur
+- Descriptions en anglais, 15-30 mots, style visuel précis
+- Si aucune image n'est pertinente, retourne []
+- Retourne UNIQUEMENT le tableau JSON, rien d'autre`;
+
+async function planAndGenerateImages(markdown: string, docType: DocType): Promise<string> {
+  // Passe 2 : demander au LLM de planifier les images
+  let plan: ImagePlan[] = [];
+  try {
+    const plannerMessages: LLMMessage[] = [
+      { role: "user", content: `Type de document : ${docType}\n\n${markdown.slice(0, 4000)}` },
+    ];
+    const plannerResult = await callLLM(plannerMessages, IMAGE_PLANNER_PROMPT);
+    const plannerText = plannerResult.content.map((b) => b.text).join("").trim();
+    const jsonMatch = plannerText.match(/\[[\s\S]*\]/);
+    if (jsonMatch) plan = JSON.parse(jsonMatch[0]);
+  } catch {
+    return markdown;
   }
 
-  if (!description) return result;
+  if (!Array.isArray(plan) || plan.length === 0) return markdown;
 
-  // Si l'image a échoué, on n'insère rien — pas de placeholder avec le prompt brut
-  if (!imgData) return result;
+  // Extraire les titres ## du markdown dans l'ordre
+  const headings = Array.from(markdown.matchAll(/^(## .+)$/gm)).map((m) => m[1]);
 
-  const h2Match = result.match(/^## .+$/m);
-  const figure = `\n\n<figure class="ai-figure"><img src="${imgData}" alt="${description}" /><figcaption>${description}</figcaption></figure>\n\n`;
+  // Passe 3 : générer les images en parallèle
+  const results = await Promise.all(
+    plan.slice(0, 2).map(async (item) => {
+      const heading = headings[item.section_index] ?? null;
+      if (!heading) return null;
+      const quality: ImageQuality = ["standard", "high", "premium"].includes(item.quality)
+        ? (item.quality as ImageQuality)
+        : "standard";
+      const imgData = await generateImage(item.description, quality);
+      return imgData ? { heading, imgData, description: item.description } : null;
+    })
+  );
 
-  result = h2Match
-    ? result.replace(h2Match[0], h2Match[0] + figure)
-    : figure + result;
+  // Insérer les images après les titres correspondants
+  let result = markdown;
+  for (const item of results) {
+    if (!item) continue;
+    const figure = `\n\n<figure class="ai-figure"><img src="${item.imgData}" alt="${item.description}" /><figcaption>${item.description}</figcaption></figure>\n\n`;
+    result = result.replace(item.heading, item.heading + figure);
+  }
+
   return result;
 }
 
@@ -204,24 +241,12 @@ const VISUAL_INSTRUCTIONS = `
      A[Idée] --> B[Validation] --> C[MVP] --> D[Lancement]
    \`\`\`
 
-2. ILLUSTRATION IA — insère exactement UNE FOIS après l'introduction avec le niveau de qualité adapté :
-
-   [IMAGE:standard:description] → blueprint, formation, ebook technique (gratuit, rapide)
-   [IMAGE:high:description]     → ebook premium, contenu visuel fort (gratuit HF, meilleure qualité)
-   [IMAGE:premium:description]  → page de vente, document commercial haut de gamme (DALL-E 3)
-
-   La description doit être en anglais, précise et professionnelle.
-   Exemples :
-   [IMAGE:standard:software architecture diagram with API nodes and database, clean minimal style, blue tones]
-   [IMAGE:high:confident entrepreneur presenting business plan, professional photography, warm office lighting]
-   [IMAGE:premium:luxury digital product launch, cinematic composition, ultra realistic, premium brand aesthetic]
-
-3. GRAPHIQUES EN BARRES — insère [CHART:bar:Titre:Label1=Valeur1,Label2=Valeur2] pour les données chiffrées.
+2. GRAPHIQUES EN BARRES — insère [CHART:bar:Titre:Label1=Valeur1,Label2=Valeur2] pour les données chiffrées.
    Syntaxe exacte (respecte les = et les ,) :
    [CHART:bar:Croissance mensuelle:Janvier=30,Février=65,Mars=90,Avril=120]
    [CHART:bar:Comparaison stack:Next.js=90,Laravel=70,Django=60]
 
-4. MÉTRIQUES CLÉS — mets les chiffres importants en blockquote :
+3. MÉTRIQUES CLÉS — mets les chiffres importants en blockquote :
    > **Métrique :** valeur | **Autre métrique :** valeur
 
 N'abuse pas de ces éléments : qualité > quantité.`;
@@ -342,7 +367,7 @@ export async function POST(req: Request) {
       ? opts.map((v) => Boolean(v))
       : [true, true, false];
 
-    // 1. LLM génère le document en Markdown
+    // Passe 1 : LLM génère le document en Markdown (texte uniquement)
     const llmMessages: LLMMessage[] = conversation
       .filter((m: { role: string; content: string }) => m.role === "user" || m.role === "assistant")
       .map((m: { role: string; content: string }) => ({
@@ -357,8 +382,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Le document généré est vide." }, { status: 500 });
     }
 
-    // 2. Génère l'image IA (si HUGGINGFACE_API_KEY configuré)
-    markdown = await processImageTags(markdown);
+    // Passes 2 & 3 : LLM planifie les images, puis génération en parallèle
+    markdown = await planAndGenerateImages(markdown, type as DocType);
 
     // 3. Markdown → HTML
     let htmlContent = await marked.parse(markdown);

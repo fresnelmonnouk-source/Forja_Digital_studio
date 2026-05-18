@@ -163,6 +163,40 @@ export default function ChatPage() {
         ? (data.content as { text?: string }[]).map(b => b.text || "").join("")
         : "";
       let reply: string = contentText || data.error || "Erreur de réponse.";
+
+      // Détection et génération des images [GENERATE_IMAGE:qualité:type|description]
+      const imageTagRegex = /\[GENERATE_IMAGE:(standard|high|premium):(cover|illustration|diagram|header)\|([^\]]+)\]/g;
+      const imageTags: { fullMatch: string; quality: string; type: string; description: string }[] = [];
+      let imgMatch;
+      while ((imgMatch = imageTagRegex.exec(reply)) !== null) {
+        imageTags.push({ fullMatch: imgMatch[0], quality: imgMatch[1], type: imgMatch[2], description: imgMatch[3] });
+      }
+      if (imageTags.length > 0) {
+        const imageResults = await Promise.all(
+          imageTags.map(async (img) => {
+            try {
+              const res = await fetch("/api/generate-image", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ quality: img.quality, type: img.type, description: img.description }),
+              });
+              if (!res.ok) return { fullMatch: img.fullMatch, url: null };
+              const json = await res.json();
+              return { fullMatch: img.fullMatch, url: json.url as string | null };
+            } catch {
+              return { fullMatch: img.fullMatch, url: null };
+            }
+          })
+        );
+        for (const result of imageResults) {
+          if (result.url) {
+            reply = reply.replace(result.fullMatch, `\n\n![image](${result.url})\n\n`);
+          } else {
+            reply = reply.replace(result.fullMatch, "");
+          }
+        }
+      }
+
       const pdfTagMatch = reply.match(/\[GENERATE_PDF:(ebook|formation|vente|blueprint)\]/);
       if (pdfTagMatch) {
         reply = reply.replace(/\[GENERATE_PDF:(ebook|formation|vente|blueprint)\]/, "").trim();
