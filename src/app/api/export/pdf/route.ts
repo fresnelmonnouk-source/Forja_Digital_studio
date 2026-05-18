@@ -41,7 +41,7 @@ async function fetchWithTimeout(url: string, opts: RequestInit, ms: number): Pro
 async function generatePollinations(prompt: string): Promise<string | null> {
   try {
     const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1200&height=675&nologo=true&model=flux`;
-    const res = await fetchWithTimeout(url, {}, 20_000);
+    const res = await fetchWithTimeout(url, {}, 8_000);
     if (!res.ok) return null;
     const buf = await res.arrayBuffer();
     return `data:image/jpeg;base64,${Buffer.from(buf).toString("base64")}`;
@@ -59,7 +59,7 @@ async function generateHF(prompt: string, model: string, params: Record<string, 
         headers: { Authorization: `Bearer ${hfKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({ inputs: prompt, parameters: params }),
       },
-      25_000
+      10_000
     );
     if (!res.ok) return null;
     const buf = await res.arrayBuffer();
@@ -79,7 +79,7 @@ async function generateDalle(prompt: string): Promise<string | null> {
         headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
         body: JSON.stringify({ model: "dall-e-3", prompt, n: 1, size: "1792x1024", response_format: "b64_json" }),
       },
-      30_000
+      12_000
     );
     if (!res.ok) return null;
     const data = await res.json();
@@ -100,11 +100,24 @@ async function generateByProvider(provider: string, prompt: string): Promise<str
 }
 
 async function generateImage(prompt: string, quality: ImageQuality = "standard"): Promise<string | null> {
-  for (const provider of PROVIDER_ORDER[quality]) {
-    const result = await generateByProvider(provider, prompt);
-    if (result) return result;
+  const providers = PROVIDER_ORDER[quality];
+  const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 12_000));
+  try {
+    const result = await Promise.race([
+      Promise.any(
+        providers.map((p) =>
+          generateByProvider(p, prompt).then((r) => {
+            if (!r) throw new Error("null");
+            return r;
+          })
+        )
+      ),
+      timeout,
+    ]);
+    return result;
+  } catch {
+    return null;
   }
-  return null;
 }
 
 // Remplace le premier [IMAGE:qualité:description] (les autres sont supprimés)
@@ -593,9 +606,9 @@ export async function POST(req: Request) {
         headless: true,
       });
       const page = await browser.newPage();
-      await page.setContent(htmlTemplate, { waitUntil: "load" });
+      await page.setContent(htmlTemplate, { waitUntil: "domcontentloaded" });
       // Attend que Mermaid.js finisse de rendre les diagrammes
-      await new Promise((r) => setTimeout(r, 1500));
+      await new Promise((r) => setTimeout(r, 1000));
       const pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
 
       return new NextResponse(Buffer.from(pdfBuffer), {
