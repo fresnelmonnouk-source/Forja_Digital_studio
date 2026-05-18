@@ -41,7 +41,7 @@ async function fetchWithTimeout(url: string, opts: RequestInit, ms: number): Pro
 async function generatePollinations(prompt: string): Promise<string | null> {
   try {
     const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1200&height=675&nologo=true&model=flux`;
-    const res = await fetchWithTimeout(url, {}, 8_000);
+    const res = await fetchWithTimeout(url, {}, 12_000);
     if (!res.ok) return null;
     const buf = await res.arrayBuffer();
     return `data:image/jpeg;base64,${Buffer.from(buf).toString("base64")}`;
@@ -144,10 +144,11 @@ async function processImageTags(md: string): Promise<string> {
 
   if (!description) return result;
 
+  // Si l'image a échoué, on n'insère rien — pas de placeholder avec le prompt brut
+  if (!imgData) return result;
+
   const h2Match = result.match(/^## .+$/m);
-  const figure = imgData
-    ? `\n\n<figure class="ai-figure"><img src="${imgData}" alt="${description}" /><figcaption>${description}</figcaption></figure>\n\n`
-    : `\n\n<div class="img-placeholder"><span>${description}</span></div>\n\n`;
+  const figure = `\n\n<figure class="ai-figure"><img src="${imgData}" alt="${description}" /><figcaption>${description}</figcaption></figure>\n\n`;
 
   result = h2Match
     ? result.replace(h2Match[0], h2Match[0] + figure)
@@ -383,7 +384,7 @@ export async function POST(req: Request) {
     const docTitle = escapeHtml(titleMatch ? titleMatch[1].trim() : (type as string).toUpperCase());
 
     const coverPage = includeCover
-      ? `<div style="page-break-after: always; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(297mm - 40mm); text-align: center; padding: 40px;">
+      ? `<div style="page-break-after: always; display: flex; flex-direction: column; align-items: center; justify-content: center; height: calc(297mm - 60mm); text-align: center; padding: 40px; box-sizing: border-box;">
           <div style="font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif; font-size: 42pt; font-weight: 700; color: #0A0804; line-height: 1.2; margin-bottom: 30px;">${docTitle}</div>
           <div style="background: #E8C547; height: 3px; width: 80px; margin: 0 auto 30px;"></div>
           <div style="font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 10pt; color: #5A4A28; text-transform: uppercase; letter-spacing: 4px;">${(type as string).toUpperCase()}</div>
@@ -476,6 +477,8 @@ export async function POST(req: Request) {
               border: 1px solid #e8e0d0;
               border-radius: 8px;
               overflow: hidden;
+              page-break-inside: avoid;
+              page-break-before: avoid;
             }
             .mermaid svg { max-width: 100%; height: auto; }
 
@@ -572,19 +575,6 @@ export async function POST(req: Request) {
               color: #8A7040;
               white-space: nowrap;
               padding-right: 6px;
-            }
-
-            .img-placeholder {
-              margin: 28px 0;
-              padding: 40px 20px;
-              background: linear-gradient(135deg, #faf7f0, #f0ebe0);
-              border: 2px dashed #c8b87a;
-              border-radius: 8px;
-              text-align: center;
-              color: #8A7040;
-              font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
-              font-style: italic;
-              font-size: 12pt;
             }
 
             .type-badge {
