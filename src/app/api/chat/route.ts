@@ -1,12 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { SYSTEM_PROMPT } from "@/lib/llm/prompts";
+import { callLLM, LLMMessage } from "@/lib/llm/client";
 import { rateLimit, getIp } from "@/lib/rate-limit";
-
-interface ChatMessage {
-  role: "user" | "assistant";
-  content: string;
-}
 
 export async function POST(req: Request) {
   if (!(await rateLimit(getIp(req), 20, 60_000))) {
@@ -19,12 +15,14 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const messages: unknown = body.messages;
+    const preferredProvider: string | undefined =
+      typeof body.provider === "string" ? body.provider : undefined;
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ error: "Messages invalides" }, { status: 400 });
     }
 
-    const validMessages: ChatMessage[] = messages.map((m) => {
+    const validMessages: LLMMessage[] = messages.map((m) => {
       if (typeof m?.role !== "string" || typeof m?.content !== "string") {
         throw new Error("Format de message invalide");
       }
@@ -34,38 +32,16 @@ export async function POST(req: Request) {
       if (m.content.length > 50_000) {
         throw new Error("Contenu de message trop long");
       }
-      return { role: m.role, content: m.content };
+      return { role: m.role as "user" | "assistant", content: m.content };
     });
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
+    if (!process.env.ANTHROPIC_API_KEY && !process.env.OPENAI_API_KEY && !process.env.DEEPSEEK_API_KEY) {
       return NextResponse.json({
-        content: [{ text: "Je suis en mode démo (Clé API Anthropic manquante). Configure la variable `ANTHROPIC_API_KEY` dans le `.env` pour que je puisse utiliser l'IA." }]
+        content: [{ text: "Je suis en mode démo (aucune clé API configurée). Ajoute `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` ou `DEEPSEEK_API_KEY` dans le `.env`." }],
       });
     }
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01"
-      },
-      body: JSON.stringify({
-        model: process.env.LLM_MODEL || "claude-3-5-sonnet-20241022",
-        max_tokens: 4096,
-        system: SYSTEM_PROMPT,
-        messages: validMessages
-      })
-    });
-
-    const data = await response.json();
-
-    if (data.error) {
-      console.error("Anthropic Error:", data.error);
-      return NextResponse.json({ error: data.error.message }, { status: 400 });
-    }
-
+    const data = await callLLM(validMessages, SYSTEM_PROMPT, preferredProvider);
     return NextResponse.json(data);
   } catch (error) {
     console.error("Chat API Error:", error);

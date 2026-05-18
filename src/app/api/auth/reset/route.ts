@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { sendPasswordChangedEmail } from "@/lib/email";
 
 export async function POST(req: Request) {
   try {
@@ -43,6 +44,8 @@ export async function POST(req: Request) {
         resetExpires: null,
       },
     });
+
+    sendPasswordChangedEmail(user.email, user.name).catch(console.error);
 
     return NextResponse.json({ success: true });
   } catch (error) {

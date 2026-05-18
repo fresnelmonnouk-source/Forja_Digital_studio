@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AuthShell from "@/components/ui/AuthShell";
@@ -36,21 +35,11 @@ export default function RegisterPage() {
         return;
       }
 
-      // 2. Connecter automatiquement
-      const signInResult = await signIn("credentials", {
-        email: form.email,
-        password: form.password,
-        redirect: false,
-      });
+      // 2. Stocker le mot de passe temporairement pour auto-login après OTP
+      sessionStorage.setItem("forja_reg_pwd", form.password);
 
-      if (signInResult?.error) {
-        setError("Compte créé mais connexion échouée. Connecte-toi manuellement.");
-        setLoading(false);
-        return;
-      }
-
-      // 3. Rediriger vers onboarding
-      router.push("/onboarding");
+      // 3. Rediriger vers la vérification OTP
+      router.push(`/verify?email=${encodeURIComponent(form.email)}`);
     } catch {
       setError("Erreur réseau. Réessaie.");
       setLoading(false);

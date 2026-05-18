@@ -102,6 +102,12 @@ export default function ChatPage() {
     content: buildWelcomeMessage(onboarding),
   };
 
+  const [selectedProvider, setSelectedProvider] = useState<string>(() => {
+    if (typeof window === "undefined") return "auto";
+    return localStorage.getItem("forja_llm_provider") || "auto";
+  });
+  const [activeProvider, setActiveProvider] = useState<string | null>(null);
+
   const [messages, setMessages] = useState<Message[]>([initialMessage]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -149,9 +155,10 @@ export default function ChatPage() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: newMessages })
+        body: JSON.stringify({ messages: newMessages, provider: selectedProvider })
       });
       const data = await response.json();
+      if (data.usedProvider) setActiveProvider(data.usedProvider);
       const contentText = Array.isArray(data.content)
         ? (data.content as { text?: string }[]).map(b => b.text || "").join("")
         : "";
@@ -305,6 +312,53 @@ export default function ChatPage() {
               <div style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.08em', marginTop: 1 }}>ÉTAPE {String(activeStep + 1).padStart(2, '0')} / {STEPS.length}</div>
             </div>
           </div>
+          {/* Provider selector */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+            {[
+              { id: "auto", label: "AUTO" },
+              { id: "anthropic", label: "CLAUDE" },
+              { id: "deepseek", label: "DEEP" },
+              { id: "openai", label: "GPT" },
+            ].map(({ id, label }) => {
+              const isSelected = selectedProvider === id;
+              const isFallback = isSelected && activeProvider && activeProvider !== id && id !== "auto";
+              return (
+                <button
+                  key={id}
+                  onClick={() => {
+                    setSelectedProvider(id);
+                    localStorage.setItem("forja_llm_provider", id);
+                  }}
+                  title={isFallback ? `Fallback actif → ${activeProvider}` : label}
+                  style={{
+                    background: isSelected ? 'rgba(238,90,36,0.12)' : 'transparent',
+                    color: isSelected ? FV.ember : FV.smoke,
+                    border: `1px solid ${isSelected ? 'rgba(238,90,36,0.35)' : FV.rule}`,
+                    borderRadius: 6,
+                    padding: '4px 8px',
+                    fontFamily: FV.mono,
+                    fontSize: 9,
+                    letterSpacing: '0.1em',
+                    cursor: 'pointer',
+                    fontWeight: isSelected ? 700 : 400,
+                    transition: 'all 0.2s',
+                    position: 'relative' as const,
+                  }}
+                >
+                  {label}
+                  {isFallback && (
+                    <span style={{ position: 'absolute', top: -3, right: -3, width: 6, height: 6, background: FV.amber, borderRadius: '50%' }} />
+                  )}
+                </button>
+              );
+            })}
+            {selectedProvider === "auto" && activeProvider && (
+              <span style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smokeDim, letterSpacing: '0.08em' }}>
+                → {activeProvider.toUpperCase()}
+              </span>
+            )}
+          </div>
+
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
             <button onClick={newConversation} title="Nouvelle session" style={{ width: 32, height: 32, background: 'rgba(241,233,218,0.04)', color: FV.ink2, border: `1px solid ${FV.ruleStrong}`, borderRadius: 7, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>↺</button>
             <button onClick={() => setShowExport(true)} style={{ background: FV.ember, color: FV.black, border: 'none', padding: '8px 14px', borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: 'pointer', letterSpacing: '0.04em', display: 'inline-flex', alignItems: 'center', gap: 6 }}>

@@ -11,6 +11,9 @@ model User {
   email         String         @unique
   name          String?
   password      String
+  emailVerified DateTime?
+  otpCode       String?
+  otpExpires    DateTime?
   resetToken    String?        @unique
   resetExpires  DateTime?
   createdAt     DateTime       @default(now())

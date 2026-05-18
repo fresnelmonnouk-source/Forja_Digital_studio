@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
-import { rateLimit, getIp } from "@/lib/rate-limit";
+import { sendOtpEmail } from "@/lib/email";
+
+function generateOtp(): string {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
 
 export async function POST(req: Request) {
-  // TEMPORAIRE : Désactivé pour les tests de production de validation du parcours complet
-  // if (!(await rateLimit(getIp(req), 5, 15 * 60_000))) {
-  //   return NextResponse.json({ error: "Trop de tentatives. Réessaie dans 15 minutes." }, { status: 429 });
-  // }
-
   try {
     const { name, email, password } = await req.json();
 
@@ -31,23 +30,32 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Format d'email invalide." }, { status: 400 });
     }
 
-    const existingUser = await prisma.user.findUnique({ where: { email } });
+    const cleanName = typeof name === "string" ? name.trim() || null : null;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const otp = generateOtp();
+    const otpExpires = new Date(Date.now() + 10 * 60_000);
 
-    if (existingUser) {
+    const existing = await prisma.user.findUnique({ where: { email } });
+
+    if (existing?.emailVerified) {
       return NextResponse.json({ error: "Cet email est déjà utilisé." }, { status: 400 });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    if (existing && !existing.emailVerified) {
+      // Compte non vérifié — on régénère le code et le mot de passe
+      await prisma.user.update({
+        where: { id: existing.id },
+        data: { name: cleanName ?? existing.name, password: hashedPassword, otpCode: otp, otpExpires },
+      });
+    } else {
+      await prisma.user.create({
+        data: { name: cleanName, email, password: hashedPassword, otpCode: otp, otpExpires },
+      });
+    }
 
-    const user = await prisma.user.create({
-      data: {
-        name: typeof name === "string" ? name.trim() : null,
-        email,
-        password: hashedPassword,
-      },
-    });
+    await sendOtpEmail(email, cleanName, otp);
 
-    return NextResponse.json({ success: true, user: { id: user.id, email: user.email, name: user.name } });
+    return NextResponse.json({ pending: true });
   } catch (error) {
     console.error("Erreur d'inscription:", error);
     return NextResponse.json({ error: "Une erreur est survenue lors de l'inscription." }, { status: 500 });
