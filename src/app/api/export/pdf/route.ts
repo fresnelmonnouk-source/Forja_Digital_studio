@@ -142,10 +142,13 @@ async function processImageTags(md: string): Promise<string> {
     imgData = await generateImage(description, "standard");
   }
 
-  if (!imgData || !description) return result;
+  if (!description) return result;
 
   const h2Match = result.match(/^## .+$/m);
-  const figure = `\n\n<figure class="ai-figure"><img src="${imgData}" alt="${description}" /><figcaption>${description}</figcaption></figure>\n\n`;
+  const figure = imgData
+    ? `\n\n<figure class="ai-figure"><img src="${imgData}" alt="${description}" /><figcaption>${description}</figcaption></figure>\n\n`
+    : `\n\n<div class="img-placeholder"><span>${description}</span></div>\n\n`;
+
   result = h2Match
     ? result.replace(h2Match[0], h2Match[0] + figure)
     : figure + result;
@@ -381,10 +384,10 @@ export async function POST(req: Request) {
 
     const coverPage = includeCover
       ? `<div style="page-break-after: always; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(297mm - 40mm); text-align: center; padding: 40px;">
-          <div style="font-family: 'Cormorant Garamond', serif; font-size: 42pt; font-weight: 700; color: #0A0804; line-height: 1.2; margin-bottom: 30px;">${docTitle}</div>
+          <div style="font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif; font-size: 42pt; font-weight: 700; color: #0A0804; line-height: 1.2; margin-bottom: 30px;">${docTitle}</div>
           <div style="background: #E8C547; height: 3px; width: 80px; margin: 0 auto 30px;"></div>
-          <div style="font-family: 'DM Sans', sans-serif; font-size: 10pt; color: #5A4A28; text-transform: uppercase; letter-spacing: 4px;">${(type as string).toUpperCase()}</div>
-          ${includeSignature ? `<div style="margin-top: 80px; font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 14pt; color: #A07820;">FORJA Digital Studio</div>` : ""}
+          <div style="font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 10pt; color: #5A4A28; text-transform: uppercase; letter-spacing: 4px;">${(type as string).toUpperCase()}</div>
+          ${includeSignature ? `<div style="margin-top: 80px; font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif; font-style: italic; font-size: 14pt; color: #A07820;">FORJA Digital Studio</div>` : ""}
         </div>`
       : "";
 
@@ -395,12 +398,10 @@ export async function POST(req: Request) {
           <meta charset="utf-8">
           <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
           <style>
-            @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-
             @page { margin: 0; size: A4; }
 
             body {
-              font-family: 'DM Sans', sans-serif;
+              font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
               color: #1a1a1a;
               background: #ffffff;
               line-height: 1.6;
@@ -413,7 +414,7 @@ export async function POST(req: Request) {
               border-bottom: 2px solid #E8C547;
               padding-bottom: 10px;
               margin-bottom: 30px;
-              font-family: 'Cormorant Garamond', serif;
+              font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
               color: #A07820;
               font-size: 14pt;
               font-weight: bold;
@@ -421,7 +422,7 @@ export async function POST(req: Request) {
               letter-spacing: 2px;
             }
 
-            h1, h2, h3 { font-family: 'Cormorant Garamond', serif; color: #0A0804; font-weight: 700; }
+            h1, h2, h3 { font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif; color: #0A0804; font-weight: 700; }
             h1 { font-size: 24pt; border-bottom: 3px solid #E8C547; padding-bottom: 5px; margin-bottom: 20px; }
             h2 { font-size: 18pt; margin-top: 36px; margin-bottom: 15px; color: #8A7040; }
             h3 { font-size: 14pt; font-style: italic; color: #5A4A28; margin-top: 20px; }
@@ -438,7 +439,7 @@ export async function POST(req: Request) {
             th {
               background: #0A0804;
               color: #E8C547;
-              font-family: 'DM Sans', sans-serif;
+              font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
               font-weight: 700;
               text-transform: uppercase;
               letter-spacing: 0.08em;
@@ -460,7 +461,7 @@ export async function POST(req: Request) {
               background: #fdf9ee;
               border-left: 4px solid #E8C547;
               border-radius: 0 8px 8px 0;
-              font-family: 'Cormorant Garamond', serif;
+              font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
               font-size: 13pt;
               color: #5A4A28;
             }
@@ -493,12 +494,12 @@ export async function POST(req: Request) {
               margin-top: 8px;
               font-size: 9pt;
               color: #8A7040;
-              font-family: 'Cormorant Garamond', serif;
+              font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
               font-style: italic;
             }
 
             code {
-              font-family: 'JetBrains Mono', monospace;
+              font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
               background: #f5f5f5;
               padding: 2px 5px;
               border-radius: 3px;
@@ -510,7 +511,7 @@ export async function POST(req: Request) {
               color: #7EC8A0;
               padding: 15px;
               border-radius: 5px;
-              font-family: 'JetBrains Mono', monospace;
+              font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
               font-size: 0.85em;
               line-height: 1.5;
               margin-bottom: 15px;
@@ -531,7 +532,7 @@ export async function POST(req: Request) {
               page-break-inside: avoid;
             }
             .chart-title {
-              font-family: 'Cormorant Garamond', serif;
+              font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
               font-size: 13pt;
               font-weight: 700;
               color: #0A0804;
@@ -566,11 +567,24 @@ export async function POST(req: Request) {
               min-width: 4px;
             }
             .chart-value {
-              font-family: 'JetBrains Mono', monospace;
+              font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
               font-size: 8.5pt;
               color: #8A7040;
               white-space: nowrap;
               padding-right: 6px;
+            }
+
+            .img-placeholder {
+              margin: 28px 0;
+              padding: 40px 20px;
+              background: linear-gradient(135deg, #faf7f0, #f0ebe0);
+              border: 2px dashed #c8b87a;
+              border-radius: 8px;
+              text-align: center;
+              color: #8A7040;
+              font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+              font-style: italic;
+              font-size: 12pt;
             }
 
             .type-badge {
@@ -588,7 +602,7 @@ export async function POST(req: Request) {
         </head>
         <body>
           <script>
-            mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });
+            mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose', suppressErrors: true });
           </script>
           ${coverPage}
           <div class="header">FORJA Digital Studio</div>
