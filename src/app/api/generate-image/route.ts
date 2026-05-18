@@ -4,9 +4,9 @@ import { auth } from "@/auth";
 type ImageQuality = "standard" | "high" | "premium";
 
 const PROVIDER_ORDER: Record<ImageQuality, string[]> = {
-  standard: ["fal-flux-schnell", "pollinations"],
-  high:     ["fal-flux-dev", "fal-flux-schnell", "pollinations"],
-  premium:  ["dalle2", "fal-flux-dev", "fal-flux-schnell", "pollinations"],
+  standard: ["pollinations"],
+  high:     ["pollinations"],
+  premium:  ["dalle2", "pollinations"],
 };
 
 const STYLE_PREFIXES: Record<string, string> = {
@@ -34,31 +34,6 @@ async function fetchWithTimeout(url: string, opts: RequestInit, ms: number): Pro
   } finally {
     clearTimeout(timer);
   }
-}
-
-async function generateFal(prompt: string, model: string, params: Record<string, unknown>): Promise<string | null> {
-  const falKey = process.env.FAL_KEY;
-  if (!falKey) return null;
-  try {
-    const res = await fetchWithTimeout(
-      `https://fal.run/${model}`,
-      {
-        method: "POST",
-        headers: { Authorization: `Key ${falKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, ...params }),
-      },
-      20_000
-    );
-    if (!res.ok) return null;
-    const data = await res.json();
-    const imageUrl = data?.images?.[0]?.url;
-    if (!imageUrl) return null;
-    const imgRes = await fetchWithTimeout(imageUrl, {}, 10_000);
-    if (!imgRes.ok) return null;
-    const buf = await imgRes.arrayBuffer();
-    const ct = imgRes.headers.get("content-type") || "image/jpeg";
-    return `data:${ct};base64,${Buffer.from(buf).toString("base64")}`;
-  } catch { return null; }
 }
 
 async function generatePollinations(prompt: string): Promise<string | null> {
@@ -101,11 +76,9 @@ async function generateDalle2(prompt: string): Promise<string | null> {
 
 async function generateByProvider(provider: string, prompt: string): Promise<string | null> {
   switch (provider) {
-    case "fal-flux-schnell": return generateFal(prompt, "fal-ai/flux/schnell", { image_size: "landscape_4_3", num_inference_steps: 4, num_images: 1 });
-    case "fal-flux-dev":     return generateFal(prompt, "fal-ai/flux/dev", { image_size: "landscape_4_3", num_inference_steps: 28, guidance_scale: 3.5, num_images: 1 });
-    case "dalle2":           return generateDalle2(prompt);
-    case "pollinations":     return generatePollinations(prompt);
-    default:                 return null;
+    case "dalle2":       return generateDalle2(prompt);
+    case "pollinations": return generatePollinations(prompt);
+    default:             return null;
   }
 }
 

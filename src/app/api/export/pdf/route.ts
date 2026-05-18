@@ -11,19 +11,19 @@ export const maxDuration = 60;
 const ALLOWED_TYPES = ["ebook", "formation", "vente", "blueprint"] as const;
 type DocType = (typeof ALLOWED_TYPES)[number];
 
-// ── Système de génération d'images (fal.ai + DALL-E 2 + Pollinations) ────────
+// ── Système de génération d'images (Pollinations gratuit + DALL-E 2 premium) ──
 //
 // Niveaux :
-//   standard → fal FLUX.1-schnell → Pollinations
-//   high     → fal FLUX.1-dev → fal FLUX.1-schnell → DALL-E 2 → Pollinations
-//   premium  → DALL-E 2 → fal FLUX.1-dev → fal FLUX.1-schnell → Pollinations
+//   standard → Pollinations (FLUX.1-schnell, gratuit)
+//   high     → Pollinations (FLUX.1-schnell, gratuit)
+//   premium  → DALL-E 2 → Pollinations (fallback)
 
 type ImageQuality = "standard" | "high" | "premium";
 
 const PROVIDER_ORDER: Record<ImageQuality, string[]> = {
-  standard: ["fal-flux-schnell", "pollinations"],
-  high:     ["fal-flux-dev", "fal-flux-schnell", "dalle", "pollinations"],
-  premium:  ["dalle", "fal-flux-dev", "fal-flux-schnell", "pollinations"],
+  standard: ["pollinations"],
+  high:     ["pollinations"],
+  premium:  ["dalle", "pollinations"],
 };
 
 async function fetchWithTimeout(url: string, opts: RequestInit, ms: number): Promise<Response> {
@@ -33,37 +33,6 @@ async function fetchWithTimeout(url: string, opts: RequestInit, ms: number): Pro
     return await fetch(url, { ...opts, signal: controller.signal });
   } finally {
     clearTimeout(timer);
-  }
-}
-
-async function generateFal(prompt: string, model: string, params: Record<string, unknown>): Promise<string | null> {
-  const falKey = process.env.FAL_KEY;
-  if (!falKey) return null;
-  try {
-    const res = await fetchWithTimeout(
-      `https://fal.run/${model}`,
-      {
-        method: "POST",
-        headers: { Authorization: `Key ${falKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, ...params }),
-      },
-      20_000
-    );
-    if (!res.ok) {
-      console.log(`[IMAGE] fal.ai error ${res.status} on ${model}`);
-      return null;
-    }
-    const data = await res.json();
-    const imageUrl = data?.images?.[0]?.url;
-    if (!imageUrl) return null;
-    const imgRes = await fetchWithTimeout(imageUrl, {}, 10_000);
-    if (!imgRes.ok) return null;
-    const buf = await imgRes.arrayBuffer();
-    const ct = imgRes.headers.get("content-type") || "image/jpeg";
-    return `data:${ct};base64,${Buffer.from(buf).toString("base64")}`;
-  } catch (e) {
-    console.log(`[IMAGE] fal.ai exception on ${model}:`, e);
-    return null;
   }
 }
 
@@ -108,11 +77,9 @@ async function generatePollinations(prompt: string): Promise<string | null> {
 
 async function generateByProvider(provider: string, prompt: string): Promise<string | null> {
   switch (provider) {
-    case "fal-flux-schnell": return generateFal(prompt, "fal-ai/flux/schnell", { image_size: "landscape_4_3", num_inference_steps: 4, num_images: 1 });
-    case "fal-flux-dev":     return generateFal(prompt, "fal-ai/flux/dev", { image_size: "landscape_4_3", num_inference_steps: 28, guidance_scale: 3.5, num_images: 1 });
-    case "dalle":            return generateDalle(prompt);
-    case "pollinations":     return generatePollinations(prompt);
-    default:                 return null;
+    case "dalle":        return generateDalle(prompt);
+    case "pollinations": return generatePollinations(prompt);
+    default:             return null;
   }
 }
 
