@@ -147,26 +147,35 @@ async function planAndGenerateImages(markdown: string, docType: DocType): Promis
     ];
     const plannerResult = await callLLM(plannerMessages, IMAGE_PLANNER_PROMPT);
     const plannerText = plannerResult.content.map((b) => b.text).join("").trim();
+    console.log("[IMAGE] Planner raw response:", plannerText.slice(0, 300));
     const jsonMatch = plannerText.match(/\[[\s\S]*\]/);
     if (jsonMatch) plan = JSON.parse(jsonMatch[0]);
-  } catch {
+    console.log("[IMAGE] Plan parsed:", JSON.stringify(plan));
+  } catch (e) {
+    console.log("[IMAGE] Planner error:", e);
     return markdown;
   }
 
-  if (!Array.isArray(plan) || plan.length === 0) return markdown;
+  if (!Array.isArray(plan) || plan.length === 0) {
+    console.log("[IMAGE] Plan vide ou invalide, pas d'images insérées");
+    return markdown;
+  }
 
   // Extraire les titres ## du markdown dans l'ordre
   const headings = Array.from(markdown.matchAll(/^(## .+)$/gm)).map((m) => m[1]);
+  console.log("[IMAGE] Headings trouvés:", headings);
 
   // Passe 3 : générer les images en parallèle
   const results = await Promise.all(
     plan.slice(0, 2).map(async (item) => {
       const heading = headings[item.section_index] ?? null;
+      console.log(`[IMAGE] Génération image pour section_index=${item.section_index} heading="${heading}" quality=${item.quality}`);
       if (!heading) return null;
       const quality: ImageQuality = ["standard", "high", "premium"].includes(item.quality)
         ? (item.quality as ImageQuality)
         : "standard";
       const imgData = await generateImage(item.description, quality);
+      console.log(`[IMAGE] Résultat génération: ${imgData ? "succès ("+imgData.slice(0,30)+"...)" : "échec"}`);
       return imgData ? { heading, imgData, description: item.description } : null;
     })
   );
