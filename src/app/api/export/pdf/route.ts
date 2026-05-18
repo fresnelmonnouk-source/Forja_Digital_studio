@@ -11,21 +11,19 @@ export const maxDuration = 60;
 const ALLOWED_TYPES = ["ebook", "formation", "vente", "blueprint"] as const;
 type DocType = (typeof ALLOWED_TYPES)[number];
 
-// ── Système de génération d'images HuggingFace (payant) ──────────────────────
+// ── Système de génération d'images (fal.ai + DALL-E 2 + Pollinations) ────────
 //
 // Niveaux :
-//   standard → FLUX.1-schnell → SD 3.5 Large Turbo
-//   high     → FLUX.1-dev → SD 3.5 Large Turbo → FLUX.1-schnell
-//   premium  → DALL-E 3 → FLUX.1-dev → SD 3.5 Large Turbo
-//
-// Tous les modèles HF passent par api-inference.huggingface.co (clé payante)
+//   standard → fal FLUX.1-schnell → Pollinations
+//   high     → fal FLUX.1-dev → fal FLUX.1-schnell → DALL-E 2 → Pollinations
+//   premium  → DALL-E 2 → fal FLUX.1-dev → fal FLUX.1-schnell → Pollinations
 
 type ImageQuality = "standard" | "high" | "premium";
 
 const PROVIDER_ORDER: Record<ImageQuality, string[]> = {
-  standard: ["hf-flux-schnell", "hf-sd35-turbo", "pollinations"],
-  high:     ["hf-flux-dev", "hf-sd35-turbo", "hf-flux-schnell", "dalle", "pollinations"],
-  premium:  ["dalle", "hf-flux-dev", "hf-sd35-turbo", "pollinations"],
+  standard: ["fal-flux-schnell", "pollinations"],
+  high:     ["fal-flux-dev", "fal-flux-schnell", "dalle", "pollinations"],
+  premium:  ["dalle", "fal-flux-dev", "fal-flux-schnell", "pollinations"],
 };
 
 async function fetchWithTimeout(url: string, opts: RequestInit, ms: number): Promise<Response> {
@@ -38,24 +36,35 @@ async function fetchWithTimeout(url: string, opts: RequestInit, ms: number): Pro
   }
 }
 
-async function generateHF(prompt: string, model: string, params: Record<string, unknown>): Promise<string | null> {
-  const hfKey = process.env.HUGGINGFACE_API_KEY;
-  if (!hfKey) return null;
+async function generateFal(prompt: string, model: string, params: Record<string, unknown>): Promise<string | null> {
+  const falKey = process.env.FAL_KEY;
+  if (!falKey) return null;
   try {
     const res = await fetchWithTimeout(
-      `https://api-inference.huggingface.co/models/${model}`,
+      `https://fal.run/${model}`,
       {
         method: "POST",
-        headers: { Authorization: `Bearer ${hfKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ inputs: prompt, parameters: params }),
+        headers: { Authorization: `Key ${falKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, ...params }),
       },
-      15_000
+      20_000
     );
-    if (!res.ok) return null;
-    const buf = await res.arrayBuffer();
-    const ct = res.headers.get("content-type") || "image/jpeg";
+    if (!res.ok) {
+      console.log(`[IMAGE] fal.ai error ${res.status} on ${model}`);
+      return null;
+    }
+    const data = await res.json();
+    const imageUrl = data?.images?.[0]?.url;
+    if (!imageUrl) return null;
+    const imgRes = await fetchWithTimeout(imageUrl, {}, 10_000);
+    if (!imgRes.ok) return null;
+    const buf = await imgRes.arrayBuffer();
+    const ct = imgRes.headers.get("content-type") || "image/jpeg";
     return `data:${ct};base64,${Buffer.from(buf).toString("base64")}`;
-  } catch { return null; }
+  } catch (e) {
+    console.log(`[IMAGE] fal.ai exception on ${model}:`, e);
+    return null;
+  }
 }
 
 async function generateDalle(prompt: string): Promise<string | null> {
@@ -99,12 +108,11 @@ async function generatePollinations(prompt: string): Promise<string | null> {
 
 async function generateByProvider(provider: string, prompt: string): Promise<string | null> {
   switch (provider) {
-    case "hf-flux-schnell": return generateHF(prompt, "black-forest-labs/FLUX.1-schnell", { num_inference_steps: 4 });
-    case "hf-flux-dev":     return generateHF(prompt, "black-forest-labs/FLUX.1-dev", { num_inference_steps: 20, guidance_scale: 3.5 });
-    case "hf-sd35-turbo":   return generateHF(prompt, "stabilityai/stable-diffusion-3.5-large-turbo", { num_inference_steps: 4 });
-    case "dalle":           return generateDalle(prompt);
-    case "pollinations":    return generatePollinations(prompt);
-    default:                return null;
+    case "fal-flux-schnell": return generateFal(prompt, "fal-ai/flux/schnell", { image_size: "landscape_4_3", num_inference_steps: 4, num_images: 1 });
+    case "fal-flux-dev":     return generateFal(prompt, "fal-ai/flux/dev", { image_size: "landscape_4_3", num_inference_steps: 28, guidance_scale: 3.5, num_images: 1 });
+    case "dalle":            return generateDalle(prompt);
+    case "pollinations":     return generatePollinations(prompt);
+    default:                 return null;
   }
 }
 
