@@ -30,7 +30,7 @@ export async function POST(req: Request) {
         if (m.role !== "user" && m.role !== "assistant") {
           throw new Error("Rôle de message invalide");
         }
-        if (m.content.length > 50_000) {
+        if (m.content.length > 200_000) {
           throw new Error("Contenu de message trop long");
         }
         return { role: m.role as "user" | "assistant", content: m.content };
@@ -40,7 +40,8 @@ export async function POST(req: Request) {
         // Drop leading assistant messages
         const firstUserIdx = arr.findIndex((m) => m.role === "user");
         return i >= firstUserIdx;
-      });
+      })
+      .slice(-20); // Keep only last 20 messages to manage context window
 
     if (!process.env.ANTHROPIC_API_KEY && !process.env.OPENAI_API_KEY && !process.env.DEEPSEEK_API_KEY) {
       return NextResponse.json({

@@ -349,6 +349,30 @@ ${VISUAL_INSTRUCTIONS}
 Réponds UNIQUEMENT avec le Markdown, sans commentaire.`,
 };
 
+// Keeps the most-recent messages that fit within charBudget, always including
+// the first message so the LLM retains the original goal/context.
+function truncateToCharBudget(messages: LLMMessage[], charBudget: number): LLMMessage[] {
+  let total = messages.reduce((sum, m) => sum + m.content.length, 0);
+  if (total <= charBudget) return messages;
+
+  // Always keep the first message for initial context
+  const first = messages[0];
+  const rest = messages.slice(1);
+  let budget = charBudget - first.content.length;
+
+  // Walk backwards through the remaining messages, keeping as many as fit
+  const kept: LLMMessage[] = [];
+  for (let i = rest.length - 1; i >= 0; i--) {
+    const len = rest[i].content.length;
+    if (budget - len < 0) break;
+    kept.unshift(rest[i]);
+    budget -= len;
+  }
+
+  console.log(`[PDF] Conversation tronquée : ${messages.length} → ${1 + kept.length} messages (budget ${charBudget} chars)`);
+  return [first, ...kept];
+}
+
 // ── Route handler ──────────────────────────────────────────────────────────────
 
 export async function POST(req: Request) {
@@ -374,12 +398,16 @@ export async function POST(req: Request) {
       : [true, true, false];
 
     // Passe 1 : LLM génère le document en Markdown (texte uniquement)
-    const llmMessages: LLMMessage[] = conversation
+    const allMessages: LLMMessage[] = conversation
       .filter((m: { role: string; content: string }) => m.role === "user" || m.role === "assistant")
       .map((m: { role: string; content: string }) => ({
         role: m.role as "user" | "assistant",
         content: m.content,
       }));
+
+    // ~4 chars/token; reserve 12K tokens for system prompt + completion
+    const CHAR_BUDGET = (1_048_576 - 12_000) * 4;
+    const llmMessages = truncateToCharBudget(allMessages, CHAR_BUDGET);
 
     const llmResult = await callLLM(llmMessages, DOC_PROMPTS[type as DocType]);
     let markdown = llmResult.content.map((b) => b.text).join("");
