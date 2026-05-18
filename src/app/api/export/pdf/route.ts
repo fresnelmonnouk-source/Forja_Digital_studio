@@ -23,9 +23,9 @@ type DocType = (typeof ALLOWED_TYPES)[number];
 type ImageQuality = "standard" | "high" | "premium";
 
 const PROVIDER_ORDER: Record<ImageQuality, string[]> = {
-  standard: ["hf-flux-schnell", "hf-sd35-turbo"],
-  high:     ["hf-flux-dev", "hf-sd35-turbo", "hf-flux-schnell"],
-  premium:  ["dalle", "hf-flux-dev", "hf-sd35-turbo"],
+  standard: ["dalle"],
+  high:     ["dalle"],
+  premium:  ["dalle"],
 };
 
 async function fetchWithTimeout(url: string, opts: RequestInit, ms: number): Promise<Response> {
@@ -60,6 +60,7 @@ async function generateHF(prompt: string, model: string, params: Record<string, 
 
 async function generateDalle(prompt: string): Promise<string | null> {
   const key = process.env.DALLE_API_KEY;
+  console.log(`[DALLE] Appel — clé présente: ${!!key}, prompt: ${prompt.substring(0, 60)}...`);
   if (!key) return null;
   try {
     const res = await fetchWithTimeout(
@@ -125,10 +126,16 @@ async function processImageTags(md: string): Promise<string> {
   if (qualityMatches.length > 0) {
     const [, quality, desc] = qualityMatches[0];
     description = desc.trim();
+    console.log(`[IMAGE] Tag détecté — qualité: ${quality}, description: ${description}`);
     imgData = await generateImage(description, quality as ImageQuality);
+    console.log(`[IMAGE] Résultat: ${imgData ? "image générée ✓" : "échec ✗"}`);
   } else if (simpleMatches.length > 0) {
     description = simpleMatches[0][1].trim();
+    console.log(`[IMAGE] Tag simple détecté — description: ${description}`);
     imgData = await generateImage(description, "standard");
+    console.log(`[IMAGE] Résultat: ${imgData ? "image générée ✓" : "échec ✗"}`);
+  } else {
+    console.log("[IMAGE] Aucun tag [IMAGE:...] trouvé dans le markdown généré");
   }
 
   if (!description) return result;
