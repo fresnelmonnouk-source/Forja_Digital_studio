@@ -23,9 +23,9 @@ type DocType = (typeof ALLOWED_TYPES)[number];
 type ImageQuality = "standard" | "high" | "premium";
 
 const PROVIDER_ORDER: Record<ImageQuality, string[]> = {
-  standard: ["hf-flux-schnell", "hf-sd35-turbo"],
-  high:     ["hf-flux-dev", "hf-sd35-turbo", "hf-flux-schnell"],
-  premium:  ["dalle", "hf-flux-dev", "hf-sd35-turbo"],
+  standard: ["hf-flux-schnell", "hf-sd35-turbo", "pollinations"],
+  high:     ["hf-flux-dev", "hf-sd35-turbo", "hf-flux-schnell", "dalle", "pollinations"],
+  premium:  ["dalle", "hf-flux-dev", "hf-sd35-turbo", "pollinations"],
 };
 
 async function fetchWithTimeout(url: string, opts: RequestInit, ms: number): Promise<Response> {
@@ -59,7 +59,7 @@ async function generateHF(prompt: string, model: string, params: Record<string, 
 }
 
 async function generateDalle(prompt: string): Promise<string | null> {
-  const key = process.env.DALLE_API_KEY;
+  const key = process.env.OPENAI_API_KEY;
   if (!key) return null;
   try {
     const res = await fetchWithTimeout(
@@ -67,14 +67,33 @@ async function generateDalle(prompt: string): Promise<string | null> {
       {
         method: "POST",
         headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "dall-e-3", prompt, n: 1, size: "1792x1024", response_format: "b64_json" }),
+        body: JSON.stringify({ model: "dall-e-2", prompt: prompt.slice(0, 1000), n: 1, size: "1024x1024", response_format: "b64_json" }),
       },
       12_000
     );
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "");
+      console.log(`[IMAGE] DALL-E 2 error ${res.status}: ${errText.slice(0, 200)}`);
+      return null;
+    }
     const data = await res.json();
     const b64 = data?.data?.[0]?.b64_json;
     return b64 ? `data:image/png;base64,${b64}` : null;
+  } catch (e) {
+    console.log("[IMAGE] DALL-E 2 exception:", e);
+    return null;
+  }
+}
+
+async function generatePollinations(prompt: string): Promise<string | null> {
+  try {
+    const encoded = encodeURIComponent(prompt.slice(0, 500));
+    const url = `https://image.pollinations.ai/prompt/${encoded}?width=768&height=512&model=flux-schnell&nologo=true&seed=${Date.now() % 10000}`;
+    const res = await fetchWithTimeout(url, { method: "GET" }, 18_000);
+    if (!res.ok) return null;
+    const buf = await res.arrayBuffer();
+    const ct = res.headers.get("content-type") || "image/jpeg";
+    return `data:${ct};base64,${Buffer.from(buf).toString("base64")}`;
   } catch { return null; }
 }
 
@@ -84,6 +103,7 @@ async function generateByProvider(provider: string, prompt: string): Promise<str
     case "hf-flux-dev":     return generateHF(prompt, "black-forest-labs/FLUX.1-dev", { num_inference_steps: 20, guidance_scale: 3.5 });
     case "hf-sd35-turbo":   return generateHF(prompt, "stabilityai/stable-diffusion-3.5-large-turbo", { num_inference_steps: 4 });
     case "dalle":           return generateDalle(prompt);
+    case "pollinations":    return generatePollinations(prompt);
     default:                return null;
   }
 }
@@ -168,8 +188,10 @@ async function planAndGenerateImages(markdown: string, docType: DocType): Promis
   // Passe 3 : générer les images en parallèle
   const results = await Promise.all(
     plan.slice(0, 2).map(async (item) => {
-      const heading = headings[item.section_index] ?? null;
-      console.log(`[IMAGE] Génération image pour section_index=${item.section_index} heading="${heading}" quality=${item.quality}`);
+      // Clamp section_index pour éviter les index hors limite
+      const clampedIndex = Math.min(item.section_index, headings.length - 1);
+      const heading = headings[clampedIndex] ?? null;
+      console.log(`[IMAGE] Génération image pour section_index=${item.section_index}→${clampedIndex} heading="${heading}" quality=${item.quality}`);
       if (!heading) return null;
       const quality: ImageQuality = ["standard", "high", "premium"].includes(item.quality)
         ? (item.quality as ImageQuality)
