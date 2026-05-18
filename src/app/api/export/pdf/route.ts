@@ -11,11 +11,11 @@ export const maxDuration = 60;
 const ALLOWED_TYPES = ["ebook", "formation", "vente", "blueprint"] as const;
 type DocType = (typeof ALLOWED_TYPES)[number];
 
-// ── HuggingFace image generation ──────────────────────────────────────────────
+// ── Image generation (HuggingFace → DALL-E fallback) ─────────────────────────
 
 async function generateHFImage(prompt: string): Promise<string | null> {
   const hfKey = process.env.HUGGINGFACE_API_KEY;
-  if (!hfKey) return null;
+  if (!hfKey || hfKey === "hf_...") return null;
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 20_000);
@@ -38,6 +38,32 @@ async function generateHFImage(prompt: string): Promise<string | null> {
   }
 }
 
+async function generateDalleImage(prompt: string): Promise<string | null> {
+  const dalleKey = process.env.DALLE_API_KEY;
+  if (!dalleKey || dalleKey === "sk-...") return null;
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 25_000);
+    const res = await fetch("https://api.openai.com/v1/images/generations", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${dalleKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "dall-e-3", prompt, n: 1, size: "1792x1024", response_format: "b64_json" }),
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const b64 = data?.data?.[0]?.b64_json;
+    return b64 ? `data:image/png;base64,${b64}` : null;
+  } catch {
+    return null;
+  }
+}
+
+async function generateImage(prompt: string): Promise<string | null> {
+  return (await generateHFImage(prompt)) ?? (await generateDalleImage(prompt));
+}
+
 // Remplace le premier [IMAGE: ...] par une vraie image (les autres sont supprimés)
 async function processImageTags(md: string): Promise<string> {
   const regex = /\[IMAGE:\s*([^\]]+)\]/g;
@@ -46,7 +72,7 @@ async function processImageTags(md: string): Promise<string> {
   if (matches.length === 0) return result;
 
   const description = matches[0][1].trim();
-  const imgData = await generateHFImage(description);
+  const imgData = await generateImage(description);
   if (!imgData) return result;
 
   const h2Match = result.match(/^## .+$/m);
