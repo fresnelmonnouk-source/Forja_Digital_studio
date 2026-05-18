@@ -156,13 +156,17 @@ async function planAndGenerateImages(markdown: string, docType: DocType): Promis
     return markdown;
   }
 
+  console.log(`[IMAGE] Plan reçu: ${plan.length} images proposées`);
+
   // Extraire les titres ## du markdown dans l'ordre
   const headings = Array.from(markdown.matchAll(/^(## .+)$/gm)).map((m) => m[1]);
-  console.log("[IMAGE] Headings trouvés:", headings);
+  console.log("[IMAGE] Headings trouvés:", headings.length, "→", headings.slice(0, 5).map(h => h.slice(0, 40)));
 
-  // Passe 3 : générer les images en parallèle
+  // Passe 3 : générer les images en parallèle (max 5 images)
+  const imagesToGenerate = plan.slice(0, 5);
+  console.log(`[IMAGE] Génération de ${imagesToGenerate.length} images (limite: 5)...`);
   const results = await Promise.all(
-    plan.slice(0, 2).map(async (item) => {
+    imagesToGenerate.map(async (item) => {
       // Clamp section_index pour éviter les index hors limite
       const clampedIndex = Math.min(item.section_index, headings.length - 1);
       const heading = headings[clampedIndex] ?? null;
