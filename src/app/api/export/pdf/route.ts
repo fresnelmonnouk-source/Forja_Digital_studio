@@ -11,21 +11,21 @@ export const maxDuration = 60;
 const ALLOWED_TYPES = ["ebook", "formation", "vente", "blueprint"] as const;
 type DocType = (typeof ALLOWED_TYPES)[number];
 
-// ── Système de génération d'images multi-providers avec niveaux de qualité ────
+// ── Système de génération d'images HuggingFace (payant) ──────────────────────
 //
 // Niveaux :
-//   standard → Pollinations → HF FLUX.1-schnell → HF SDXL      (tout gratuit)
-//   high     → HF SD3-Medium → HF FLUX.1-schnell → HF SDXL     (gratuit HF)
-//   premium  → DALL-E 3 → HF SD3-Medium → HF FLUX.1-schnell    (payant en tête)
+//   standard → FLUX.1-schnell → SD 3.5 Large Turbo
+//   high     → FLUX.1-dev → SD 3.5 Large Turbo → FLUX.1-schnell
+//   premium  → DALL-E 3 → FLUX.1-dev → SD 3.5 Large Turbo
 //
-// FORJA choisit le niveau dans le tag [IMAGE:niveau:description]
+// Tous les modèles HF passent par api-inference.huggingface.co (clé payante)
 
 type ImageQuality = "standard" | "high" | "premium";
 
 const PROVIDER_ORDER: Record<ImageQuality, string[]> = {
-  standard: ["pollinations", "hf-flux-schnell", "hf-sdxl"],
-  high:     ["hf-sd3", "hf-flux-schnell", "hf-sdxl", "dalle"],
-  premium:  ["dalle", "hf-sd3", "hf-flux-schnell"],
+  standard: ["hf-flux-schnell", "hf-sd35-turbo"],
+  high:     ["hf-flux-dev", "hf-sd35-turbo", "hf-flux-schnell"],
+  premium:  ["dalle", "hf-flux-dev", "hf-sd35-turbo"],
 };
 
 async function fetchWithTimeout(url: string, opts: RequestInit, ms: number): Promise<Response> {
@@ -38,19 +38,9 @@ async function fetchWithTimeout(url: string, opts: RequestInit, ms: number): Pro
   }
 }
 
-async function generatePollinations(prompt: string): Promise<string | null> {
-  try {
-    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1200&height=675&nologo=true&model=flux`;
-    const res = await fetchWithTimeout(url, {}, 12_000);
-    if (!res.ok) return null;
-    const buf = await res.arrayBuffer();
-    return `data:image/jpeg;base64,${Buffer.from(buf).toString("base64")}`;
-  } catch { return null; }
-}
-
 async function generateHF(prompt: string, model: string, params: Record<string, unknown>): Promise<string | null> {
   const hfKey = process.env.HUGGINGFACE_API_KEY;
-  if (!hfKey || hfKey === "hf_...") return null;
+  if (!hfKey) return null;
   try {
     const res = await fetchWithTimeout(
       `https://api-inference.huggingface.co/models/${model}`,
@@ -59,7 +49,7 @@ async function generateHF(prompt: string, model: string, params: Record<string, 
         headers: { Authorization: `Bearer ${hfKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({ inputs: prompt, parameters: params }),
       },
-      10_000
+      15_000
     );
     if (!res.ok) return null;
     const buf = await res.arrayBuffer();
@@ -70,7 +60,7 @@ async function generateHF(prompt: string, model: string, params: Record<string, 
 
 async function generateDalle(prompt: string): Promise<string | null> {
   const key = process.env.DALLE_API_KEY;
-  if (!key || key === "sk-...") return null;
+  if (!key) return null;
   try {
     const res = await fetchWithTimeout(
       "https://api.openai.com/v1/images/generations",
@@ -90,18 +80,17 @@ async function generateDalle(prompt: string): Promise<string | null> {
 
 async function generateByProvider(provider: string, prompt: string): Promise<string | null> {
   switch (provider) {
-    case "pollinations":    return generatePollinations(prompt);
     case "hf-flux-schnell": return generateHF(prompt, "black-forest-labs/FLUX.1-schnell", { num_inference_steps: 4 });
-    case "hf-sdxl":        return generateHF(prompt, "stabilityai/stable-diffusion-xl-base-1.0", {});
-    case "hf-sd3":         return generateHF(prompt, "stabilityai/stable-diffusion-3-medium-diffusers", {});
-    case "dalle":          return generateDalle(prompt);
-    default:               return null;
+    case "hf-flux-dev":     return generateHF(prompt, "black-forest-labs/FLUX.1-dev", { num_inference_steps: 20, guidance_scale: 3.5 });
+    case "hf-sd35-turbo":   return generateHF(prompt, "stabilityai/stable-diffusion-3.5-large-turbo", { num_inference_steps: 4 });
+    case "dalle":           return generateDalle(prompt);
+    default:                return null;
   }
 }
 
 async function generateImage(prompt: string, quality: ImageQuality = "standard"): Promise<string | null> {
   const providers = PROVIDER_ORDER[quality];
-  const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 12_000));
+  const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 18_000));
   try {
     const result = await Promise.race([
       Promise.any(
