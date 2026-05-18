@@ -23,9 +23,9 @@ type DocType = (typeof ALLOWED_TYPES)[number];
 type ImageQuality = "standard" | "high" | "premium";
 
 const PROVIDER_ORDER: Record<ImageQuality, string[]> = {
-  standard: ["dalle"],
-  high:     ["dalle"],
-  premium:  ["dalle"],
+  standard: ["hf-flux-schnell", "hf-sd35-turbo"],
+  high:     ["hf-flux-dev", "hf-sd35-turbo", "hf-flux-schnell"],
+  premium:  ["dalle", "hf-flux-dev", "hf-sd35-turbo"],
 };
 
 async function fetchWithTimeout(url: string, opts: RequestInit, ms: number): Promise<Response> {
@@ -60,7 +60,6 @@ async function generateHF(prompt: string, model: string, params: Record<string, 
 
 async function generateDalle(prompt: string): Promise<string | null> {
   const key = process.env.DALLE_API_KEY;
-  console.log(`[DALLE] Appel — clé présente: ${!!key}, prompt: ${prompt.substring(0, 60)}...`);
   if (!key) return null;
   try {
     const res = await fetchWithTimeout(
@@ -126,16 +125,10 @@ async function processImageTags(md: string): Promise<string> {
   if (qualityMatches.length > 0) {
     const [, quality, desc] = qualityMatches[0];
     description = desc.trim();
-    console.log(`[IMAGE] Tag détecté — qualité: ${quality}, description: ${description}`);
     imgData = await generateImage(description, quality as ImageQuality);
-    console.log(`[IMAGE] Résultat: ${imgData ? "image générée ✓" : "échec ✗"}`);
   } else if (simpleMatches.length > 0) {
     description = simpleMatches[0][1].trim();
-    console.log(`[IMAGE] Tag simple détecté — description: ${description}`);
     imgData = await generateImage(description, "standard");
-    console.log(`[IMAGE] Résultat: ${imgData ? "image générée ✓" : "échec ✗"}`);
-  } else {
-    console.log("[IMAGE] Aucun tag [IMAGE:...] trouvé dans le markdown généré");
   }
 
   if (!description) return result;
@@ -211,24 +204,17 @@ const VISUAL_INSTRUCTIONS = `
      A[Idée] --> B[Validation] --> C[MVP] --> D[Lancement]
    \`\`\`
 
-2. ILLUSTRATION IA — OBLIGATOIRE. Tu DOIS insérer exactement UN tag image dans chaque document.
-   Place-le sur sa propre ligne, juste après le premier ## (premier sous-titre), JAMAIS dans une liste ou un tableau.
+2. ILLUSTRATION IA — insère exactement UNE FOIS après l'introduction avec le niveau de qualité adapté :
 
-   Choisis le niveau selon le type de document :
-   [IMAGE:standard:description] → formation, blueprint, ebook technique
-   [IMAGE:high:description]     → ebook premium, guide pratique
-   [IMAGE:premium:description]  → page de vente, document commercial
+   [IMAGE:standard:description] → blueprint, formation, ebook technique (gratuit, rapide)
+   [IMAGE:high:description]     → ebook premium, contenu visuel fort (gratuit HF, meilleure qualité)
+   [IMAGE:premium:description]  → page de vente, document commercial haut de gamme (DALL-E 3)
 
-   La description DOIT être en anglais, courte (max 20 mots), visuelle et précise.
-   BONS exemples :
-   [IMAGE:standard:professional online course dashboard interface, clean UI, blue and white tones, minimal design]
-   [IMAGE:high:confident entrepreneur at modern desk with laptop, warm office lighting, professional photography]
-   [IMAGE:premium:luxury digital product launch event, cinematic composition, ultra realistic, premium brand aesthetic]
-
-   MAUVAIS exemples (à éviter) :
-   ❌ [IMAGE:standard:une image de formation] — trop vague, pas en anglais
-   ❌ [IMAGE:high:illustration] — pas de description visuelle
-   ❌ Oublier le tag — INTERDIT, le tag est obligatoire dans chaque document
+   La description doit être en anglais, précise et professionnelle.
+   Exemples :
+   [IMAGE:standard:software architecture diagram with API nodes and database, clean minimal style, blue tones]
+   [IMAGE:high:confident entrepreneur presenting business plan, professional photography, warm office lighting]
+   [IMAGE:premium:luxury digital product launch, cinematic composition, ultra realistic, premium brand aesthetic]
 
 3. GRAPHIQUES EN BARRES — insère [CHART:bar:Titre:Label1=Valeur1,Label2=Valeur2] pour les données chiffrées.
    Syntaxe exacte (respecte les = et les ,) :
