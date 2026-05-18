@@ -1,12 +1,12 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import AuthShell from "@/components/ui/AuthShell";
 import { FV, FVHook } from "@/components/ui/fonderie";
 
-export default function VerifyPage() {
+function VerifyContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const email = searchParams.get("email") || "";
@@ -221,5 +221,13 @@ export default function VerifyPage() {
         </div>
       </form>
     </AuthShell>
+  );
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense>
+      <VerifyContent />
+    </Suspense>
   );
 }
