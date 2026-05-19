@@ -1,14 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ["puppeteer", "@sparticuz/chromium"],
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  serverExternalPackages: ["puppeteer", "@sparticuz/chromium"],
 };
 
 export default nextConfig;

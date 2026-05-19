@@ -127,7 +127,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Aucun provider n'a pu générer l'image" }, { status: 503 });
     }
 
-    return NextResponse.json({ url: imageData, type, quality: resolvedQuality });
+    return NextResponse.json({ url: imageData, type, quality: resolvedQuality }, {
+      headers: { "Cache-Control": "public, max-age=86400, immutable" },
+    });
   } catch (error) {
     console.error("[generate-image]", error);
     return NextResponse.json({ error: "Erreur lors de la génération" }, { status: 500 });

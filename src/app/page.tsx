@@ -1,6 +1,7 @@
-"use client";
 import Link from "next/link";
 import { FV, FVMark, FVHook, FVOrb } from "@/components/ui/fonderie";
+
+export const revalidate = 3600;
 
 export default function FonderieV2Landing() {
   return (

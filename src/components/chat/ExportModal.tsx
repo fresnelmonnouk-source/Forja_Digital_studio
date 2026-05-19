@@ -25,6 +25,7 @@ export default function ExportModal({ onClose, conversation }: { onClose: () => 
   const [error, setError] = useState<string | null>(null);
   const [docType, setDocType] = useState("ebook");
   const [opts, setOpts] = useState([true, true, false]);
+  const [stats, setStats] = useState<{ duration: number; requestId: string } | null>(null);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -52,10 +53,18 @@ export default function ExportModal({ onClose, conversation }: { onClose: () => 
         body: JSON.stringify({ conversation: validMessages, type: docType, opts })
       });
 
+      const requestId = res.headers.get("X-PDF-Request-ID") || "unknown";
+      const duration = parseInt(res.headers.get("X-PDF-Duration-MS") || "0");
+
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error((data as { error?: string }).error || `Erreur ${res.status}`);
+        const errorMsg = (data as { error?: string; details?: string }).error || `Erreur ${res.status}`;
+        const details = (data as { details?: string }).details || "";
+        console.error(`[${requestId}] PDF generation failed:`, errorMsg, details);
+        throw new Error(errorMsg);
       }
+
+      console.log(`[${requestId}] PDF generated successfully in ${duration}ms`);
 
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
@@ -69,6 +78,8 @@ export default function ExportModal({ onClose, conversation }: { onClose: () => 
         document.body.removeChild(a);
       }
       window.URL.revokeObjectURL(url);
+
+      setStats({ duration, requestId });
       setDone(true);
     } catch (e) {
       console.error("Erreur export PDF:", e);
@@ -166,11 +177,17 @@ export default function ExportModal({ onClose, conversation }: { onClose: () => 
             <p style={{ fontFamily: FV.serif, fontStyle: 'italic', fontSize: 14, color: FV.ink2, marginBottom: 28, lineHeight: 1.6 }}>
               Le document a été généré et téléchargé automatiquement.
             </p>
+            {stats && (
+              <div style={{ background: FV.black, border: `1px solid ${FV.rule}`, borderRadius: 10, padding: '14px 16px', marginBottom: 20, textAlign: 'left', fontFamily: FV.mono, fontSize: 11, color: FV.smoke }}>
+                <div>⏱️ Durée: <strong>{(stats.duration / 1000).toFixed(2)}s</strong></div>
+                <div>🔖 ID: <strong>{stats.requestId}</strong></div>
+              </div>
+            )}
             <div style={{ display: 'flex', gap: 12 }}>
               <button onClick={onClose} style={{ flex: 1, background: 'transparent', color: FV.ink, border: `1px solid ${FV.ruleStrong}`, padding: '12px', fontSize: 13, fontWeight: 500, cursor: 'pointer', borderRadius: 8 }}>
                 Retour à la forge
               </button>
-              <button onClick={() => { setDone(false); setError(null); }} style={{ flex: 1, background: FV.ember, color: FV.black, border: 'none', padding: '12px', fontSize: 13, fontWeight: 700, cursor: 'pointer', borderRadius: 8, boxShadow: `0 0 20px ${FV.ember}55` }}>
+              <button onClick={() => { setDone(false); setError(null); setStats(null); }} style={{ flex: 1, background: FV.ember, color: FV.black, border: 'none', padding: '12px', fontSize: 13, fontWeight: 700, cursor: 'pointer', borderRadius: 8, boxShadow: `0 0 20px ${FV.ember}55` }}>
                 Nouveau document →
               </button>
             </div>

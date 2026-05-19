@@ -30,7 +30,9 @@ export async function GET(req: Request) {
       },
     });
 
-    return NextResponse.json(conversations);
+    return NextResponse.json(conversations, {
+      headers: { "Cache-Control": "private, no-store" },
+    });
   } catch (error) {
     console.error("Erreur conversations GET:", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });

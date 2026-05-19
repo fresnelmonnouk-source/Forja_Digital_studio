@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
   try {
     const conversation = await prisma.conversation.findUnique({
-      where: { id: params.id, userId: session.user.id },
+      where: { id, userId: session.user.id },
       include: { messages: { orderBy: { createdAt: "asc" } } },
     });
 
@@ -21,7 +22,8 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   }
 }
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
@@ -32,13 +34,13 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     }
 
     const conversation = await prisma.conversation.findUnique({
-      where: { id: params.id, userId: session.user.id },
+      where: { id, userId: session.user.id },
     });
 
     if (!conversation) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
     const updated = await prisma.conversation.update({
-      where: { id: params.id },
+      where: { id },
       data: { title: title.trim().substring(0, 100) },
     });
 
@@ -49,18 +51,19 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
 }
 
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
   try {
     const conversation = await prisma.conversation.findUnique({
-      where: { id: params.id, userId: session.user.id },
+      where: { id, userId: session.user.id },
     });
 
     if (!conversation) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
-    await prisma.conversation.delete({ where: { id: params.id } });
+    await prisma.conversation.delete({ where: { id } });
 
     return NextResponse.json({ success: true });
   } catch (error) {
