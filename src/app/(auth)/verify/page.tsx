@@ -9,7 +9,7 @@ import { FV, FVHook } from "@/components/ui/fonderie";
 function VerifyContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const email = searchParams.get("email") || "";
+  const email = searchParams?.get("email") || "";
 
   const [digits, setDigits] = useState(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
