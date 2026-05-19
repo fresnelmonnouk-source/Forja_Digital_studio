@@ -1,7 +1,7 @@
 import { LLMMessage } from "@/lib/llm/client";
 
 export function truncateToCharBudget(messages: LLMMessage[], charBudget: number): LLMMessage[] {
-  let total = messages.reduce((sum, m) => sum + m.content.length, 0);
+  const total = messages.reduce((sum, m) => sum + m.content.length, 0);
   if (total <= charBudget) return messages;
 
   const first = messages[0];

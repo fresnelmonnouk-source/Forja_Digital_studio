@@ -1,9 +1,5 @@
 import { DocType } from "./types";
 
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
-
 export function buildHtmlTemplate(
   htmlContent: string,
   type: DocType,

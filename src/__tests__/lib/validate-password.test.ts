@@ -5,7 +5,8 @@ describe("validatePassword", () => {
     expect(validatePassword("")).toBeTruthy();
     expect(validatePassword(null)).toBeTruthy();
     expect(validatePassword(undefined)).toBeTruthy();
-    expect(validatePassword(123 as any)).toBeTruthy();
+    // @ts-expect-error - testing invalid input
+    expect(validatePassword(123)).toBeTruthy();
   });
 
   it("should reject passwords shorter than 8 characters", () => {

@@ -30,7 +30,7 @@ export default function ForgotPage() {
       } else {
         setSubmitted(true);
       }
-    } catch (err) {
+    } catch {
       setError("Impossible de contacter le serveur.");
     } finally {
       setLoading(false);

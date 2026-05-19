@@ -7,7 +7,7 @@ import { rateLimit, getIp } from "@/lib/rate-limit";
 import { callLLM, LLMMessage } from "@/lib/llm/client";
 import { ALLOWED_TYPES, DocType } from "@/lib/pdf/types";
 import { truncateToCharBudget } from "@/lib/pdf/truncate";
-import { buildBarChart, processCharts } from "@/lib/pdf/charts";
+import { processCharts } from "@/lib/pdf/charts";
 import { processMermaidBlocks } from "@/lib/pdf/mermaid";
 import { planAndGenerateImages } from "@/lib/pdf/image-planner";
 import { DOC_PROMPTS } from "@/lib/pdf/prompts";

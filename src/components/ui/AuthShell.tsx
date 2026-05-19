@@ -1,5 +1,5 @@
 import React from 'react';
-import { FV, FVMark, FVHook, FVOrb, FVSGrid } from "@/components/ui/fonderie";
+import { FV, FVMark, FVOrb, FVSGrid } from "@/components/ui/fonderie";
 
 export default function AuthShell({ children, hero }: { children: React.ReactNode, hero?: React.ReactNode }) {
   return (

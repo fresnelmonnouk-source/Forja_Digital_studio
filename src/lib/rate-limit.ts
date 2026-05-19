@@ -25,7 +25,7 @@ export async function rateLimit(key: string, limit: number, windowMs: number): P
   if (!limiter) {
     limiter = new Ratelimit({
       redis: redis as Redis,
-      limiter: Ratelimit.slidingWindow(limit, windowSec as any),
+      limiter: Ratelimit.slidingWindow(limit, windowSec),
       analytics: false,
     });
     limiters.set(limiterKey, limiter);

@@ -77,7 +77,7 @@ function ResetForm() {
         setSubmitted(true);
         setTimeout(() => router.push("/login"), 2000);
       }
-    } catch (err) {
+    } catch {
       setError("Impossible de contacter le serveur.");
     } finally {
       setLoading(false);
