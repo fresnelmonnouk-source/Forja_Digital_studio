@@ -7,16 +7,7 @@ Sentry.init({
   debug: process.env.NODE_ENV !== "production",
   integrations: [
     Sentry.httpIntegration({
-      failedRequestStatusCodes: [
-        ...Sentry.defaultIntegrations
-          .find((integration) => integration.name === "Http")
-          ?.options?.failedRequestStatusCodes ?? [],
-        500,
-        501,
-        502,
-        503,
-        504,
-      ],
+      statusCodes: [[500, 599]],
     }),
   ],
 });
