@@ -19,7 +19,7 @@ const STRENGTH_COLORS = ["", FV.ember, FV.amber, FV.amber, "#7EC8A0"];
 function ResetForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get("token");
+  const token = searchParams?.get("token");
 
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
