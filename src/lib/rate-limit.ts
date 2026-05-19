@@ -23,9 +23,9 @@ export async function rateLimit(key: string, limit: number, windowMs: number): P
 
   let limiter = limiters.get(limiterKey);
   if (!limiter) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     limiter = new Ratelimit({
       redis: redis as Redis,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       limiter: Ratelimit.slidingWindow(limit, `${windowSec} s` as any),
       analytics: false,
     });
