@@ -18,14 +18,15 @@ export async function rateLimit(key: string, limit: number, windowMs: number): P
     redis = new Redis({ url, token });
   }
 
-  const windowSec = Math.floor(windowMs / 1000) + " s";
-  const limiterKey = `${limit}-${windowSec}`;
+  const windowSec = Math.floor(windowMs / 1000);
+  const limiterKey = `${limit}-${windowSec}s`;
 
   let limiter = limiters.get(limiterKey);
   if (!limiter) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     limiter = new Ratelimit({
       redis: redis as Redis,
-      limiter: Ratelimit.slidingWindow(limit, windowSec),
+      limiter: Ratelimit.slidingWindow(limit, `${windowSec} s` as any),
       analytics: false,
     });
     limiters.set(limiterKey, limiter);
