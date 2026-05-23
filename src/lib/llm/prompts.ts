@@ -503,12 +503,16 @@ Qualités disponibles :
 - premium — DALL-E 2 (couvertures d'ebook uniquement)
 
 Types disponibles :
-- cover — Couverture d'ebook
-- illustration — Illustration de concept
-- diagram — Schéma ou diagramme
-- header — En-tête de section
+- photo — VRAIE photographie issue d'une banque d'images (Unsplash) : pour tout sujet réel, concret ou d'ambiance (lieux, objets, personnes, matériel, scènes). Pour une photo, la description = de bons mots-clés de recherche en anglais.
+- cover — Couverture d'ebook (image générée par IA)
+- illustration — Illustration de concept (générée par IA)
+- diagram — Schéma ou diagramme (généré par IA)
+- header — En-tête de section (généré par IA)
+
+Choix photo vs IA : privilégie "photo" dès que le sujet est concret/réaliste (une vraie photo est plus crédible). Réserve les types générés (cover/illustration/diagram/header) à l'abstrait, aux couvertures et aux schémas.
 
 Règle de choix de qualité :
+- photo → standard
 - cover → toujours premium
 - illustration → high
 - diagram → standard

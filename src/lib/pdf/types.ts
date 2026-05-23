@@ -7,4 +7,5 @@ export interface ImagePlan {
   section_index: number;
   quality: ImageQuality;
   description: string;
+  kind?: "photo" | "generated"; // photo = vraie photo Unsplash ; generated = image IA
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { searchUnsplash } from "@/lib/unsplash";
 
 type ImageQuality = "standard" | "high" | "premium";
 
@@ -114,13 +115,26 @@ export async function POST(req: NextRequest) {
     if (!type || !description) {
       return NextResponse.json({ error: "Type et description requis" }, { status: 400 });
     }
-    if (!["cover", "illustration", "diagram", "header"].includes(type)) {
+    if (!["cover", "illustration", "diagram", "header", "photo"].includes(type)) {
       return NextResponse.json({ error: "Type invalide" }, { status: 400 });
     }
+
+    // Type "photo" → vraie photo Unsplash (repli sur génération IA si indisponible).
+    if (type === "photo") {
+      const photo = await searchUnsplash(description, "landscape");
+      if (photo) {
+        return NextResponse.json(
+          { url: photo.url, type, source: "unsplash", credit: photo.credit, creditUrl: photo.creditUrl },
+          { headers: { "Cache-Control": "public, max-age=86400, immutable" } }
+        );
+      }
+      // pas de clé / aucun résultat → on génère une image à la place
+    }
+
     const resolvedQuality: ImageQuality =
       ["standard", "high", "premium"].includes(quality) ? quality : "standard";
 
-    const prompt = buildPrompt(type, description);
+    const prompt = buildPrompt(type === "photo" ? "illustration" : type, description);
     const imageData = await generateImage(prompt, resolvedQuality);
 
     if (!imageData) {

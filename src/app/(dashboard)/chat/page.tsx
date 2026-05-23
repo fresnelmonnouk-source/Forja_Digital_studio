@@ -7,7 +7,7 @@ import { FV, FVMark } from "@/components/ui/fonderie";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { stripImageData } from "@/lib/strip-images";
 import Link from "next/link";
-import { Menu, X, RotateCcw, LogOut, Sparkles, ArrowRight, CornerDownLeft, GraduationCap, BookOpen, Cog, Bot, Shield, Trash2, type LucideIcon } from "lucide-react";
+import { Menu, X, RotateCcw, LogOut, Sparkles, ArrowRight, CornerDownLeft, GraduationCap, BookOpen, Cog, Bot, Shield, Trash2, Paperclip, type LucideIcon } from "lucide-react";
 
 interface Message {
   role: string;
@@ -127,9 +127,26 @@ export default function ChatPage() {
   const [history, setHistory] = useState<Conversation[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
+  const [attachedFile, setAttachedFile] = useState<{ name: string; content: string } | null>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const FILE_CHAR_CAP = 30_000; // borne le contenu joint pour rester sous les limites
+  const handleFilePick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // permet de re-sélectionner le même fichier
+    if (!file) return;
+    if (file.size > 2_000_000) { alert("Fichier trop volumineux (max 2 Mo)."); return; }
+    try {
+      let text = await file.text();
+      if (text.length > FILE_CHAR_CAP) text = text.slice(0, FILE_CHAR_CAP) + "\n…[fichier tronqué]";
+      setAttachedFile({ name: file.name, content: text });
+    } catch {
+      alert("Impossible de lire ce fichier.");
+    }
+  };
 
   useEffect(() => {
     if (session?.user) {
@@ -158,18 +175,28 @@ export default function ChatPage() {
 
   const sendMessage = async (text?: string) => {
     const userText = text || input.trim();
-    if (!userText || loading) return;
+    const file = attachedFile;
+    if ((!userText && !file) || loading) return;
     setShowPrompts(false);
     setInput("");
+    setAttachedFile(null);
     if (textareaRef.current) textareaRef.current.style.height = "auto";
-    const newMessages: Message[] = [...messages, { role: "user", content: userText }];
+    // Affichage : texte + chip discret du fichier (pas le contenu brut).
+    const displayText = (userText || "(fichier joint)") + (file ? `\n📎 ${file.name}` : "");
+    const newMessages: Message[] = [...messages, { role: "user", content: displayText }];
     setMessages(newMessages);
     setLoading(true);
     try {
+      // Payload LLM : on injecte le contenu réel du fichier dans le dernier message.
+      const payloadMessages = stripMessages(newMessages);
+      if (file) {
+        const last = payloadMessages[payloadMessages.length - 1];
+        last.content = `${userText}\n\n[Fichier joint : ${file.name}]\n"""\n${file.content}\n"""`;
+      }
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: stripMessages(newMessages), provider: selectedProvider })
+        body: JSON.stringify({ messages: payloadMessages, provider: selectedProvider })
       });
       const data = await response.json();
       if (data.usedProvider) setActiveProvider(data.usedProvider);
@@ -179,7 +206,7 @@ export default function ChatPage() {
       let reply: string = contentText || data.error || "Erreur de réponse.";
 
       // Détection et génération des images [GENERATE_IMAGE:qualité:type|description]
-      const imageTagRegex = /\[GENERATE_IMAGE:(standard|high|premium):(cover|illustration|diagram|header)\|([^\]]+)\]/g;
+      const imageTagRegex = /\[GENERATE_IMAGE:(standard|high|premium):(cover|illustration|diagram|header|photo)\|([^\]]+)\]/g;
       const imageTags: { fullMatch: string; quality: string; type: string; description: string }[] = [];
       let imgMatch;
       while ((imgMatch = imageTagRegex.exec(reply)) !== null) {
@@ -194,17 +221,18 @@ export default function ChatPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ quality: img.quality, type: img.type, description: img.description }),
               });
-              if (!res.ok) return { fullMatch: img.fullMatch, url: null };
+              if (!res.ok) return { fullMatch: img.fullMatch, url: null, credit: undefined };
               const json = await res.json();
-              return { fullMatch: img.fullMatch, url: json.url as string | null };
+              return { fullMatch: img.fullMatch, url: json.url as string | null, credit: json.credit as string | undefined };
             } catch {
-              return { fullMatch: img.fullMatch, url: null };
+              return { fullMatch: img.fullMatch, url: null, credit: undefined };
             }
           })
         );
         for (const result of imageResults) {
           if (result.url) {
-            reply = reply.replace(result.fullMatch, `\n\n![image](${result.url})\n\n`);
+            const creditLine = result.credit ? `\n*Photo : ${result.credit} / Unsplash*` : "";
+            reply = reply.replace(result.fullMatch, `\n\n![image](${result.url})${creditLine}\n\n`);
           } else {
             reply = reply.replace(result.fullMatch, "");
           }
@@ -513,7 +541,7 @@ export default function ChatPage() {
                     )}
                     <div style={{ background: isUser ? 'rgba(238,90,36,0.08)' : FV.black2, border: `1px solid ${isUser ? 'rgba(238,90,36,0.22)' : FV.rule}`, borderRadius: isUser ? '14px 3px 14px 14px' : '3px 14px 14px 14px', padding: '14px 18px', fontSize: 14, lineHeight: 1.7, color: isUser ? FV.ink : FV.ink2 }}>
                       {isUser ? (
-                        <p style={{ margin: 0 }}>{m.content}</p>
+                        <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{m.content}</p>
                       ) : (
                         <MarkdownRenderer text={m.content} />
                       )}
@@ -542,7 +570,17 @@ export default function ChatPage() {
         {/* Composer */}
         <div style={{ borderTop: `1px solid ${FV.rule}`, padding: isMobile ? '12px 12px 14px' : '14px 20px 18px', background: FV.black2 }}>
           <div style={{ maxWidth: 720, margin: '0 auto' }}>
-            <div style={{ background: FV.black, border: `1px solid ${FV.ruleStrong}`, borderRadius: 12, padding: '10px 12px', display: 'flex', alignItems: 'flex-end', gap: 10 }}>
+            {/* Chip du fichier joint */}
+            {attachedFile && (
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 8, padding: '6px 10px', background: 'rgba(238,90,36,0.08)', border: '1px solid rgba(238,90,36,0.22)', borderRadius: 8, fontSize: 12, color: FV.ink }}>
+                <Paperclip size={13} color={FV.ember} />
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 220 }}>{attachedFile.name}</span>
+                <button onClick={() => setAttachedFile(null)} title="Retirer" style={{ background: 'transparent', border: 'none', color: FV.smoke, cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}><X size={13} /></button>
+              </div>
+            )}
+            <input ref={fileInputRef} type="file" aria-label="Joindre un fichier texte" title="Joindre un fichier texte" accept=".txt,.md,.markdown,.csv,.text,text/plain,text/markdown,text/csv" onChange={handleFilePick} style={{ display: 'none' }} />
+            <div style={{ background: FV.black, border: `1px solid ${FV.ruleStrong}`, borderRadius: 12, padding: '10px 12px', display: 'flex', alignItems: 'flex-end', gap: 8 }}>
+              <button onClick={() => fileInputRef.current?.click()} style={{ background: 'transparent', border: 'none', color: FV.smoke, cursor: 'pointer', padding: 6, lineHeight: 1, flexShrink: 0, marginBottom: 2, display: 'flex', alignItems: 'center' }} title="Joindre un fichier texte (.txt, .md, .csv)"><Paperclip size={18} /></button>
               <button onClick={() => setShowExport(true)} style={{ background: 'transparent', border: 'none', color: FV.ember, cursor: 'pointer', padding: 6, lineHeight: 1, flexShrink: 0, marginBottom: 2, display: 'flex', alignItems: 'center' }} title="Générer un document"><Sparkles size={18} /></button>
               <textarea
                 ref={textareaRef}
@@ -563,8 +601,8 @@ export default function ChatPage() {
                 <kbd style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, padding: '3px 6px', border: `1px solid ${FV.rule}`, borderRadius: 4, display: 'inline-flex', alignItems: 'center' }}><CornerDownLeft size={11} /></kbd>
                 <button
                   onClick={() => sendMessage()}
-                  disabled={loading || !input.trim()}
-                  style={{ background: (loading || !input.trim()) ? FV.rule : FV.ember, color: (loading || !input.trim()) ? FV.smoke : FV.black, border: 'none', width: 34, height: 34, borderRadius: 8, cursor: (loading || !input.trim()) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: (!loading && input.trim()) ? `0 0 12px ${FV.ember}66` : 'none', transition: 'all 0.2s' }}
+                  disabled={loading || (!input.trim() && !attachedFile)}
+                  style={{ background: (loading || (!input.trim() && !attachedFile)) ? FV.rule : FV.ember, color: (loading || (!input.trim() && !attachedFile)) ? FV.smoke : FV.black, border: 'none', width: 34, height: 34, borderRadius: 8, cursor: (loading || (!input.trim() && !attachedFile)) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: (!loading && (input.trim() || attachedFile)) ? `0 0 12px ${FV.ember}66` : 'none', transition: 'all 0.2s' }}
                 >
                   <ArrowRight size={16} />
                 </button>

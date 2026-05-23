@@ -1,5 +1,6 @@
 import { callLLM, LLMMessage } from "@/lib/llm/client";
 import { generateImage } from "./image-gen";
+import { searchUnsplash } from "@/lib/unsplash";
 import { DocType, ImagePlan, ImageQuality } from "./types";
 
 export const IMAGE_PLANNER_PROMPT = `Tu es un designer de documents. Analyse le markdown fourni et retourne UNIQUEMENT un tableau JSON (rien d'autre, pas de commentaire, pas de markdown).
@@ -9,18 +10,22 @@ Format strict :
 [
   {
     "section_index": 0,
+    "kind": "photo",
     "quality": "standard",
     "description": "description en anglais, précise et visuelle"
   }
 ]
 
 section_index = index 0-based du titre ## dans le document (0 = premier ##, 1 = deuxième ##, etc.)
+kind = "photo" (VRAIE photographie : sujets réels, lieux, objets, personnes, ambiance) | "generated" (image générée par IA : couvertures, concepts abstraits, schémas stylisés)
 quality = "standard" (schémas, diagrammes) | "high" (illustrations de concepts) | "premium" (couvertures ebook uniquement)
 
 Règles :
 - Maximum 5 images par document
 - Choisis des sections où une image apporte vraiment de la valeur
-- Descriptions en anglais, 15-30 mots, style visuel précis
+- Privilégie "photo" pour tout ce qui est concret/réaliste, "generated" pour l'abstrait et les couvertures
+- Pour une photo, la description doit être de bons mots-clés de recherche en anglais (ex : "modern office desk laptop coffee")
+- Descriptions en anglais, 15-30 mots (ou mots-clés pour une photo)
 - Si aucune image n'est pertinente, retourne []
 - Retourne UNIQUEMENT le tableau JSON, rien d'autre`;
 
@@ -69,18 +74,30 @@ export async function planAndGenerateImages(markdown: string, docType: DocType):
       const quality: ImageQuality = ["standard", "high", "premium"].includes(item.quality)
         ? (item.quality as ImageQuality)
         : "standard";
-      const imgData = await generateImage(item.description, quality);
+
+      let imgData: string | null = null;
+      let credit: string | undefined;
+      // kind "photo" → vraie photo Unsplash (repli sur génération IA si indisponible)
+      if (item.kind === "photo") {
+        const photo = await searchUnsplash(item.description, "landscape");
+        if (photo) {
+          imgData = photo.url;
+          credit = photo.credit;
+        }
+      }
+      if (!imgData) imgData = await generateImage(item.description, quality);
       console.log(
-        `[IMAGE] Résultat génération: ${imgData ? "succès (" + imgData.slice(0, 30) + "...)" : "échec"}`
+        `[IMAGE] Résultat (${credit ? "unsplash" : "ia"}): ${imgData ? "succès (" + imgData.slice(0, 30) + "...)" : "échec"}`
       );
-      return imgData ? { heading, imgData, description: item.description } : null;
+      return imgData ? { heading, imgData, description: item.description, credit } : null;
     })
   );
 
   let result = markdown;
   for (const item of results) {
     if (!item) continue;
-    const figure = `\n\n<figure class="ai-figure"><img src="${item.imgData}" alt="${item.description}" /><figcaption>${item.description}</figcaption></figure>\n\n`;
+    const caption = item.credit ? `${item.description} — Photo : ${item.credit} / Unsplash` : item.description;
+    const figure = `\n\n<figure class="ai-figure"><img src="${item.imgData}" alt="${item.description}" /><figcaption>${caption}</figcaption></figure>\n\n`;
     result = result.replace(item.heading, item.heading + figure);
   }
 
