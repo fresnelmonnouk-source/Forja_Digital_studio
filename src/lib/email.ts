@@ -176,7 +176,7 @@ export function buildWelcomeEmail(name: string | null): string {
       </table>
     </div>
 
-    ${footer("Si tu cales — un seul mail à wilson@forja.fr et je te débloque personnellement. — W.")}
+    ${footer("Si tu cales — un seul mail à aide@forja.fr et on te débloque. — L'équipe FORJA")}
   `);
 }
 

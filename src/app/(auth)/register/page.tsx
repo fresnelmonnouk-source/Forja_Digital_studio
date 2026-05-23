@@ -89,7 +89,7 @@ export default function RegisterPage() {
 
         {/* Fields */}
         {[
-          { key: 'name', label: 'Prénom', type: 'text', placeholder: 'Wilson', autoComplete: 'name' },
+          { key: 'name', label: 'Prénom', type: 'text', placeholder: 'Ton prénom', autoComplete: 'name' },
           { key: 'email', label: 'Email', type: 'email', placeholder: 'toi@exemple.fr', autoComplete: 'email' },
           { key: 'password', label: 'Mot de passe', type: 'password', placeholder: '8 caractères minimum', autoComplete: 'new-password' },
         ].map(({ key, label, type, placeholder, autoComplete }) => (
