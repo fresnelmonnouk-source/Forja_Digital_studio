@@ -5,6 +5,7 @@ import MarkdownRenderer from "@/components/chat/MarkdownRenderer";
 import ExportModal from "@/components/chat/ExportModal";
 import { FV, FVMark } from "@/components/ui/fonderie";
 import { useMediaQuery } from "@/lib/use-media-query";
+import { stripImageData } from "@/lib/strip-images";
 import Link from "next/link";
 import { Menu, X, RotateCcw, LogOut, Sparkles, ArrowRight, CornerDownLeft, GraduationCap, BookOpen, Cog, Bot, Shield, type LucideIcon } from "lucide-react";
 
@@ -88,6 +89,9 @@ function buildWelcomeMessage(onboarding: OnboardingData | null): string {
   return msg;
 }
 
+const stripMessages = (msgs: Message[]) =>
+  msgs.map((m) => ({ role: m.role, content: stripImageData(m.content) }));
+
 export default function ChatPage() {
   const { data: session } = useSession();
   const userName = session?.user?.name || "Forgeron";
@@ -165,7 +169,7 @@ export default function ChatPage() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: newMessages, provider: selectedProvider })
+        body: JSON.stringify({ messages: stripMessages(newMessages), provider: selectedProvider })
       });
       const data = await response.json();
       if (data.usedProvider) setActiveProvider(data.usedProvider);
@@ -222,7 +226,7 @@ export default function ChatPage() {
           const title = userText.length > 30 ? userText.substring(0, 30) + "…" : userText;
           const resConv = await fetch("/api/conversations", {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title, initialMessages: finalMessages })
+            body: JSON.stringify({ title, initialMessages: stripMessages(finalMessages) })
           });
           if (!resConv.ok) throw new Error("Impossible de créer la conversation");
           const newConv: Conversation = await resConv.json();
@@ -232,7 +236,7 @@ export default function ChatPage() {
         } else {
           await fetch(`/api/conversations/${convId}/messages`, {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ messages: [{ role: "user", content: userText }, { role: "assistant", content: reply }] })
+            body: JSON.stringify({ messages: [{ role: "user", content: userText }, { role: "assistant", content: stripImageData(reply) }] })
           });
         }
       }

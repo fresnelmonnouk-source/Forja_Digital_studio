@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FV, FVMark, FVHook } from "@/components/ui/fonderie";
 import { useMediaQuery } from "@/lib/use-media-query";
+import { stripImageData } from "@/lib/strip-images";
 import { X, Check, Sparkles, Loader2, Clock, Hash, AlertTriangle, BookOpen, GraduationCap, Wallet, Cog, type LucideIcon } from "lucide-react";
 
 interface Message {
@@ -40,9 +41,11 @@ export default function ExportModal({ onClose, conversation }: { onClose: () => 
     setExporting(true);
     setError(null);
     try {
-      const validMessages = conversation.filter(
-        (m) => (m.role === "user" || m.role === "assistant") && m.content.trim()
-      );
+      const validMessages = conversation
+        .filter((m) => (m.role === "user" || m.role === "assistant") && m.content.trim())
+        // On retire les images base64 : le PDF génère ses propres visuels,
+        // inutile d'envoyer l'historique d'images au LLM (tokens + limites).
+        .map((m) => ({ role: m.role, content: stripImageData(m.content) }));
 
       if (validMessages.length < 2) {
         setError("Lance une conversation avec FORJA avant de générer un document.");
