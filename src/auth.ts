@@ -36,21 +36,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
 
         if (passwordsMatch) {
-          return { id: user.id, email: user.email, name: user.name };
+          return { id: user.id, email: user.email, name: user.name, role: user.role };
         }
         return null;
       },
     }),
   ],
-  callbacks: {
-    ...authConfig.callbacks,
-    async jwt({ token, user }) {
-      if (user) token.id = user.id;
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user && token.id) session.user.id = token.id as string;
-      return session;
-    },
-  },
+  // Les callbacks jwt/session/authorized sont partagés via authConfig
+  // (propagation id + role, garde admin) — voir auth.config.ts.
+  callbacks: authConfig.callbacks,
 });

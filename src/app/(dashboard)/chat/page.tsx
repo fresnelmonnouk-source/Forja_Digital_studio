@@ -5,7 +5,8 @@ import MarkdownRenderer from "@/components/chat/MarkdownRenderer";
 import ExportModal from "@/components/chat/ExportModal";
 import { FV, FVMark } from "@/components/ui/fonderie";
 import { useMediaQuery } from "@/lib/use-media-query";
-import { Menu, X, RotateCcw, LogOut, Sparkles, ArrowRight, CornerDownLeft, GraduationCap, BookOpen, Cog, Bot, type LucideIcon } from "lucide-react";
+import Link from "next/link";
+import { Menu, X, RotateCcw, LogOut, Sparkles, ArrowRight, CornerDownLeft, GraduationCap, BookOpen, Cog, Bot, Shield, type LucideIcon } from "lucide-react";
 
 interface Message {
   role: string;
@@ -91,6 +92,7 @@ export default function ChatPage() {
   const { data: session } = useSession();
   const userName = session?.user?.name || "Forgeron";
   const userInitial = userName.charAt(0).toUpperCase();
+  const isAdmin = session?.user?.role === "admin";
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   const [onboarding] = useState<OnboardingData | null>(() => {
@@ -331,6 +333,13 @@ export default function ChatPage() {
             );
           })}
         </div>
+
+        {/* Lien back office (admins uniquement) */}
+        {isAdmin && (
+          <Link href="/admin" style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 10px 6px', padding: '9px 12px', borderRadius: 8, textDecoration: 'none', color: FV.ember, background: 'rgba(238,90,36,0.08)', border: '1px solid rgba(238,90,36,0.22)', fontSize: 12, fontWeight: 600 }}>
+            <Shield size={15} /> Back office
+          </Link>
+        )}
 
         {/* User bottom */}
         <div style={{ padding: '12px 14px', borderTop: `1px solid ${FV.rule}`, display: 'flex', alignItems: 'center', gap: 10 }}>
