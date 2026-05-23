@@ -214,6 +214,12 @@ export default function ChatPage() {
       const pdfTagMatch = reply.match(/\[GENERATE_PDF:(ebook|formation|vente|blueprint)\]/);
       if (pdfTagMatch) {
         reply = reply.replace(/\[GENERATE_PDF:(ebook|formation|vente|blueprint)\]/, "").trim();
+      }
+      // Filet de sécurité : si l'utilisateur demande explicitement un PDF/document,
+      // on ouvre la modale d'export même si le modèle a "oublié" (ou refusé) d'émettre
+      // le tag. Le moteur PDF fonctionne indépendamment de la réponse du modèle.
+      const userWantsPdf = /(\bpdf\b|t[ée]l[ée]charg|\bexporte?r?\b|g[ée]n[èe]re.{0,40}(document|ebook|livrable|pdf)|fais.{0,20}(le )?(document|pdf|ebook)|mets [çc]a en (document|pdf)|le fichier)/i.test(userText);
+      if (pdfTagMatch || userWantsPdf) {
         setTimeout(() => setShowExport(true), 800);
       }
       const detected = detectStep(reply);
