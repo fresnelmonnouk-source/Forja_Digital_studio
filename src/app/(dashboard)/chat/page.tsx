@@ -251,8 +251,17 @@ export default function ChatPage() {
       if (pdfTagMatch || userWantsPdf) {
         setTimeout(() => setShowExport(true), 800);
       }
-      const detected = detectStep(reply);
-      if (detected !== null) setActiveStep(detected);
+      // Étape courante : tag explicite [ETAPE:n] émis par FORJA (fiable), sinon
+      // détection par mots-clés en repli. Le tag est retiré de l'affichage.
+      const stepTagMatch = reply.match(/\[(?:E|É|É)TAPE\s*:\s*(\d{1,2})\]/i);
+      if (stepTagMatch) {
+        const n = parseInt(stepTagMatch[1], 10);
+        reply = reply.replace(/\[(?:E|É)TAPE\s*:\s*\d{1,2}\]/gi, "").trim();
+        if (n >= 0 && n < STEPS.length) setActiveStep(n);
+      } else {
+        const detected = detectStep(reply);
+        if (detected !== null) setActiveStep(detected);
+      }
       const finalMessages: Message[] = [...newMessages, { role: "assistant", content: reply }];
       setMessages(finalMessages);
       if (session?.user) {
