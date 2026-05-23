@@ -206,6 +206,43 @@ export default function ChatPage() {
         : "";
       let reply: string = contentText || data.error || "Erreur de réponse.";
 
+      // Recherche de marché : si FORJA demande [RECHERCHE: requête], on interroge
+      // web + Reddit, puis on lui renvoie les résultats réels pour qu'il synthétise.
+      const searchMatch = reply.match(/\[RECHERCHE\s*:\s*([^\]]+)\]/i);
+      if (searchMatch) {
+        const query = searchMatch[1].trim();
+        try {
+          const sres = await fetch("/api/search", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query }),
+          });
+          const sdata = await sres.json();
+          const results: { title: string; snippet: string; url: string; source: string }[] = sdata.results || [];
+          if (sdata.configured === false) {
+            // Pas de clé de recherche → on retire le tag et on garde la réponse telle quelle.
+            reply = reply.replace(searchMatch[0], "").trim();
+          } else {
+            const resultsText = results.length
+              ? results.map((r, i) => `${i + 1}. [${r.source}] ${r.title}\n${r.snippet}\n${r.url}`).join("\n\n")
+              : "Aucun résultat pertinent trouvé.";
+            const followup = [
+              ...stripMessages(newMessages),
+              { role: "assistant", content: "Je consulte le marché en temps réel…" },
+              { role: "user", content: `Résultats de recherche réels (web + Reddit) pour « ${query} » :\n\n${resultsText}\n\nAnalyse ces données et poursuis ta réponse en t'appuyant dessus. Ne réémets PAS de tag [RECHERCHE].` },
+            ];
+            const r2 = await fetch("/api/chat", {
+              method: "POST", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ messages: followup, provider: selectedProvider }),
+            });
+            const d2 = await r2.json();
+            const t2 = Array.isArray(d2.content) ? (d2.content as { text?: string }[]).map(b => b.text || "").join("") : "";
+            reply = t2 || reply.replace(searchMatch[0], "").trim();
+          }
+        } catch {
+          reply = reply.replace(searchMatch[0], "").trim();
+        }
+      }
+
       // Détection et génération des images [GENERATE_IMAGE:qualité:type|description]
       const imageTagRegex = /\[GENERATE_IMAGE:(standard|high|premium):(cover|illustration|diagram|header|photo)\|([^\]]+)\]/g;
       const imageTags: { fullMatch: string; quality: string; type: string; description: string }[] = [];
