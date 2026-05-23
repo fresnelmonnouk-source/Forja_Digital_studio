@@ -4,6 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import MarkdownRenderer from "@/components/chat/MarkdownRenderer";
 import ExportModal from "@/components/chat/ExportModal";
 import { FV, FVMark } from "@/components/ui/fonderie";
+import { useMediaQuery } from "@/lib/use-media-query";
 
 interface Message {
   role: string;
@@ -89,6 +90,7 @@ export default function ChatPage() {
   const { data: session } = useSession();
   const userName = session?.user?.name || "Forgeron";
   const userInitial = userName.charAt(0).toUpperCase();
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   const [onboarding] = useState<OnboardingData | null>(() => {
     if (typeof window === "undefined") return null;
@@ -141,6 +143,11 @@ export default function ChatPage() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
+
+  // Sur mobile, la sidebar démarre fermée (elle s'ouvre en overlay à la demande).
+  useEffect(() => {
+    setSidebarOpen(!isMobile);
+  }, [isMobile]);
 
   const sendMessage = async (text?: string) => {
     const userText = text || input.trim();
@@ -244,11 +251,13 @@ export default function ChatPage() {
     setInput("");
     setActiveConv(null);
     setActiveStep(0);
+    if (isMobile) setSidebarOpen(false);
   };
 
   const loadConversation = async (conv: Conversation) => {
     setActiveConv(conv.id);
     setShowPrompts(false);
+    if (isMobile) setSidebarOpen(false); // referme l'overlay après sélection
     setLoading(true);
     try {
       const res = await fetch(`/api/conversations/${conv.id}`);
@@ -267,8 +276,15 @@ export default function ChatPage() {
     <div style={{ width: '100%', height: '100vh', background: FV.black, fontFamily: FV.sans, color: FV.ink, display: 'flex', overflow: 'hidden', position: 'relative' }}>
       <div style={{ position: 'absolute', top: -200, right: -200, width: 600, height: 600, background: `radial-gradient(circle, ${FV.ember}15 0%, transparent 60%)`, pointerEvents: 'none' }} />
 
+      {/* Backdrop mobile (ferme la sidebar au tap) */}
+      {isMobile && sidebarOpen && (
+        <div onClick={() => setSidebarOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(11,9,8,0.6)', backdropFilter: 'blur(2px)', zIndex: 40 }} />
+      )}
+
       {/* ── SIDEBAR ── */}
-      <div style={{ width: sidebarOpen ? 260 : 0, background: FV.black2, borderRight: sidebarOpen ? `1px solid ${FV.rule}` : 'none', display: 'flex', flexDirection: 'column', flexShrink: 0, overflow: 'hidden', transition: 'width 0.3s ease', position: 'relative', zIndex: 1 }}>
+      <div style={isMobile
+        ? { width: 280, maxWidth: '85vw', background: FV.black2, borderRight: `1px solid ${FV.rule}`, display: 'flex', flexDirection: 'column', flexShrink: 0, overflow: 'hidden', position: 'fixed', top: 0, bottom: 0, left: 0, zIndex: 50, transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)', transition: 'transform 0.3s ease', boxShadow: sidebarOpen ? '0 0 40px rgba(0,0,0,0.5)' : 'none' }
+        : { width: sidebarOpen ? 260 : 0, background: FV.black2, borderRight: sidebarOpen ? `1px solid ${FV.rule}` : 'none', display: 'flex', flexDirection: 'column', flexShrink: 0, overflow: 'hidden', transition: 'width 0.3s ease', position: 'relative', zIndex: 1 }}>
         {/* Logo */}
         <div style={{ padding: '18px', borderBottom: `1px solid ${FV.rule}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -330,15 +346,17 @@ export default function ChatPage() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1, minWidth: 0 }}>
 
         {/* Header */}
-        <div style={{ borderBottom: `1px solid ${FV.rule}`, padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(11,9,8,0.7)', backdropFilter: 'blur(12px)', gap: 12 }}>
+        <div style={{ borderBottom: `1px solid ${FV.rule}`, padding: isMobile ? '10px 14px' : '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(11,9,8,0.7)', backdropFilter: 'blur(12px)', gap: isMobile ? 8 : 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0, flex: 1 }}>
-            {!sidebarOpen && (
+            {(!sidebarOpen || isMobile) && (
               <button onClick={() => setSidebarOpen(true)} style={{ background: 'transparent', border: 'none', color: FV.smoke, cursor: 'pointer', fontSize: 18, padding: 4, lineHeight: 1, flexShrink: 0 }}>☰</button>
             )}
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 9px', background: 'rgba(238,90,36,0.1)', border: '1px solid rgba(238,90,36,0.25)', borderRadius: 999, flexShrink: 0 }}>
-              <div style={{ width: 5, height: 5, borderRadius: '50%', background: FV.ember, boxShadow: `0 0 8px ${FV.ember}` }} />
-              <span style={{ fontFamily: FV.mono, fontSize: 9, color: FV.ember, letterSpacing: '0.12em' }}>EN COURS</span>
-            </div>
+            {!isMobile && (
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 9px', background: 'rgba(238,90,36,0.1)', border: '1px solid rgba(238,90,36,0.25)', borderRadius: 999, flexShrink: 0 }}>
+                <div style={{ width: 5, height: 5, borderRadius: '50%', background: FV.ember, boxShadow: `0 0 8px ${FV.ember}` }} />
+                <span style={{ fontFamily: FV.mono, fontSize: 9, color: FV.ember, letterSpacing: '0.12em' }}>EN COURS</span>
+              </div>
+            )}
             <div style={{ minWidth: 0, overflow: 'hidden' }}>
               <div style={{ fontSize: 13, color: FV.ink, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {activeConv ? history.find(h => h.id === activeConv)?.title || "Session active" : "Nouvelle session"}
@@ -346,8 +364,8 @@ export default function ChatPage() {
               <div style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.08em', marginTop: 1 }}>ÉTAPE {String(activeStep + 1).padStart(2, '0')} / {STEPS.length}</div>
             </div>
           </div>
-          {/* Provider selector */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+          {/* Provider selector — masqué sur mobile (le défaut AUTO reste actif) */}
+          {!isMobile && <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
             {[
               { id: "auto", label: "AUTO" },
               { id: "anthropic", label: "CLAUDE" },
@@ -391,13 +409,13 @@ export default function ChatPage() {
                 → {activeProvider.toUpperCase()}
               </span>
             )}
-          </div>
+          </div>}
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-            <button onClick={newConversation} title="Nouvelle session" style={{ width: 32, height: 32, background: 'rgba(241,233,218,0.04)', color: FV.ink2, border: `1px solid ${FV.ruleStrong}`, borderRadius: 7, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>↺</button>
-            <button onClick={() => setShowExport(true)} style={{ background: FV.ember, color: FV.black, border: 'none', padding: '8px 14px', borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: 'pointer', letterSpacing: '0.04em', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            {!isMobile && <button onClick={newConversation} title="Nouvelle session" style={{ width: 32, height: 32, background: 'rgba(241,233,218,0.04)', color: FV.ink2, border: `1px solid ${FV.ruleStrong}`, borderRadius: 7, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>↺</button>}
+            <button onClick={() => setShowExport(true)} title="Forger un PDF" style={{ background: FV.ember, color: FV.black, border: 'none', padding: isMobile ? '8px 12px' : '8px 14px', borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: 'pointer', letterSpacing: '0.04em', display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
               <span style={{ fontFamily: FV.serif, fontStyle: 'italic' }}>✦</span>
-              FORGER PDF
+              {isMobile ? 'PDF' : 'FORGER PDF'}
             </button>
           </div>
         </div>
@@ -420,14 +438,14 @@ export default function ChatPage() {
         </div>
 
         {/* Messages */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '32px 40px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '20px 16px' : '32px 40px' }}>
           <div style={{ maxWidth: 720, margin: '0 auto' }}>
 
             {/* Quick prompts on start */}
             {showPrompts && (
               <div style={{ marginBottom: 32 }}>
                 <div style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.18em', marginBottom: 16 }}>DÉMARRAGE RAPIDE</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: 10 }}>
                   {QUICK_PROMPTS.map((q, i) => (
                     <button key={i} onClick={() => sendMessage(q.text)} style={{ background: FV.black2, border: `1px solid ${FV.rule}`, borderRadius: 10, padding: '14px 16px', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 14, transition: 'all 0.2s' }}
                       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(238,90,36,0.3)'; }}
@@ -487,7 +505,7 @@ export default function ChatPage() {
         </div>
 
         {/* Composer */}
-        <div style={{ borderTop: `1px solid ${FV.rule}`, padding: '14px 20px 18px', background: FV.black2 }}>
+        <div style={{ borderTop: `1px solid ${FV.rule}`, padding: isMobile ? '12px 12px 14px' : '14px 20px 18px', background: FV.black2 }}>
           <div style={{ maxWidth: 720, margin: '0 auto' }}>
             <div style={{ background: FV.black, border: `1px solid ${FV.ruleStrong}`, borderRadius: 12, padding: '10px 12px', display: 'flex', alignItems: 'flex-end', gap: 10 }}>
               <button onClick={() => setShowExport(true)} style={{ background: 'transparent', border: 'none', color: FV.ember, cursor: 'pointer', fontSize: 18, padding: 6, lineHeight: 1, flexShrink: 0, marginBottom: 2 }} title="Générer un document">✦</button>

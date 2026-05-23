@@ -2,12 +2,15 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { sendOtpEmail } from "@/lib/email";
-
-function generateOtp(): string {
-  return String(Math.floor(100000 + Math.random() * 900000));
-}
+import { generateOtp } from "@/lib/otp";
+import { rateLimit, getIp } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
+  // Anti-abus : limite les créations de compte / envois d'email par IP.
+  if (!(await rateLimit(getIp(req), 5, 60_000))) {
+    return NextResponse.json({ error: "Trop de tentatives. Réessaie dans une minute." }, { status: 429 });
+  }
+
   try {
     const { name, email, password } = await req.json();
 

@@ -1,12 +1,10 @@
-import type { Config } from "jest";
-import nextJest from "next/jest";
+import nextJest from "next/jest.js";
 
-const createJestConfig = nextJest({
-  dir: "./",
-});
+// next/jest transforme les tests TS via SWC : ni ts-node ni ts-jest requis.
+const createJestConfig = nextJest({ dir: "./" });
 
-const config: Config = {
-  preset: "ts-jest",
+/** @type {import('jest').Config} */
+const config = {
   testEnvironment: "node",
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",

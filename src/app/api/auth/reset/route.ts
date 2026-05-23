@@ -2,8 +2,14 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { sendPasswordChangedEmail } from "@/lib/email";
+import { rateLimit, getIp } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
+  // Anti-brute-force : limite les tentatives sur le token de reset par IP.
+  if (!(await rateLimit(getIp(req), 5, 60_000))) {
+    return NextResponse.json({ error: "Trop de tentatives. Réessaie dans une minute." }, { status: 429 });
+  }
+
   try {
     const { token, password } = await req.json();
 

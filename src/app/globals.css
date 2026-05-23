@@ -59,3 +59,24 @@
   0%, 80%, 100% { transform: scale(0.7); opacity: 0.5; }
   40%           { transform: scale(1);   opacity: 1;   }
 }
+
+/* ── Garde-fous responsive globaux ──
+   L'UI est en styles inline ; ces règles de base évitent les débordements
+   horizontaux sur mobile sans entrer en conflit avec les styles inline. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Les images injectées (markdown chat, couvertures) ne débordent jamais. */
+img {
+  max-width: 100%;
+  height: auto;
+}

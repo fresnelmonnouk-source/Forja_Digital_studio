@@ -2,8 +2,14 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import prisma from "@/lib/prisma";
 import { sendPasswordResetEmail } from "@/lib/email";
+import { rateLimit, getIp } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
+  // Anti-spam : limite les demandes de réinitialisation par IP.
+  if (!(await rateLimit(getIp(req), 3, 60_000))) {
+    return NextResponse.json({ error: "Trop de tentatives. Réessaie dans une minute." }, { status: 429 });
+  }
+
   try {
     const { email } = await req.json();
 

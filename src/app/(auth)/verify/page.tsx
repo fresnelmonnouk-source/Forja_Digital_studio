@@ -108,8 +108,12 @@ function VerifyContent() {
   };
 
   const inputStyle: React.CSSProperties = {
-    width: 52,
-    height: 64,
+    // Fluide : chaque case occupe une part égale de la rangée, avec un mini garde-fou.
+    flex: 1,
+    minWidth: 0,
+    width: "100%",
+    aspectRatio: "52 / 64",
+    maxWidth: 52,
     textAlign: "center",
     background: FV.black2,
     border: `1px solid ${FV.ruleStrong}`,

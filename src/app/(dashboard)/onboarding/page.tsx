@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FV, FVMark, FVHook, FVOrb, FVSGrid } from "@/components/ui/fonderie";
+import { useBreakpoint } from "@/lib/use-media-query";
 
 const GOALS = [
   { id: "formation", icon: "🎓", label: "Créer une formation", desc: "Programme pédagogique · 12 étapes" },
@@ -20,6 +21,7 @@ const LEVELS = [
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { isMobile, isTablet } = useBreakpoint();
   const [step, setStep] = useState(0);
   const [selectedGoal, setSelectedGoal] = useState<string | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
@@ -42,7 +44,7 @@ export default function OnboardingPage() {
       <div style={{ position: 'absolute', bottom: -200, left: -100, width: 600, height: 600, background: `radial-gradient(circle, ${FV.amber}10 0%, transparent 60%)`, pointerEvents: 'none' }} />
 
       {/* Nav */}
-      <div style={{ position: 'relative', padding: '20px 48px', borderBottom: `1px solid ${FV.rule}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 10 }}>
+      <div style={{ position: 'relative', padding: isMobile ? '16px 20px' : '20px 48px', borderBottom: `1px solid ${FV.rule}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <FVMark size={30} />
           <div style={{ fontFamily: FV.serif, fontSize: 20, fontWeight: 700, letterSpacing: '0.18em' }}>FORJA</div>
@@ -57,7 +59,7 @@ export default function OnboardingPage() {
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 48px', position: 'relative', zIndex: 5 }}>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: isMobile ? '28px 20px' : '40px 48px', position: 'relative', zIndex: 5 }}>
         <div style={{ width: '100%', maxWidth: 700 }}>
 
           {/* STEP 0 — Bienvenue + Nom */}
@@ -70,7 +72,7 @@ export default function OnboardingPage() {
                 </div>
               </div>
               <FVHook tag="00" label="Bienvenue à la forge" />
-              <h1 style={{ fontFamily: FV.serif, fontWeight: 500, fontSize: 64, lineHeight: 1, letterSpacing: '-0.03em', margin: '24px 0 16px', color: FV.ink }}>
+              <h1 style={{ fontFamily: FV.serif, fontWeight: 500, fontSize: isMobile ? 42 : 64, lineHeight: 1, letterSpacing: '-0.03em', margin: '24px 0 16px', color: FV.ink }}>
                 L'atelier est<br />
                 <span style={{ fontStyle: 'italic', background: `linear-gradient(180deg, ${FV.amber}, ${FV.ember})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>prêt pour toi.</span>
               </h1>
@@ -101,13 +103,13 @@ export default function OnboardingPage() {
           {step === 1 && (
             <div>
               <FVHook tag="01" label="Ton objectif" />
-              <h2 style={{ fontFamily: FV.serif, fontWeight: 500, fontSize: 52, lineHeight: 1.05, letterSpacing: '-0.025em', margin: '20px 0 8px', color: FV.ink }}>
+              <h2 style={{ fontFamily: FV.serif, fontWeight: 500, fontSize: isMobile ? 34 : 52, lineHeight: 1.05, letterSpacing: '-0.025em', margin: '20px 0 8px', color: FV.ink }}>
                 Qu'est-ce qu'on<br /><span style={{ fontStyle: 'italic', color: FV.ember }}>forge</span> ensemble ?
               </h2>
               <p style={{ fontFamily: FV.serif, fontStyle: 'italic', fontSize: 15, color: FV.ink2, marginBottom: 32, lineHeight: 1.5 }}>
                 Choisis l'objectif principal de cette session.
               </p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 32 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 12, marginBottom: 32 }}>
                 {GOALS.map(g => (
                   <div
                     key={g.id}
@@ -142,7 +144,7 @@ export default function OnboardingPage() {
           {step === 2 && (
             <div>
               <FVHook tag="02" label="Ton niveau" />
-              <h2 style={{ fontFamily: FV.serif, fontWeight: 500, fontSize: 52, lineHeight: 1.05, letterSpacing: '-0.025em', margin: '20px 0 8px', color: FV.ink }}>
+              <h2 style={{ fontFamily: FV.serif, fontWeight: 500, fontSize: isMobile ? 34 : 52, lineHeight: 1.05, letterSpacing: '-0.025em', margin: '20px 0 8px', color: FV.ink }}>
                 Où en es-tu<br /><span style={{ fontStyle: 'italic', color: FV.ember }}>aujourd'hui ?</span>
               </h2>
               <p style={{ fontFamily: FV.serif, fontStyle: 'italic', fontSize: 15, color: FV.ink2, marginBottom: 32, lineHeight: 1.5 }}>

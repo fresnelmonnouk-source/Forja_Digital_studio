@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { sendWelcomeEmail } from "@/lib/email";
+import { rateLimit, getIp } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
+  // Anti-brute-force : limite les essais de code OTP par IP.
+  if (!(await rateLimit(getIp(req), 10, 60_000))) {
+    return NextResponse.json({ error: "Trop de tentatives. Réessaie dans une minute." }, { status: 429 });
+  }
+
   try {
     const { email, code } = await req.json();
 

@@ -1,8 +1,13 @@
 import React from 'react';
 
 function renderInline(text: string) {
-  const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
+  // Gère gras **…**, code inline `…` et images markdown ![alt](url).
+  const parts = text.split(/(!\[[^\]]*\]\([^)]+\)|\*\*[^*]+\*\*|`[^`]+`)/g);
   return parts.map((part, i) => {
+    const img = part.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    if (img)
+      // eslint-disable-next-line @next/next/no-img-element
+      return <img key={i} src={img[2]} alt={img[1] || "Illustration FORJA"} className="block w-full max-w-full h-auto rounded-lg border border-fv-brass/15 my-3" />;
     if (part.startsWith("**") && part.endsWith("**"))
       return <strong key={i} className="text-fv-brass font-bold">{part.slice(2, -2)}</strong>;
     if (part.startsWith("`") && part.endsWith("`"))

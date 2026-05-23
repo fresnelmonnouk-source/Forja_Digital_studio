@@ -1,6 +1,18 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Instanciation paresseuse : `new Resend(undefined)` lève une exception au
+// chargement du module si la clé manque, ce qui faisait planter le build et
+// toute route important ce fichier. On ne crée le client qu'à l'envoi réel.
+let _resend: Resend | null = null;
+function getResend(): Resend {
+  if (!_resend) {
+    const key = process.env.RESEND_API_KEY;
+    if (!key) throw new Error("RESEND_API_KEY manquante — envoi d'email impossible.");
+    _resend = new Resend(key);
+  }
+  return _resend;
+}
+
 const FROM = process.env.RESEND_FROM || "onboarding@resend.dev";
 const APP_URL = process.env.NEXTAUTH_URL || "http://localhost:3000";
 
@@ -223,7 +235,7 @@ export function buildPasswordChangedEmail(name: string | null): string {
 
 export async function sendOtpEmail(to: string, name: string | null, code: string) {
   const formatted = `${code.slice(0, 3)} ${code.slice(3)}`;
-  return resend.emails.send({
+  return getResend().emails.send({
     from: FROM,
     to,
     subject: `Ton code d'accès au four : ${formatted}`,
@@ -232,7 +244,7 @@ export async function sendOtpEmail(to: string, name: string | null, code: string
 }
 
 export async function sendWelcomeEmail(to: string, name: string | null) {
-  return resend.emails.send({
+  return getResend().emails.send({
     from: FROM,
     to,
     subject: `${name ? name + ", " : ""}le four est chaud.`,
@@ -241,7 +253,7 @@ export async function sendWelcomeEmail(to: string, name: string | null) {
 }
 
 export async function sendPasswordResetEmail(to: string, name: string | null, resetLink: string) {
-  return resend.emails.send({
+  return getResend().emails.send({
     from: FROM,
     to,
     subject: "Rallumer votre fourneau — Réinitialisation FORJA",
@@ -250,7 +262,7 @@ export async function sendPasswordResetEmail(to: string, name: string | null, re
 }
 
 export async function sendPasswordChangedEmail(to: string, name: string | null) {
-  return resend.emails.send({
+  return getResend().emails.send({
     from: FROM,
     to,
     subject: "Ton mot de passe a été modifié — FORJA",

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FV, FVMark, FVHook } from "@/components/ui/fonderie";
+import { useMediaQuery } from "@/lib/use-media-query";
 
 interface Message {
   role: string;
@@ -20,6 +21,7 @@ const OPTIONS = [
 ] as const;
 
 export default function ExportModal({ onClose, conversation }: { onClose: () => void; conversation: Message[] }) {
+  const isMobile = useMediaQuery("(max-width: 640px)");
   const [exporting, setExporting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -92,9 +94,9 @@ export default function ExportModal({ onClose, conversation }: { onClose: () => 
   return (
     <div
       onClick={e => e.target === e.currentTarget && onClose()}
-      style={{ position: 'fixed', inset: 0, background: 'rgba(11,9,8,0.78)', backdropFilter: 'blur(12px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(11,9,8,0.78)', backdropFilter: 'blur(12px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: isMobile ? 14 : 24, overflowY: 'auto' }}
     >
-      <div style={{ width: 560, background: FV.black2, border: `1px solid ${FV.ruleStrong}`, borderRadius: 16, padding: 32, boxShadow: `0 30px 80px rgba(0,0,0,0.6), 0 0 80px ${FV.ember}22`, position: 'relative' }}>
+      <div style={{ width: '100%', maxWidth: 560, maxHeight: '92vh', overflowY: 'auto', background: FV.black2, border: `1px solid ${FV.ruleStrong}`, borderRadius: 16, padding: isMobile ? 20 : 32, boxShadow: `0 30px 80px rgba(0,0,0,0.6), 0 0 80px ${FV.ember}22`, position: 'relative' }}>
 
         {!done ? (
           <>
