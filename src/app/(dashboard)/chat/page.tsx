@@ -7,7 +7,7 @@ import { FV, FVMark } from "@/components/ui/fonderie";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { stripImageData } from "@/lib/strip-images";
 import Link from "next/link";
-import { Menu, X, RotateCcw, LogOut, Sparkles, ArrowRight, CornerDownLeft, GraduationCap, BookOpen, Cog, Bot, Shield, type LucideIcon } from "lucide-react";
+import { Menu, X, RotateCcw, LogOut, Sparkles, ArrowRight, CornerDownLeft, GraduationCap, BookOpen, Cog, Bot, Shield, Trash2, type LucideIcon } from "lucide-react";
 
 interface Message {
   role: string;
@@ -285,6 +285,20 @@ export default function ChatPage() {
     }
   };
 
+  const deleteConversation = async (conv: Conversation) => {
+    if (!confirm(`Supprimer la session « ${conv.title || "sans titre"} » ? Action irréversible.`)) return;
+    const prev = history;
+    setHistory((list) => list.filter((c) => c.id !== conv.id)); // optimiste
+    if (activeConv === conv.id) newConversation();
+    try {
+      const res = await fetch(`/api/conversations/${conv.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+    } catch {
+      setHistory(prev); // rollback si l'API échoue
+      alert("Suppression impossible. Réessaie.");
+    }
+  };
+
   return (
     <div style={{ width: '100%', height: '100vh', background: FV.black, fontFamily: FV.sans, color: FV.ink, display: 'flex', overflow: 'hidden', position: 'relative' }}>
       <div style={{ position: 'absolute', top: -200, right: -200, width: 600, height: 600, background: `radial-gradient(circle, ${FV.ember}15 0%, transparent 60%)`, pointerEvents: 'none' }} />
@@ -337,6 +351,7 @@ export default function ChatPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
                   {active && <div style={{ width: 6, height: 6, borderRadius: '50%', background: FV.ember, boxShadow: `0 0 6px ${FV.ember}`, flexShrink: 0 }} />}
                   <div style={{ fontSize: 12, color: active ? FV.ember : FV.ink, fontWeight: active ? 600 : 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{conv.title || "Session sans titre"}</div>
+                  <button onClick={(e) => { e.stopPropagation(); deleteConversation(conv); }} title="Supprimer la session" style={{ background: 'transparent', border: 'none', color: FV.smoke, cursor: 'pointer', padding: 2, display: 'flex', alignItems: 'center', flexShrink: 0 }}><Trash2 size={13} /></button>
                 </div>
                 <div style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.08em', paddingLeft: active ? 14 : 0 }}>{new Date(conv.updatedAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }).toUpperCase()}</div>
               </div>
