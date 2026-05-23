@@ -102,7 +102,7 @@ function btn(label: string, url: string, secondary = false): string {
 
 // ── 02 · Vérification OTP ────────────────────────────────────────
 
-export function buildOtpEmail(name: string | null, code: string): string {
+export function buildOtpEmail(name: string | null, code: string, email: string): string {
   const displayName = esc(name || "Créateur");
   const digits = code.split("").map(d =>
     `<span style="display:inline-block;width:52px;height:64px;line-height:64px;text-align:center;margin:0 4px;border-radius:8px;background:${C.black};border:1px solid ${C.strong};font-family:Georgia,'Times New Roman',serif;font-size:36px;font-weight:500;color:${C.ember};font-style:italic">${esc(d)}</span>`
@@ -126,7 +126,7 @@ export function buildOtpEmail(name: string | null, code: string): string {
 
     <div style="padding:24px 44px 32px;text-align:center">
       <p style="font-family:Consolas,'Courier New',monospace;font-size:9px;color:${C.smoke};letter-spacing:0.15em;margin:0 0 14px">OU CLIQUE DIRECTEMENT</p>
-      ${btn("Confirmer mon adresse →", `${APP_URL}/verify?email=placeholder`, true)}
+      ${btn("Confirmer mon adresse →", `${APP_URL}/verify?email=${encodeURIComponent(email)}`, true)}
     </div>
 
     ${footer("Tu n'as pas demandé ce code ? Ignore ce mail — personne n'accèdera à ton compte sans lui.")}
@@ -239,7 +239,7 @@ export async function sendOtpEmail(to: string, name: string | null, code: string
     from: FROM,
     to,
     subject: `Ton code d'accès au four : ${formatted}`,
-    html: buildOtpEmail(name, code),
+    html: buildOtpEmail(name, code, to),
   });
 }
 

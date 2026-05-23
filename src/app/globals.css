@@ -80,3 +80,20 @@ img {
   max-width: 100%;
   height: auto;
 }
+
+/* ── Accessibilité : respect de prefers-reduced-motion ──
+   Coupe le marquee, les dots de chargement et toutes les transitions inline
+   pour les utilisateurs qui désactivent les animations (système). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .marquee-track {
+    animation: none !important;
+  }
+}

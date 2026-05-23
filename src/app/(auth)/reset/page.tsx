@@ -31,7 +31,7 @@ function ResetForm() {
   const strength = getStrength(password);
 
   const checks = [
-    { label: "10 caractères minimum", ok: password.length >= 10 },
+    { label: "8 caractères minimum", ok: password.length >= 8 },
     { label: "Au moins un chiffre", ok: /\d/.test(password) },
     { label: "Au moins une majuscule", ok: /[A-Z]/.test(password) },
     { label: "Un caractère spécial (recommandé)", ok: /[^A-Za-z0-9]/.test(password) },
@@ -46,8 +46,8 @@ function ResetForm() {
       return;
     }
 
-    if (password.length < 10) {
-      setError("Le mot de passe doit contenir au moins 10 caractères.");
+    if (password.length < 8) {
+      setError("Le mot de passe doit contenir au moins 8 caractères.");
       return;
     }
     if (!/\d/.test(password)) {
@@ -109,7 +109,7 @@ function ResetForm() {
       ) : (
         <form onSubmit={handleSubmit} noValidate>
           <p style={{ fontSize: 14, color: FV.ink2, marginTop: 16, marginBottom: 28, lineHeight: 1.6 }}>
-            Au moins 10 caractères. Plus c'est long, plus c'est solide.
+            Au moins 8 caractères, une majuscule et un chiffre. Plus c'est long, plus c'est solide.
           </p>
 
           {!token && (

@@ -1,16 +1,17 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { GraduationCap, BookOpen, Cog, Wallet, Bot, Sparkles, Check, type LucideIcon } from "lucide-react";
 import { FV, FVMark, FVHook, FVOrb, FVSGrid } from "@/components/ui/fonderie";
 import { useBreakpoint } from "@/lib/use-media-query";
 
-const GOALS = [
-  { id: "formation", icon: "🎓", label: "Créer une formation", desc: "Programme pédagogique · 12 étapes" },
-  { id: "ebook", icon: "📖", label: "Lancer un ebook", desc: "Document structuré · prêt à vendre" },
-  { id: "saas", icon: "⚙️", label: "Lancer un SaaS", desc: "MVP · validation marché · roadmap" },
-  { id: "vente", icon: "💰", label: "Construire une offre", desc: "Copywriting · page de vente · prix" },
-  { id: "automatisation", icon: "🤖", label: "Automatisation IA", desc: "Workflows · Make · systèmes" },
-  { id: "marque", icon: "✦", label: "Bâtir ma marque", desc: "Positionnement · audience · contenu" },
+const GOALS: { id: string; Icon: LucideIcon; label: string; desc: string }[] = [
+  { id: "formation", Icon: GraduationCap, label: "Créer une formation", desc: "Programme pédagogique · 12 étapes" },
+  { id: "ebook", Icon: BookOpen, label: "Lancer un ebook", desc: "Document structuré · prêt à vendre" },
+  { id: "saas", Icon: Cog, label: "Lancer un SaaS", desc: "MVP · validation marché · roadmap" },
+  { id: "vente", Icon: Wallet, label: "Construire une offre", desc: "Copywriting · page de vente · prix" },
+  { id: "automatisation", Icon: Bot, label: "Automatisation IA", desc: "Workflows · Make · systèmes" },
+  { id: "marque", Icon: Sparkles, label: "Bâtir ma marque", desc: "Positionnement · audience · contenu" },
 ];
 
 const LEVELS = [
@@ -117,9 +118,9 @@ export default function OnboardingPage() {
                     style={{ background: selectedGoal === g.id ? 'rgba(238,90,36,0.1)' : FV.black2, border: `1px solid ${selectedGoal === g.id ? 'rgba(238,90,36,0.4)' : FV.rule}`, borderRadius: 12, padding: '20px 18px', cursor: 'pointer', transition: 'all 0.2s', position: 'relative' }}
                   >
                     {selectedGoal === g.id && (
-                      <div style={{ position: 'absolute', top: 10, right: 10, width: 16, height: 16, borderRadius: '50%', background: FV.ember, color: FV.black, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700 }}>✓</div>
+                      <div style={{ position: 'absolute', top: 10, right: 10, width: 16, height: 16, borderRadius: '50%', background: FV.ember, color: FV.black, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Check size={10} strokeWidth={3} /></div>
                     )}
-                    <div style={{ fontSize: 24, marginBottom: 10 }}>{g.icon}</div>
+                    <g.Icon size={26} strokeWidth={1.5} color={selectedGoal === g.id ? FV.ember : FV.ink} style={{ marginBottom: 10, display: 'block' }} />
                     <div style={{ fontFamily: FV.serif, fontSize: 16, color: selectedGoal === g.id ? FV.ember : FV.ink, fontWeight: 600, marginBottom: 4 }}>{g.label}</div>
                     <div style={{ fontSize: 11, color: FV.smoke, lineHeight: 1.5 }}>{g.desc}</div>
                   </div>
@@ -161,14 +162,14 @@ export default function OnboardingPage() {
                       <div style={{ fontFamily: FV.serif, fontSize: 20, color: selectedLevel === l.id ? FV.ember : FV.ink, fontWeight: 600, marginBottom: 4 }}>{l.label}</div>
                       <div style={{ fontFamily: FV.serif, fontStyle: 'italic', fontSize: 13, color: FV.smoke }}>{l.desc}</div>
                     </div>
-                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: selectedLevel === l.id ? FV.ember : FV.rule, border: `1px solid ${selectedLevel === l.id ? FV.ember : FV.ruleStrong}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: FV.black, fontSize: 12, fontWeight: 700, flexShrink: 0, transition: 'all 0.2s' }}>
-                      {selectedLevel === l.id ? '✓' : ''}
+                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: selectedLevel === l.id ? FV.ember : FV.rule, border: `1px solid ${selectedLevel === l.id ? FV.ember : FV.ruleStrong}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: FV.black, flexShrink: 0, transition: 'all 0.2s' }}>
+                      {selectedLevel === l.id ? <Check size={13} strokeWidth={3} /> : null}
                     </div>
                   </div>
                 ))}
               </div>
               <div style={{ background: 'rgba(243,156,44,0.06)', border: `1px solid rgba(243,156,44,0.18)`, borderRadius: 10, padding: '14px 18px', marginBottom: 24, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                <span style={{ color: FV.amber, fontFamily: FV.serif, fontStyle: 'italic', fontSize: 18, lineHeight: 1, flexShrink: 0 }}>✦</span>
+                <Sparkles size={16} color={FV.amber} style={{ flexShrink: 0, marginTop: 1 }} />
                 <span style={{ fontFamily: FV.serif, fontStyle: 'italic', fontSize: 13, color: FV.amberPale, lineHeight: 1.55 }}>
                   Tu peux toujours changer de direction en pleine session. FORJA s'adapte à chaque tournant.
                 </span>

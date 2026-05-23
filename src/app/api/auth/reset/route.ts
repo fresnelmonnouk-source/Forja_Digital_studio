@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { sendPasswordChangedEmail } from "@/lib/email";
 import { rateLimit, getIp } from "@/lib/rate-limit";
+import { validatePassword } from "@/lib/validate-password";
 
 export async function POST(req: Request) {
   // Anti-brute-force : limite les tentatives sur le token de reset par IP.
@@ -17,8 +18,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Token de réinitialisation requis ou invalide." }, { status: 400 });
     }
 
-    if (!password || typeof password !== "string" || password.length < 10) {
-      return NextResponse.json({ error: "Le mot de passe doit contenir au moins 10 caractères." }, { status: 400 });
+    const pwdError = validatePassword(password);
+    if (pwdError) {
+      return NextResponse.json({ error: pwdError }, { status: 400 });
     }
 
     // Trouver l'utilisateur avec un jeton valide et non expiré

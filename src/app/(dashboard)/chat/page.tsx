@@ -5,6 +5,7 @@ import MarkdownRenderer from "@/components/chat/MarkdownRenderer";
 import ExportModal from "@/components/chat/ExportModal";
 import { FV, FVMark } from "@/components/ui/fonderie";
 import { useMediaQuery } from "@/lib/use-media-query";
+import { Menu, X, RotateCcw, LogOut, Sparkles, ArrowRight, CornerDownLeft, GraduationCap, BookOpen, Cog, Bot, type LucideIcon } from "lucide-react";
 
 interface Message {
   role: string;
@@ -18,11 +19,11 @@ interface Conversation {
   messages?: Message[];
 }
 
-const QUICK_PROMPTS = [
-  { icon: "🎓", label: "Créer une formation", text: "Je veux créer une formation en ligne. Guide-moi à travers les 12 étapes." },
-  { icon: "📖", label: "Créer un Ebook", text: "Je veux créer un ebook rentable. Aide-moi à trouver le bon sujet, la structure et l'offre." },
-  { icon: "⚙️", label: "Lancer un SaaS", text: "J'ai une idée de SaaS. Aide-moi à valider le marché, définir le MVP et construire le plan de lancement." },
-  { icon: "🤖", label: "Automatisation IA", text: "Je veux automatiser des processus avec l'IA. Guide-moi avec la logique d'automatisation." },
+const QUICK_PROMPTS: { Icon: LucideIcon; label: string; text: string }[] = [
+  { Icon: GraduationCap, label: "Créer une formation", text: "Je veux créer une formation en ligne. Guide-moi à travers les 12 étapes." },
+  { Icon: BookOpen, label: "Créer un Ebook", text: "Je veux créer un ebook rentable. Aide-moi à trouver le bon sujet, la structure et l'offre." },
+  { Icon: Cog, label: "Lancer un SaaS", text: "J'ai une idée de SaaS. Aide-moi à valider le marché, définir le MVP et construire le plan de lancement." },
+  { Icon: Bot, label: "Automatisation IA", text: "Je veux automatiser des processus avec l'IA. Guide-moi avec la logique d'automatisation." },
 ];
 
 const STEPS = ['Signal', 'Offre', 'Promesse', 'Avatar', 'Douleurs', 'Pédagogie', 'Fil Rouge', 'Outils', 'Auto.', 'Livrables', 'Copy', 'ROI', 'WOW'];
@@ -294,7 +295,7 @@ export default function ChatPage() {
               <div style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.12em' }}>v.4 · LIBRE</div>
             </div>
           </div>
-          <button onClick={() => setSidebarOpen(false)} style={{ background: 'transparent', border: 'none', color: FV.smoke, cursor: 'pointer', fontSize: 18, padding: 4, lineHeight: 1 }}>×</button>
+          <button onClick={() => setSidebarOpen(false)} title="Fermer" style={{ background: 'transparent', border: 'none', color: FV.smoke, cursor: 'pointer', padding: 4, lineHeight: 1, display: 'flex', alignItems: 'center' }}><X size={18} /></button>
         </div>
 
         {/* New session btn */}
@@ -338,7 +339,7 @@ export default function ChatPage() {
             <div style={{ fontSize: 12, color: FV.ink, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userName}</div>
             <div style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.1em' }}>LIBRE</div>
           </div>
-          <button onClick={() => signOut({ callbackUrl: "/" })} title="Déconnexion" style={{ background: 'transparent', border: 'none', color: FV.smoke, cursor: 'pointer', fontSize: 14, padding: 4, lineHeight: 1 }}>↩</button>
+          <button onClick={() => signOut({ callbackUrl: "/" })} title="Déconnexion" style={{ background: 'transparent', border: 'none', color: FV.smoke, cursor: 'pointer', padding: 4, lineHeight: 1, display: 'flex', alignItems: 'center' }}><LogOut size={15} /></button>
         </div>
       </div>
 
@@ -349,7 +350,7 @@ export default function ChatPage() {
         <div style={{ borderBottom: `1px solid ${FV.rule}`, padding: isMobile ? '10px 14px' : '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(11,9,8,0.7)', backdropFilter: 'blur(12px)', gap: isMobile ? 8 : 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0, flex: 1 }}>
             {(!sidebarOpen || isMobile) && (
-              <button onClick={() => setSidebarOpen(true)} style={{ background: 'transparent', border: 'none', color: FV.smoke, cursor: 'pointer', fontSize: 18, padding: 4, lineHeight: 1, flexShrink: 0 }}>☰</button>
+              <button onClick={() => setSidebarOpen(true)} title="Menu" style={{ background: 'transparent', border: 'none', color: FV.smoke, cursor: 'pointer', padding: 4, lineHeight: 1, flexShrink: 0, display: 'flex', alignItems: 'center' }}><Menu size={18} /></button>
             )}
             {!isMobile && (
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 9px', background: 'rgba(238,90,36,0.1)', border: '1px solid rgba(238,90,36,0.25)', borderRadius: 999, flexShrink: 0 }}>
@@ -412,9 +413,9 @@ export default function ChatPage() {
           </div>}
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-            {!isMobile && <button onClick={newConversation} title="Nouvelle session" style={{ width: 32, height: 32, background: 'rgba(241,233,218,0.04)', color: FV.ink2, border: `1px solid ${FV.ruleStrong}`, borderRadius: 7, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>↺</button>}
+            {!isMobile && <button onClick={newConversation} title="Nouvelle session" style={{ width: 32, height: 32, background: 'rgba(241,233,218,0.04)', color: FV.ink2, border: `1px solid ${FV.ruleStrong}`, borderRadius: 7, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><RotateCcw size={15} /></button>}
             <button onClick={() => setShowExport(true)} title="Forger un PDF" style={{ background: FV.ember, color: FV.black, border: 'none', padding: isMobile ? '8px 12px' : '8px 14px', borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: 'pointer', letterSpacing: '0.04em', display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
-              <span style={{ fontFamily: FV.serif, fontStyle: 'italic' }}>✦</span>
+              <Sparkles size={13} />
               {isMobile ? 'PDF' : 'FORGER PDF'}
             </button>
           </div>
@@ -451,7 +452,7 @@ export default function ChatPage() {
                       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(238,90,36,0.3)'; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = FV.rule; }}
                     >
-                      <span style={{ fontSize: 22, flexShrink: 0 }}>{q.icon}</span>
+                      <q.Icon size={22} color={FV.ember} strokeWidth={1.5} style={{ flexShrink: 0 }} />
                       <span style={{ fontSize: 13, color: FV.ink, fontWeight: 500 }}>{q.label}</span>
                     </button>
                   ))}
@@ -508,7 +509,7 @@ export default function ChatPage() {
         <div style={{ borderTop: `1px solid ${FV.rule}`, padding: isMobile ? '12px 12px 14px' : '14px 20px 18px', background: FV.black2 }}>
           <div style={{ maxWidth: 720, margin: '0 auto' }}>
             <div style={{ background: FV.black, border: `1px solid ${FV.ruleStrong}`, borderRadius: 12, padding: '10px 12px', display: 'flex', alignItems: 'flex-end', gap: 10 }}>
-              <button onClick={() => setShowExport(true)} style={{ background: 'transparent', border: 'none', color: FV.ember, cursor: 'pointer', fontSize: 18, padding: 6, lineHeight: 1, flexShrink: 0, marginBottom: 2 }} title="Générer un document">✦</button>
+              <button onClick={() => setShowExport(true)} style={{ background: 'transparent', border: 'none', color: FV.ember, cursor: 'pointer', padding: 6, lineHeight: 1, flexShrink: 0, marginBottom: 2, display: 'flex', alignItems: 'center' }} title="Générer un document"><Sparkles size={18} /></button>
               <textarea
                 ref={textareaRef}
                 value={input}
@@ -525,13 +526,13 @@ export default function ChatPage() {
                 }}
               />
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                <kbd style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, padding: '2px 6px', border: `1px solid ${FV.rule}`, borderRadius: 4 }}>⏎</kbd>
+                <kbd style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, padding: '3px 6px', border: `1px solid ${FV.rule}`, borderRadius: 4, display: 'inline-flex', alignItems: 'center' }}><CornerDownLeft size={11} /></kbd>
                 <button
                   onClick={() => sendMessage()}
                   disabled={loading || !input.trim()}
-                  style={{ background: (loading || !input.trim()) ? FV.rule : FV.ember, color: (loading || !input.trim()) ? FV.smoke : FV.black, border: 'none', width: 34, height: 34, borderRadius: 8, cursor: (loading || !input.trim()) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, boxShadow: (!loading && input.trim()) ? `0 0 12px ${FV.ember}66` : 'none', transition: 'all 0.2s' }}
+                  style={{ background: (loading || !input.trim()) ? FV.rule : FV.ember, color: (loading || !input.trim()) ? FV.smoke : FV.black, border: 'none', width: 34, height: 34, borderRadius: 8, cursor: (loading || !input.trim()) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: (!loading && input.trim()) ? `0 0 12px ${FV.ember}66` : 'none', transition: 'all 0.2s' }}
                 >
-                  →
+                  <ArrowRight size={16} />
                 </button>
               </div>
             </div>

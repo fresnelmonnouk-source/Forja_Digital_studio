@@ -19,9 +19,15 @@ function createPrismaClient(): PrismaClient {
     .replace(/([?&])sslmode=[^&]*/g, "$1")
     .replace(/[?&]$/, "");
 
+  // Validation du certificat SSL de la base.
+  // Par défaut désactivée (certaines connexions Supabase directes utilisent un
+  // certificat non validable par les CA standard → sinon la connexion échoue).
+  // Mettre DATABASE_SSL_STRICT=true en prod une fois confirmé que le pooler
+  // (port 6543) présente bien un certificat valide → protège contre le MITM.
+  const strictSsl = process.env.DATABASE_SSL_STRICT === "true";
   const pool = new Pool({
     connectionString,
-    ssl: { rejectUnauthorized: false },
+    ssl: { rejectUnauthorized: strictSsl },
   });
   const adapter = new PrismaPg(pool);
   return new PrismaClient({

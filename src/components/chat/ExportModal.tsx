@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { FV, FVMark, FVHook } from "@/components/ui/fonderie";
 import { useMediaQuery } from "@/lib/use-media-query";
+import { X, Check, Sparkles, Loader2, Clock, Hash, AlertTriangle, BookOpen, GraduationCap, Wallet, Cog, type LucideIcon } from "lucide-react";
 
 interface Message {
   role: string;
   content: string;
 }
 
-const TYPES = [
-  { id: "ebook", icon: "📖", label: "Ebook", desc: "Document structuré prêt à vendre" },
-  { id: "formation", icon: "🎓", label: "Formation", desc: "Plan pédagogique complet, 12 étapes" },
-  { id: "vente", icon: "💰", label: "Page de vente", desc: "Copywriting prêt à publier" },
-  { id: "blueprint", icon: "⚙", label: "Blueprint", desc: "Roadmap & architecture technique" },
+const TYPES: { id: string; Icon: LucideIcon; label: string; desc: string }[] = [
+  { id: "ebook", Icon: BookOpen, label: "Ebook", desc: "Document structuré prêt à vendre" },
+  { id: "formation", Icon: GraduationCap, label: "Formation", desc: "Plan pédagogique complet, 12 étapes" },
+  { id: "vente", Icon: Wallet, label: "Page de vente", desc: "Copywriting prêt à publier" },
+  { id: "blueprint", Icon: Cog, label: "Blueprint", desc: "Roadmap & architecture technique" },
 ];
 
 const OPTIONS = [
@@ -111,7 +112,7 @@ export default function ExportModal({ onClose, conversation }: { onClose: () => 
                   FORJA compile la session en PDF professionnel.
                 </p>
               </div>
-              <button onClick={onClose} style={{ width: 32, height: 32, background: 'rgba(241,233,218,0.04)', border: `1px solid ${FV.rule}`, borderRadius: 7, color: FV.smoke, cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✕</button>
+              <button onClick={onClose} title="Fermer" style={{ width: 32, height: 32, background: 'rgba(241,233,218,0.04)', border: `1px solid ${FV.rule}`, borderRadius: 7, color: FV.smoke, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><X size={16} /></button>
             </div>
 
             {/* Type grid */}
@@ -123,9 +124,9 @@ export default function ExportModal({ onClose, conversation }: { onClose: () => 
                   style={{ background: docType === t.id ? 'rgba(238,90,36,0.1)' : FV.black, border: `1px solid ${docType === t.id ? 'rgba(238,90,36,0.4)' : FV.rule}`, borderRadius: 10, padding: '16px 18px', cursor: 'pointer', position: 'relative', transition: 'all 0.15s' }}
                 >
                   {docType === t.id && (
-                    <div style={{ position: 'absolute', top: 10, right: 10, width: 16, height: 16, borderRadius: '50%', background: FV.ember, color: FV.black, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700 }}>✓</div>
+                    <div style={{ position: 'absolute', top: 10, right: 10, width: 16, height: 16, borderRadius: '50%', background: FV.ember, color: FV.black, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Check size={10} strokeWidth={3} /></div>
                   )}
-                  <div style={{ fontSize: 22, marginBottom: 8 }}>{t.icon}</div>
+                  <t.Icon size={22} strokeWidth={1.5} color={docType === t.id ? FV.ember : FV.ink} style={{ marginBottom: 8, display: 'block' }} />
                   <div style={{ fontFamily: FV.serif, fontSize: 16, color: docType === t.id ? FV.ember : FV.ink, fontWeight: 600, marginBottom: 4 }}>{t.label}</div>
                   <div style={{ fontSize: 11, color: FV.smoke, lineHeight: 1.5 }}>{t.desc}</div>
                 </div>
@@ -150,8 +151,8 @@ export default function ExportModal({ onClose, conversation }: { onClose: () => 
 
             {/* Error message */}
             {error && (
-              <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(238,90,36,0.08)', border: `1px solid rgba(238,90,36,0.3)`, borderRadius: 8, fontSize: 12, color: FV.ember, lineHeight: 1.5 }}>
-                ⚠️ {error}
+              <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(238,90,36,0.08)', border: `1px solid rgba(238,90,36,0.3)`, borderRadius: 8, fontSize: 12, color: FV.ember, lineHeight: 1.5, display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: 1 }} /> <span>{error}</span>
               </div>
             )}
 
@@ -161,7 +162,7 @@ export default function ExportModal({ onClose, conversation }: { onClose: () => 
               disabled={exporting}
               style={{ width: '100%', background: exporting ? FV.smokeDim : FV.ember, color: exporting ? FV.smoke : FV.black, border: 'none', padding: '14px', fontSize: 13, fontWeight: 700, cursor: exporting ? 'not-allowed' : 'pointer', borderRadius: 8, boxShadow: exporting ? 'none' : `0 0 24px ${FV.ember}66`, letterSpacing: '0.04em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, transition: 'all 0.2s' }}
             >
-              <span style={{ fontFamily: FV.serif, fontStyle: 'italic', fontSize: 16 }}>{exporting ? '⏳' : '✦'}</span>
+              {exporting ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
               {exporting ? "FORJA RÉDIGE LE DOCUMENT…" : "FORGER LE PDF MAINTENANT →"}
             </button>
             <div style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.12em', textAlign: 'center', marginTop: 10 }}>~ 20 SECONDES · FORJA GÉNÈRE UN VRAI LIVRABLE, PAS UN EXPORT</div>
@@ -181,8 +182,8 @@ export default function ExportModal({ onClose, conversation }: { onClose: () => 
             </p>
             {stats && (
               <div style={{ background: FV.black, border: `1px solid ${FV.rule}`, borderRadius: 10, padding: '14px 16px', marginBottom: 20, textAlign: 'left', fontFamily: FV.mono, fontSize: 11, color: FV.smoke }}>
-                <div>⏱️ Durée: <strong>{(stats.duration / 1000).toFixed(2)}s</strong></div>
-                <div>🔖 ID: <strong>{stats.requestId}</strong></div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Clock size={12} /> Durée: <strong>{(stats.duration / 1000).toFixed(2)}s</strong></div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}><Hash size={12} /> ID: <strong>{stats.requestId}</strong></div>
               </div>
             )}
             <div style={{ display: 'flex', gap: 12 }}>
