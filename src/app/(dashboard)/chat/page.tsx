@@ -128,6 +128,7 @@ export default function ChatPage() {
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const [attachedFile, setAttachedFile] = useState<{ name: string; content: string } | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<Conversation | null>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -313,8 +314,8 @@ export default function ChatPage() {
     }
   };
 
-  const deleteConversation = async (conv: Conversation) => {
-    if (!confirm(`Supprimer la session « ${conv.title || "sans titre"} » ? Action irréversible.`)) return;
+  const performDelete = async (conv: Conversation) => {
+    setConfirmDelete(null);
     const prev = history;
     setHistory((list) => list.filter((c) => c.id !== conv.id)); // optimiste
     if (activeConv === conv.id) newConversation();
@@ -323,7 +324,6 @@ export default function ChatPage() {
       if (!res.ok) throw new Error();
     } catch {
       setHistory(prev); // rollback si l'API échoue
-      alert("Suppression impossible. Réessaie.");
     }
   };
 
@@ -379,7 +379,7 @@ export default function ChatPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
                   {active && <div style={{ width: 6, height: 6, borderRadius: '50%', background: FV.ember, boxShadow: `0 0 6px ${FV.ember}`, flexShrink: 0 }} />}
                   <div style={{ fontSize: 12, color: active ? FV.ember : FV.ink, fontWeight: active ? 600 : 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{conv.title || "Session sans titre"}</div>
-                  <button onClick={(e) => { e.stopPropagation(); deleteConversation(conv); }} title="Supprimer la session" style={{ background: 'transparent', border: 'none', color: FV.smoke, cursor: 'pointer', padding: 2, display: 'flex', alignItems: 'center', flexShrink: 0 }}><Trash2 size={13} /></button>
+                  <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(conv); }} title="Supprimer la session" style={{ background: 'transparent', border: 'none', color: FV.smoke, cursor: 'pointer', padding: 2, display: 'flex', alignItems: 'center', flexShrink: 0 }}><Trash2 size={13} /></button>
                 </div>
                 <div style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.08em', paddingLeft: active ? 14 : 0 }}>{new Date(conv.updatedAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }).toUpperCase()}</div>
               </div>
@@ -616,6 +616,32 @@ export default function ChatPage() {
       </div>
 
       {showExport && <ExportModal onClose={() => setShowExport(false)} conversation={messages} />}
+
+      {/* Confirmation de suppression — modale au design FORJA (remplace confirm() natif) */}
+      {confirmDelete && (
+        <div
+          onClick={(e) => e.target === e.currentTarget && setConfirmDelete(null)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(11,9,8,0.8)', backdropFilter: 'blur(10px)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+        >
+          <div style={{ width: '100%', maxWidth: 400, background: FV.black2, border: `1px solid ${FV.ruleStrong}`, borderRadius: 14, padding: 26, boxShadow: `0 30px 80px rgba(0,0,0,0.6), 0 0 60px ${FV.ember}1a` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(238,90,36,0.1)', border: '1px solid rgba(238,90,36,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Trash2 size={18} color={FV.ember} />
+              </div>
+              <div style={{ fontFamily: FV.serif, fontSize: 20, fontWeight: 500, color: FV.ink, letterSpacing: '-0.01em' }}>Supprimer la session ?</div>
+            </div>
+            <p style={{ fontSize: 13, color: FV.ink2, lineHeight: 1.6, margin: '0 0 22px' }}>
+              <span style={{ color: FV.ink, fontWeight: 600 }}>« {confirmDelete.title || "Session sans titre"} »</span> et tous ses messages seront définitivement effacés. Cette action est irréversible.
+            </p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button onClick={() => setConfirmDelete(null)} style={{ background: 'transparent', color: FV.ink, border: `1px solid ${FV.ruleStrong}`, padding: '10px 18px', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Annuler</button>
+              <button onClick={() => performDelete(confirmDelete)} style={{ background: FV.ember, color: FV.black, border: 'none', padding: '10px 18px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, boxShadow: `0 0 20px ${FV.ember}55` }}>
+                <Trash2 size={14} /> Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

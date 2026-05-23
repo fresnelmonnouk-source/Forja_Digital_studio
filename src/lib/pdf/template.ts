@@ -24,6 +24,9 @@ export function buildHtmlTemplate(
           <meta charset="utf-8">
           <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
           <style>
+            /* Les marges réelles (haut/bas/gauche/droite) sont imposées par Puppeteer
+               (option margin de page.pdf) → uniformes sur CHAQUE page. Le body ne met
+               donc plus de padding (sinon double marge sur la 1re page uniquement). */
             @page { margin: 0; size: A4; }
 
             body {
@@ -32,8 +35,14 @@ export function buildHtmlTemplate(
               background: #ffffff;
               line-height: 1.6;
               font-size: ${printerMode ? "10.5pt" : "11pt"};
-              padding: 20mm;
+              padding: 0;
+              margin: 0;
             }
+
+            /* Évite de couper têtes de section, et orphelins/veuves en bas/haut de page */
+            h1, h2, h3 { page-break-after: avoid; break-after: avoid; }
+            p, li { orphans: 2; widows: 2; }
+            tr, img, figure, blockquote, pre { page-break-inside: avoid; }
 
             .header {
               text-align: right;

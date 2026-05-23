@@ -110,7 +110,18 @@ export async function POST(req: Request) {
       await new Promise((r) => setTimeout(r, 1000));
       console.log(`[PDF-${requestId}] ✓ Attente 1s (images/fonts)`);
 
-      const pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
+      const pdfBuffer = await page.pdf({
+        format: "A4",
+        printBackground: true,
+        // Marges imposées sur CHAQUE page (haut/bas/gauche/droite).
+        margin: { top: "20mm", bottom: "20mm", left: "18mm", right: "18mm" },
+        // Pied de page constant : numéro de page + signature.
+        displayHeaderFooter: true,
+        headerTemplate: "<div></div>",
+        footerTemplate:
+          `<div style="width:100%; padding:0 18mm; font-family:Georgia,'Times New Roman',serif; font-size:8pt; color:#A07820; text-align:center;">` +
+          `<span class="pageNumber"></span> · FORJA Digital Studio</div>`,
+      });
       const puppeteerDuration = Date.now() - puppeteerStartTime;
       console.log(`[PDF-${requestId}] ✓ PDF généré en ${puppeteerDuration}ms (taille: ${pdfBuffer.length} bytes)`);
 
