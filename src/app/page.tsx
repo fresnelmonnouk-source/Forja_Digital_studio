@@ -1,10 +1,13 @@
 "use client";
+import { useState } from "react";
 import Link from "next/link";
 import { FV, FVMark, FVHook, FVOrb } from "@/components/ui/fonderie";
 import { useBreakpoint } from "@/lib/use-media-query";
+import DemoModal from "@/components/DemoModal";
 
 export default function FonderieV2Landing() {
   const { isMobile, isTablet } = useBreakpoint();
+  const [showDemo, setShowDemo] = useState(false);
 
   // Variables responsive partagées
   const padX = isMobile ? 20 : isTablet ? 36 : 56;
@@ -55,9 +58,9 @@ export default function FonderieV2Landing() {
             <Link href="/register" style={{ background: FV.ember, color: FV.black, border: 'none', padding: '16px 28px', borderRadius: 10, fontSize: 14, fontWeight: 700, letterSpacing: '0.02em', cursor: 'pointer', boxShadow: `0 0 32px ${FV.ember}66, inset 0 1px 0 rgba(255,255,255,0.2)`, textDecoration: 'none' }}>
               Forger gratuitement →
             </Link>
-            <button style={{ background: 'rgba(241,233,218,0.04)', color: FV.ink, border: `1px solid ${FV.ruleStrong}`, padding: '16px 24px', borderRadius: 10, fontSize: 14, fontWeight: 500, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+            <button onClick={() => setShowDemo(true)} style={{ background: 'rgba(241,233,218,0.04)', color: FV.ink, border: `1px solid ${FV.ruleStrong}`, padding: '16px 24px', borderRadius: 10, fontSize: 14, fontWeight: 500, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 10 }}>
               <span style={{ width: 18, height: 18, borderRadius: '50%', background: FV.ember, color: FV.black, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 9 }}>▶</span>
-              Voir la démo — 90s
+              Voir la démo
             </button>
           </div>
 
@@ -277,7 +280,7 @@ export default function FonderieV2Landing() {
             <Link href="/register" style={{ background: FV.ember, color: FV.black, border: 'none', padding: '20px 32px', borderRadius: 12, fontSize: 15, fontWeight: 700, letterSpacing: '0.02em', cursor: 'pointer', boxShadow: `0 0 40px ${FV.ember}88, inset 0 1px 0 rgba(255,255,255,0.25)`, textDecoration: 'none' }}>
               Allumer mon four — gratuit →
             </Link>
-            <button style={{ background: 'rgba(241,233,218,0.04)', color: FV.ink, border: `1px solid ${FV.ruleStrong}`, padding: '20px 28px', borderRadius: 12, fontSize: 15, fontWeight: 500, cursor: 'pointer' }}>
+            <button onClick={() => setShowDemo(true)} style={{ background: 'rgba(241,233,218,0.04)', color: FV.ink, border: `1px solid ${FV.ruleStrong}`, padding: '20px 28px', borderRadius: 12, fontSize: 15, fontWeight: 500, cursor: 'pointer' }}>
               Voir la démo
             </button>
           </div>
@@ -310,7 +313,7 @@ export default function FonderieV2Landing() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <a href="#" style={{ fontSize: 14, color: FV.ink2, textDecoration: 'none' }}>Fonctionnalités</a>
               <a href="#" style={{ fontSize: 14, color: FV.ink2, textDecoration: 'none' }}>Tarifs</a>
-              <a href="#" style={{ fontSize: 14, color: FV.ink2, textDecoration: 'none' }}>Démo</a>
+              <a href="#" onClick={(e) => { e.preventDefault(); setShowDemo(true); }} style={{ fontSize: 14, color: FV.ink2, textDecoration: 'none', cursor: 'pointer' }}>Démo</a>
             </div>
           </div>
 
@@ -354,6 +357,8 @@ export default function FonderieV2Landing() {
           </div>
         </div>
       </footer>
+
+      {showDemo && <DemoModal onClose={() => setShowDemo(false)} />}
     </div>
   );
 }
