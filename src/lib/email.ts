@@ -161,7 +161,7 @@ export function buildWelcomeEmail(name: string | null): string {
     <div style="padding:28px 44px 8px;text-align:center">
       ${hook("00:00", "Édition v.4 · première session")}
       ${title(`Bienvenue à<br><em style="font-style:italic;color:${C.ember}">l'enclume</em>, ${displayName}.`, 42)}
-      ${lead(`Le four est allumé. Ton compte est créé.<br>Trente ans de terrain dans le SaaS et l'automatisation IA, condensés en un agent qui te guide — du signal de marché à l'effet WOW.`)}
+      ${lead(`Le four est allumé. Ton compte est créé.<br>Toute l'expertise du terrain — produits digitaux, SaaS, automatisation IA — condensée en un agent qui te guide, du signal de marché à l'effet WOW.`)}
     </div>
 
     <div style="padding:28px 44px 8px;text-align:center">

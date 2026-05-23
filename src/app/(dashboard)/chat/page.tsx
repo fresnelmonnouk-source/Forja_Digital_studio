@@ -75,7 +75,7 @@ const LEVEL_LABELS: Record<string, string> = {
 
 function buildWelcomeMessage(onboarding: OnboardingData | null): string {
   if (!onboarding?.goal && !onboarding?.level) {
-    return "Bonjour, je suis **FORJA** — 30 ans de terrain dans les produits digitaux, le SaaS et l'automatisation IA.\n\nMon rôle : transformer ton idée en produit concret, rentable et bien construit.\n\nMéthodes disponibles : **ORACLE** · **Triangle d'Or** · **Matrice de Valeur** · **Framework 12 Étapes** · **Flywheel Digitale**\n\n**Sur quoi travaillons-nous aujourd'hui ?**";
+    return "Bonjour, je suis **FORJA** — toute l'expertise du terrain en produits digitaux, SaaS et automatisation IA, condensée en un agent.\n\nMon rôle : transformer ton idée en produit concret, rentable et bien construit.\n\nMéthodes disponibles : **ORACLE** · **Triangle d'Or** · **Matrice de Valeur** · **Framework 12 Étapes** · **Flywheel Digitale**\n\n**Sur quoi travaillons-nous aujourd'hui ?**";
   }
   const goalLabel = onboarding.goal ? GOAL_LABELS[onboarding.goal] ?? onboarding.goal : null;
   const levelLabel = onboarding.level ? LEVEL_LABELS[onboarding.level] ?? onboarding.level : null;

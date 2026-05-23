@@ -48,7 +48,7 @@ export default function FonderieV2Landing() {
           <p style={{ fontSize: isMobile ? 16 : 18, lineHeight: 1.55, color: FV.ink2, marginTop: 32, maxWidth: 540, fontWeight: 400 }}>
             FORJA est un agent stratégique qui guide chaque créateur, du signal de marché à l'effet WOW.
             <br /><br />
-            <span style={{ color: FV.brass, fontFamily: FV.serif, fontStyle: 'italic' }}>Trente ans de terrain</span> dans les produits digitaux, le SaaS et l'automatisation IA — au feu, à l'enclume, et au marteau.
+            <span style={{ color: FV.brass, fontFamily: FV.serif, fontStyle: 'italic' }}>Toute l'expertise du terrain</span> — produits digitaux, SaaS, automatisation IA — condensée dans une méthode qui forge, au feu, à l'enclume, et au marteau.
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 44, flexWrap: 'wrap' }}>
