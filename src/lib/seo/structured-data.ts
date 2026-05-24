@@ -13,12 +13,12 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Qu'est-ce que FORJA ?",
     answer:
-      "FORJA est un studio digital piloté par une intelligence artificielle qui vous guide pas à pas pour transformer une idée en produit digital prêt à vendre (ebook, guide, kit) et génère un PDF professionnel en quelques minutes.",
+      "FORJA est un studio digital piloté par une intelligence artificielle qui te guide pas à pas pour transformer une idée en produit digital prêt à vendre (ebook, guide, kit) et génère un PDF professionnel en quelques minutes.",
   },
   {
     question: "FORJA est-il gratuit ?",
     answer:
-      "Oui, vous pouvez créer un compte et générer plusieurs documents gratuitement, sans carte bancaire. Des packs payants (Starter, Pro, Studio) débloquent davantage de documents lorsque vous en avez besoin.",
+      "Oui. Tu peux créer un compte et générer 5 documents gratuitement, à vie, sans carte bancaire. Des packs payants (Starter, Pro, Studio) débloquent davantage de documents quand tu en as besoin.",
   },
   {
     question: "Combien coûtent les packs FORJA ?",
@@ -33,12 +33,22 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "À qui appartiennent les documents générés ?",
     answer:
-      "Les documents que vous créez avec FORJA vous appartiennent intégralement. Vous êtes libre de les vendre et de les diffuser.",
+      "Les documents que tu crées avec FORJA t'appartiennent intégralement. Tu es libre de les vendre et de les diffuser.",
   },
   {
     question: "Ai-je besoin de compétences techniques ?",
     answer:
-      "Non. FORJA vous accompagne par la conversation, étape par étape. Vous décrivez votre idée, l'agent fait le reste : structure, contenu, mise en page et export PDF.",
+      "Non. FORJA t'accompagne par la conversation, étape par étape. Tu décris ton idée, l'agent fait le reste : structure, contenu, mise en page et export PDF.",
+  },
+  {
+    question: "En quoi FORJA est différent d'une formation ?",
+    answer:
+      "Une formation t'explique quoi faire, puis te laisse seul devant la page blanche. FORJA travaille avec toi et te rend un livrable fini : un PDF professionnel prêt à vendre, à la fin de la session. Tu ne repars pas avec des notes — tu repars avec ton produit.",
+  },
+  {
+    question: "Et si je ne suis pas satisfait ?",
+    answer:
+      "Commence par le gratuit : 5 documents sans carte, pour juger sur pièce avant de payer. Sur les packs payants, c'est satisfait ou remboursé — notre équipe traite chaque demande au cas par cas, par email à aide@myforja.digital.",
   },
 ];
 

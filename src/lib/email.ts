@@ -46,7 +46,7 @@ function shell(content: string): string {
     ${content}
   </div>
   <div style="max-width:600px;margin:12px auto 0;text-align:center;font-family:Consolas,'Courier New',monospace;font-size:9px;color:${C.dim};letter-spacing:0.15em">
-    FORJA · 12 RUE DE LA FORGE, 75011 PARIS
+    Forja Digital Studio · Cotonou, Bénin
   </div>
 </body>
 </html>`;
@@ -285,7 +285,7 @@ export async function sendPasswordResetEmail(to: string, name: string | null, re
   return getResend().emails.send({
     from: FROM,
     to,
-    subject: "Rallumer votre fourneau — Réinitialisation FORJA",
+    subject: "Rallumer ton fourneau — Réinitialisation FORJA",
     html: buildPasswordResetEmail(name, resetLink),
   });
 }
