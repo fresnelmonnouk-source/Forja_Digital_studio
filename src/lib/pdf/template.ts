@@ -17,6 +17,19 @@ export function buildHtmlTemplate(
         </div>`
     : "";
 
+  // Table des matières — générée automatiquement à partir des titres ## (h2) du document.
+  const tocItems = Array.from(htmlContent.matchAll(/<h2[^>]*>([\s\S]*?)<\/h2>/gi))
+    .map((m) => m[1].replace(/<[^>]+>/g, "").trim())
+    .filter(Boolean);
+  const tocPage = tocItems.length >= 2
+    ? `<div class="toc">
+          <div class="toc-title">Table des matières</div>
+          <ol class="toc-list">
+            ${tocItems.map((t) => `<li><span class="toc-text">${t}</span></li>`).join("")}
+          </ol>
+        </div>`
+    : "";
+
   return `
       <!DOCTYPE html>
       <html>
@@ -222,6 +235,28 @@ export function buildHtmlTemplate(
               text-transform: uppercase;
               margin-bottom: 20px;
             }
+
+            /* Table des matières */
+            .toc { page-break-after: always; padding-top: 10mm; }
+            .toc-title {
+              font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+              font-size: 26pt; font-weight: 700; color: #0A0804;
+              border-bottom: 3px solid #E8C547; padding-bottom: 8px; margin-bottom: 24px;
+            }
+            .toc-list { list-style: none; counter-reset: toc; padding: 0; margin: 0; }
+            .toc-list li {
+              counter-increment: toc;
+              display: flex; align-items: baseline;
+              padding: 9px 0; border-bottom: 1px solid #ede4d0;
+              font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+              font-size: 13.5pt; color: #2a2a2a;
+            }
+            .toc-list li::before {
+              content: counter(toc, decimal-leading-zero);
+              font-family: 'JetBrains Mono', 'Courier New', monospace;
+              font-size: 10pt; color: #A07820; font-weight: 700;
+              margin-right: 14px; min-width: 26px;
+            }
           </style>
         </head>
         <body>
@@ -229,6 +264,7 @@ export function buildHtmlTemplate(
             mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose', suppressErrors: true });
           </script>
           ${coverPage}
+          ${tocPage}
           <div class="header">FORJA Digital Studio</div>
           <div class="type-badge">Document : ${(type as string).toUpperCase()}</div>
           ${htmlContent}

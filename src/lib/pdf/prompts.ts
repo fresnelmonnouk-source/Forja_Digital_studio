@@ -23,6 +23,13 @@ export const VISUAL_INSTRUCTIONS = `
 
 N'abuse pas de ces éléments : qualité > quantité.`;
 
+export const STRUCTURE_RULES = `
+RÈGLES DE STRUCTURE OBLIGATOIRES (tous documents) :
+- Le document COMMENCE par une section "## Introduction" (qui pose le contexte et la promesse)
+  et SE TERMINE par une section "## Conclusion" (qui récapitule et donne le prochain pas).
+- Ne génère PAS toi-même de table des matières : elle est créée automatiquement à partir de tes
+  titres "##". Soigne donc tes titres "##" (clairs, courts, parlants) car ils composent le sommaire.`;
+
 export const DOC_PROMPTS: Record<DocType, string> = {
   ebook: `Tu es FORJA, expert en création de produits digitaux. À partir de la conversation ci-dessous, génère un ebook complet et professionnel en Markdown.
 
@@ -41,6 +48,7 @@ Règles :
 - Intègre les informations, idées et décisions de la conversation
 - Ton professionnel, actionnable, structuré
 - Minimum 1500 mots
+${STRUCTURE_RULES}
 ${VISUAL_INSTRUCTIONS}
 
 Réponds UNIQUEMENT avec le Markdown, sans commentaire.`,
@@ -65,6 +73,7 @@ Règles :
 - Inclus des exercices pratiques concrets
 - Basé sur les informations de la conversation
 - Minimum 1500 mots
+${STRUCTURE_RULES}
 ${VISUAL_INSTRUCTIONS}
 
 Réponds UNIQUEMENT avec le Markdown, sans commentaire.`,
@@ -88,6 +97,7 @@ Règles :
 - Copywriting direct, émotionnel, orienté bénéfices
 - Basé sur les informations, l'avatar et l'offre de la conversation
 - Minimum 1200 mots
+${STRUCTURE_RULES}
 ${VISUAL_INSTRUCTIONS}
 
 Réponds UNIQUEMENT avec le Markdown, sans commentaire.`,
@@ -110,6 +120,7 @@ Règles :
 - Contenu concret, chiffré, actionnable
 - Basé sur les informations techniques de la conversation
 - Minimum 1200 mots
+${STRUCTURE_RULES}
 ${VISUAL_INSTRUCTIONS}
 
 Réponds UNIQUEMENT avec le Markdown, sans commentaire.`,
