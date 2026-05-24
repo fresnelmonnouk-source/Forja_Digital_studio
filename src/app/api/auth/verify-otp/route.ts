@@ -16,6 +16,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Email et code requis." }, { status: 400 });
     }
 
+    // Anti-brute-force PAR COMPTE : max 5 essais / 10 min pour un même email
+    // (en plus du rate-limit par IP). Empêche de forcer le code à 6 chiffres.
+    if (typeof email === "string" && !(await rateLimit(`otp-verify:${email.toLowerCase()}`, 5, 10 * 60_000))) {
+      return NextResponse.json({ error: "Trop d'essais pour ce compte. Réessaie dans 10 minutes." }, { status: 429 });
+    }
+
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {

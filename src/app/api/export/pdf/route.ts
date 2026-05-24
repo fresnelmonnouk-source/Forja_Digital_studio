@@ -12,6 +12,7 @@ import { processMermaidBlocks } from "@/lib/pdf/mermaid";
 import { planAndGenerateImages } from "@/lib/pdf/image-planner";
 import { DOC_PROMPTS } from "@/lib/pdf/prompts";
 import { buildHtmlTemplate } from "@/lib/pdf/template";
+import { sanitizeHtml } from "@/lib/pdf/sanitize";
 
 export const maxDuration = 60;
 
@@ -90,6 +91,7 @@ export async function POST(req: Request) {
 
     const htmlStartTime = Date.now();
     let htmlContent = await marked.parse(markdown);
+    htmlContent = sanitizeHtml(htmlContent); // retire script/iframe/handlers injectés
     htmlContent = processMermaidBlocks(htmlContent);
     htmlContent = processCharts(htmlContent);
     const htmlDuration = Date.now() - htmlStartTime;
