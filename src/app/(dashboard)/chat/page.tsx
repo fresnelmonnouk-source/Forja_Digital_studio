@@ -133,6 +133,8 @@ export default function ChatPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const stepsScrollRef = useRef<HTMLDivElement>(null);
+  const activeStepRef = useRef<HTMLDivElement>(null);
 
   const FILE_CHAR_CAP = 30_000; // borne le contenu joint pour rester sous les limites
   const handleFilePick = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -173,6 +175,16 @@ export default function ChatPage() {
   useEffect(() => {
     setSidebarOpen(!isMobile);
   }, [isMobile]);
+
+  // Fait défiler le stepper pour centrer l'étape active à chaque changement
+  // (sinon les étapes avancées sont hors écran → on ne voit pas la progression).
+  useEffect(() => {
+    const c = stepsScrollRef.current;
+    const el = activeStepRef.current;
+    if (c && el) {
+      c.scrollTo({ left: el.offsetLeft - c.clientWidth / 2 + el.clientWidth / 2, behavior: "smooth" });
+    }
+  }, [activeStep]);
 
   const sendMessage = async (text?: string) => {
     const userText = text || input.trim();
@@ -530,14 +542,29 @@ export default function ChatPage() {
         </div>
 
         {/* Steps bar */}
-        <div style={{ padding: '10px 20px', borderBottom: `1px solid ${FV.rule}`, background: FV.black2, display: 'flex', alignItems: 'center', gap: 10, overflowX: 'auto' }}>
+        <div style={{ padding: '10px 20px', borderBottom: `1px solid ${FV.rule}`, background: FV.black2, display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.15em', flexShrink: 0 }}>SÉQUENCE</span>
-          <div style={{ flex: 1, display: 'flex', gap: 3, overflow: 'hidden' }}>
+          <div ref={stepsScrollRef} className="hide-scrollbar" style={{ flex: 1, position: 'relative', display: 'flex', gap: 3, overflowX: 'auto', scrollBehavior: 'smooth', paddingBottom: 2 }}>
             {STEPS.map((s, i) => {
               const isActive = i === activeStep;
               const isDone = i < activeStep;
               return (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 999, background: isActive ? FV.ember : isDone ? 'rgba(238,90,36,0.08)' : 'transparent', color: isActive ? FV.black : isDone ? FV.ember : FV.smoke, border: isActive ? 'none' : `1px solid ${isDone ? 'rgba(238,90,36,0.18)' : FV.rule}`, fontSize: 9, fontFamily: FV.mono, letterSpacing: '0.08em', whiteSpace: 'nowrap', fontWeight: isActive || isDone ? 600 : 400, transition: 'all 0.3s' }}>
+                <div
+                  key={i}
+                  ref={isActive ? activeStepRef : null}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 999,
+                    background: isActive ? FV.ember : isDone ? 'rgba(238,90,36,0.08)' : 'transparent',
+                    color: isActive ? FV.black : isDone ? FV.ember : FV.smoke,
+                    // bordure toujours présente (1px) → pas de saut de largeur quand l'étape change
+                    border: `1px solid ${isActive ? FV.ember : isDone ? 'rgba(238,90,36,0.18)' : FV.rule}`,
+                    boxShadow: isActive ? `0 0 12px ${FV.ember}66` : 'none',
+                    transform: isActive ? 'scale(1.06)' : 'scale(1)',
+                    fontSize: 9, fontFamily: FV.mono, letterSpacing: '0.08em', whiteSpace: 'nowrap', flexShrink: 0,
+                    fontWeight: isActive || isDone ? 600 : 400,
+                    transition: 'background 0.35s ease, color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease, transform 0.35s ease',
+                  }}
+                >
                   <span>{String(i).padStart(2, '0')}</span>
                   {s.toUpperCase()}
                 </div>

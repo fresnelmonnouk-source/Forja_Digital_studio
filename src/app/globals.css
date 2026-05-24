@@ -81,6 +81,15 @@ img {
   height: auto;
 }
 
+/* Conteneur scrollable horizontalement sans barre visible (ex : stepper du chat) */
+.hide-scrollbar {
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* IE/Edge */
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;                  /* Chrome/Safari */
+}
+
 /* ── Accessibilité : respect de prefers-reduced-motion ──
    Coupe le marquee, les dots de chargement et toutes les transitions inline
    pour les utilisateurs qui désactivent les animations (système). */
