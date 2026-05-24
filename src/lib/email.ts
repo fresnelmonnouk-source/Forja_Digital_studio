@@ -231,6 +231,35 @@ export function buildPasswordChangedEmail(name: string | null): string {
   `);
 }
 
+// ── 05 · Confirmation de paiement (achat de crédits) ─────────────
+
+export function buildPaymentEmail(name: string | null, packLabel: string, credits: number, amount: number): string {
+  const displayName = esc(name || "Créateur");
+  const amountStr = amount.toLocaleString("fr-FR");
+  const row = (label: string, value: string, strong = false, top = true) =>
+    `<tr><td style="padding:9px 0;${top ? `border-top:1px solid ${C.rule};` : ""}font-size:13px;color:${C.ink2}">${label}</td>` +
+    `<td style="padding:9px 0;${top ? `border-top:1px solid ${C.rule};` : ""}font-size:13px;text-align:right;font-weight:${strong ? 700 : 600};color:${strong ? C.ember : C.ink}">${value}</td></tr>`;
+  return shell(`
+    ${header("✦ PAIEMENT")}
+    <div style="padding:36px 44px 8px">
+      ${hook("✓", "Paiement confirmé")}
+      ${title(`Tes crédits sont <em style="font-style:italic;color:${C.ember}">chargés</em>.`)}
+      ${lead(`Bonjour ${displayName},<br><br>Merci ! Ton paiement a bien été reçu et tes documents ont été ajoutés à ton compte.`)}
+    </div>
+    <div style="padding:24px 44px 8px">
+      <table style="width:100%;border-collapse:collapse;background:${C.black2};border:1px solid ${C.strong};border-radius:12px">
+        <tr><td style="padding:9px 0 9px 20px;font-size:13px;color:${C.ink2}">Pack</td><td style="padding:9px 20px 9px 0;font-size:13px;text-align:right;font-weight:600;color:${C.ink}">${esc(packLabel)}</td></tr>
+        <tr><td style="padding:9px 0 9px 20px;border-top:1px solid ${C.rule};font-size:13px;color:${C.ink2}">Documents ajoutés</td><td style="padding:9px 20px 9px 0;border-top:1px solid ${C.rule};font-size:13px;text-align:right;font-weight:700;color:${C.ember}">+${credits}</td></tr>
+        <tr><td style="padding:9px 0 9px 20px;border-top:1px solid ${C.rule};font-size:13px;color:${C.ink2}">Montant</td><td style="padding:9px 20px 9px 0;border-top:1px solid ${C.rule};font-size:13px;text-align:right;font-weight:600;color:${C.ink}">${amountStr} FCFA</td></tr>
+      </table>
+    </div>
+    <div style="padding:24px 44px 32px;text-align:center">
+      ${btn("Forger un document →", `${APP_URL}/chat`)}
+    </div>
+    ${footer("Reçu généré automatiquement. Une question ? aide@forja.fr")}
+  `);
+}
+
 // ── Send helpers ─────────────────────────────────────────────────
 
 export async function sendOtpEmail(to: string, name: string | null, code: string) {
@@ -267,5 +296,14 @@ export async function sendPasswordChangedEmail(to: string, name: string | null) 
     to,
     subject: "Ton mot de passe a été modifié — FORJA",
     html: buildPasswordChangedEmail(name),
+  });
+}
+
+export async function sendPaymentEmail(to: string, name: string | null, packLabel: string, credits: number, amount: number) {
+  return getResend().emails.send({
+    from: FROM,
+    to,
+    subject: `Paiement confirmé — ${credits} documents ajoutés à ton four ✦`,
+    html: buildPaymentEmail(name, packLabel, credits, amount),
   });
 }

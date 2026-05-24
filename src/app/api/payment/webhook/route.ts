@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getTransaction } from "@/lib/fedapay";
+import { getPack } from "@/lib/plans";
+import { sendPaymentEmail } from "@/lib/email";
 
 // Webhook FedaPay. On NE FAIT PAS confiance au corps reçu : on extrait l'id de
 // transaction puis on re-vérifie le statut DIRECTEMENT auprès de FedaPay (appel
@@ -33,6 +35,16 @@ export async function POST(req: Request) {
           data: { credits: { increment: payment.credits } },
         });
         console.log(`[PAYMENT] +${payment.credits} crédits → user ${payment.userId} (tx ${id})`);
+        // Email de confirmation (non bloquant)
+        const u = await prisma.user.findUnique({
+          where: { id: payment.userId },
+          select: { email: true, name: true },
+        });
+        if (u?.email) {
+          const pack = getPack(payment.packId);
+          sendPaymentEmail(u.email, u.name, pack?.label ?? payment.packId, payment.credits, payment.amount)
+            .catch((e) => console.error("[PAYMENT] email confirmation KO:", e));
+        }
       }
     } else if (tx.status === "declined" || tx.status === "canceled") {
       await prisma.payment.updateMany({
