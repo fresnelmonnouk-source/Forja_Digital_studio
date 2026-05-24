@@ -32,6 +32,8 @@ export async function GET(req: Request) {
           name: true,
           email: true,
           role: true,
+          credits: true,
+          freeDocsUsed: true,
           emailVerified: true,
           createdAt: true,
           _count: { select: { conversations: true } },

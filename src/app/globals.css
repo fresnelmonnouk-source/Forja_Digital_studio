@@ -94,6 +94,48 @@ img {
   display: none;                  /* Chrome/Safari */
 }
 
+/* ── Pages légales (contenu markdown rendu) ── */
+.legal-prose {
+  color: #C8BDA8;
+  font-size: 15px;
+  line-height: 1.8;
+}
+.legal-prose h2 {
+  color: #F1E9DA;
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 500;
+  margin: 36px 0 14px;
+  letter-spacing: -0.01em;
+}
+.legal-prose h3 {
+  color: #F1E9DA;
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 500;
+  margin: 28px 0 10px;
+}
+.legal-prose p { margin: 0 0 16px; }
+.legal-prose ul, .legal-prose ol { margin: 0 0 16px; padding-left: 22px; }
+.legal-prose li { margin-bottom: 6px; }
+.legal-prose a { color: #EE5A24; text-decoration: none; }
+.legal-prose a:hover { text-decoration: underline; }
+.legal-prose strong { color: #F1E9DA; font-weight: 600; }
+.legal-prose blockquote {
+  border-left: 2px solid rgba(238, 90, 36, 0.5);
+  padding-left: 16px;
+  margin: 0 0 16px;
+  color: #7A6F5E;
+  font-style: italic;
+}
+.legal-prose code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  background: rgba(241, 233, 218, 0.06);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
 /* ── Accessibilité : respect de prefers-reduced-motion ──
    Coupe le marquee, les dots de chargement et toutes les transitions inline
    pour les utilisateurs qui désactivent les animations (système). */

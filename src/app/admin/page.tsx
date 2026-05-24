@@ -2,11 +2,12 @@
 import { useEffect, useState } from "react";
 import { FV } from "@/components/ui/fonderie";
 import { useMediaQuery } from "@/lib/use-media-query";
-import { Users, BadgeCheck, Activity, Shield, MessageSquare, FileText, Check, AlertTriangle } from "lucide-react";
+import { Users, BadgeCheck, Activity, Shield, MessageSquare, FileText, Check, AlertTriangle, Wallet, TrendingUp } from "lucide-react";
 
 interface Stats {
   users: { total: number; verified: number; admins: number; active: number; new7d: number; new30d: number };
   content: { conversations: number; messages: number };
+  revenue: { allTime: number; last30d: number; paidCount: number; payingUsers: number };
   timeline: { day: string; count: number }[];
   tech: { providers: string[]; envHealth: Record<string, boolean> };
 }
@@ -16,9 +17,13 @@ const ENV_LABELS: Record<string, string> = {
   NEXTAUTH_SECRET: "Secret NextAuth",
   NEXTAUTH_URL: "URL publique",
   RESEND_API_KEY: "Emails (Resend)",
+  FEDAPAY: "Paiements (FedaPay)",
+  DEEPSEEK: "Modèle IA (DeepSeek)",
   UPSTASH_REDIS: "Rate-limit (Upstash)",
   SENTRY: "Monitoring (Sentry)",
 };
+
+const fmtF = (n: number) => `${n.toLocaleString("fr-FR")} F`;
 
 export default function AdminOverview() {
   const isMobile = useMediaQuery("(max-width: 768px)");
@@ -68,6 +73,15 @@ export default function AdminOverview() {
         <Card Icon={FileText} label="Messages" value={stats.content.messages} />
         <Card Icon={Users} label="Nouveaux 30j" value={stats.users.new30d} />
         <Card Icon={Activity} label="Msg / conv." value={stats.content.conversations ? (stats.content.messages / stats.content.conversations).toFixed(1) : "0"} />
+      </div>
+
+      {/* Revenus */}
+      <div style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: "0.18em", marginBottom: 14, textTransform: "uppercase" }}>Revenus</div>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 12, marginBottom: 28 }}>
+        <Card Icon={Wallet} label="CA total" value={fmtF(stats.revenue?.allTime ?? 0)} sub={`${stats.revenue?.paidCount ?? 0} paiement${(stats.revenue?.paidCount ?? 0) > 1 ? "s" : ""}`} />
+        <Card Icon={TrendingUp} label="CA 30 jours" value={fmtF(stats.revenue?.last30d ?? 0)} />
+        <Card Icon={Users} label="Clients payants" value={stats.revenue?.payingUsers ?? 0} />
+        <Card Icon={BadgeCheck} label="Conversion" value={`${stats.users.total ? Math.round(((stats.revenue?.payingUsers ?? 0) / stats.users.total) * 100) : 0}%`} sub="payants / inscrits" />
       </div>
 
       {/* Timeline */}

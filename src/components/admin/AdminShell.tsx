@@ -5,11 +5,13 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { FV, FVMark } from "@/components/ui/fonderie";
 import { useMediaQuery } from "@/lib/use-media-query";
-import { LayoutDashboard, Users, LogOut, MessageSquare } from "lucide-react";
+import { LayoutDashboard, Users, LogOut, MessageSquare, Wallet, Scale } from "lucide-react";
 
 const NAV = [
   { href: "/admin", label: "Vue d'ensemble", Icon: LayoutDashboard },
   { href: "/admin/users", label: "Utilisateurs", Icon: Users },
+  { href: "/admin/payments", label: "Paiements", Icon: Wallet },
+  { href: "/admin/legal", label: "Conformité légale", Icon: Scale },
 ];
 
 export default function AdminShell({ userName, children }: { userName: string; children: React.ReactNode }) {

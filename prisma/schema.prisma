@@ -41,6 +41,13 @@ model Payment {
   @@index([userId])
 }
 
+model LegalPage {
+  slug      String   @id // "mentions" | "cgu" | "confidentialite" | "remboursement"
+  title     String
+  content   String   @db.Text // markdown éditable depuis le back office
+  updatedAt DateTime @updatedAt
+}
+
 model Conversation {
   id        String    @id @default(cuid())
   title     String?

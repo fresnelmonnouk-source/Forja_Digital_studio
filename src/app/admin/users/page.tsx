@@ -2,13 +2,16 @@
 import { useEffect, useState, useCallback } from "react";
 import { FV } from "@/components/ui/fonderie";
 import { useMediaQuery } from "@/lib/use-media-query";
-import { Search, ShieldCheck, ShieldOff, Trash2, BadgeCheck, Clock } from "lucide-react";
+import { Search, ShieldCheck, ShieldOff, Trash2, BadgeCheck, Clock, Coins, RotateCcw } from "lucide-react";
+import { FREE_DOC_LIMIT } from "@/lib/plans";
 
 interface AdminUser {
   id: string;
   name: string | null;
   email: string;
   role: string;
+  credits: number;
+  freeDocsUsed: number;
   emailVerified: string | null;
   createdAt: string;
   _count: { conversations: number };
@@ -55,6 +58,35 @@ export default function AdminUsers() {
     } finally { setBusy(null); }
   };
 
+  const adjustCredits = async (u: AdminUser) => {
+    const raw = prompt(`Crédits à ajouter pour ${u.email} (négatif pour retirer).\nSolde actuel : ${u.credits}`, "10");
+    if (raw === null) return;
+    const delta = parseInt(raw, 10);
+    if (!Number.isInteger(delta) || delta === 0) { alert("Entre un entier non nul."); return; }
+    setBusy(u.id);
+    try {
+      const res = await fetch(`/api/admin/users/${u.id}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ addCredits: delta }),
+      });
+      const d = await res.json();
+      if (res.ok) setUsers((list) => list.map((x) => (x.id === u.id ? { ...x, credits: d.credits } : x)));
+      else alert(d.error || "Action impossible.");
+    } finally { setBusy(null); }
+  };
+
+  const resetFree = async (u: AdminUser) => {
+    if (!confirm(`Réinitialiser le quota gratuit de ${u.email} ? Il pourra à nouveau générer ${FREE_DOC_LIMIT} documents gratuits.`)) return;
+    setBusy(u.id);
+    try {
+      const res = await fetch(`/api/admin/users/${u.id}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ resetFreeDocs: true }),
+      });
+      const d = await res.json();
+      if (res.ok) setUsers((list) => list.map((x) => (x.id === u.id ? { ...x, freeDocsUsed: d.freeDocsUsed } : x)));
+      else alert(d.error || "Action impossible.");
+    } finally { setBusy(null); }
+  };
+
   const removeUser = async (u: AdminUser) => {
     if (!confirm(`Supprimer ${u.email} ? Ses conversations seront effacées. Action irréversible.`)) return;
     setBusy(u.id);
@@ -76,13 +108,26 @@ export default function AdminUsers() {
 
   const Actions = ({ u }: { u: AdminUser }) => (
     <div style={{ display: "flex", gap: 6 }}>
-      <button onClick={() => toggleRole(u)} disabled={busy === u.id} title={u.role === "admin" ? "Rétrograder en user" : "Promouvoir admin"} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 9px", borderRadius: 7, background: "transparent", border: `1px solid ${FV.ruleStrong}`, color: FV.ink2, cursor: "pointer", fontSize: 11 }}>
+      <button type="button" onClick={() => adjustCredits(u)} disabled={busy === u.id} title="Ajuster les crédits" style={{ display: "inline-flex", alignItems: "center", padding: "6px 9px", borderRadius: 7, background: "transparent", border: `1px solid ${FV.ruleStrong}`, color: FV.amber, cursor: "pointer" }}>
+        <Coins size={13} />
+      </button>
+      <button type="button" onClick={() => resetFree(u)} disabled={busy === u.id} title="Réinitialiser le quota gratuit" style={{ display: "inline-flex", alignItems: "center", padding: "6px 9px", borderRadius: 7, background: "transparent", border: `1px solid ${FV.ruleStrong}`, color: FV.ink2, cursor: "pointer" }}>
+        <RotateCcw size={13} />
+      </button>
+      <button type="button" onClick={() => toggleRole(u)} disabled={busy === u.id} title={u.role === "admin" ? "Rétrograder en user" : "Promouvoir admin"} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 9px", borderRadius: 7, background: "transparent", border: `1px solid ${FV.ruleStrong}`, color: FV.ink2, cursor: "pointer", fontSize: 11 }}>
         {u.role === "admin" ? <ShieldOff size={13} /> : <ShieldCheck size={13} />}
       </button>
-      <button onClick={() => removeUser(u)} disabled={busy === u.id} title="Supprimer" style={{ display: "inline-flex", alignItems: "center", padding: "6px 9px", borderRadius: 7, background: "transparent", border: "1px solid rgba(238,90,36,0.3)", color: FV.ember, cursor: "pointer" }}>
+      <button type="button" onClick={() => removeUser(u)} disabled={busy === u.id} title="Supprimer" style={{ display: "inline-flex", alignItems: "center", padding: "6px 9px", borderRadius: 7, background: "transparent", border: "1px solid rgba(238,90,36,0.3)", color: FV.ember, cursor: "pointer" }}>
         <Trash2 size={13} />
       </button>
     </div>
+  );
+
+  const CreditCell = ({ u }: { u: AdminUser }) => (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, color: u.credits > 0 ? FV.amber : FV.smoke }}>
+      <Coins size={12} /> {u.credits}
+      <span style={{ color: FV.smokeDim, fontFamily: FV.mono, fontSize: 10 }}>· {u.freeDocsUsed}/{FREE_DOC_LIMIT}</span>
+    </span>
   );
 
   return (
@@ -117,8 +162,9 @@ export default function AdminUsers() {
                 </div>
                 <RoleBadge role={u.role} />
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "12px 0", fontSize: 11, color: FV.smoke }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "12px 0", fontSize: 11, color: FV.smoke, flexWrap: "wrap" }}>
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>{u.emailVerified ? <BadgeCheck size={13} color="#7EC8A0" /> : <Clock size={13} />} {u.emailVerified ? "Vérifié" : "En attente"}</span>
+                <CreditCell u={u} />
                 <span>{u._count.conversations} conv.</span>
                 <span>{fmtDate(u.createdAt)}</span>
               </div>
@@ -132,7 +178,7 @@ export default function AdminUsers() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
             <thead>
               <tr style={{ background: FV.black2, color: FV.smoke }}>
-                {["Nom", "Email", "Rôle", "Vérifié", "Conv.", "Inscrit", ""].map((h) => (
+                {["Nom", "Email", "Rôle", "Vérifié", "Crédits", "Conv.", "Inscrit", ""].map((h) => (
                   <th key={h} style={{ textAlign: "left", padding: "12px 16px", fontFamily: FV.mono, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 500 }}>{h}</th>
                 ))}
               </tr>
@@ -144,6 +190,7 @@ export default function AdminUsers() {
                   <td style={{ padding: "12px 16px", color: FV.ink2 }}>{u.email}</td>
                   <td style={{ padding: "12px 16px" }}><RoleBadge role={u.role} /></td>
                   <td style={{ padding: "12px 16px" }}>{u.emailVerified ? <BadgeCheck size={15} color="#7EC8A0" /> : <Clock size={15} color={FV.smoke} />}</td>
+                  <td style={{ padding: "12px 16px" }}><CreditCell u={u} /></td>
                   <td style={{ padding: "12px 16px", color: FV.ink2 }}>{u._count.conversations}</td>
                   <td style={{ padding: "12px 16px", color: FV.smoke, fontFamily: FV.mono, fontSize: 11 }}>{fmtDate(u.createdAt)}</td>
                   <td style={{ padding: "12px 16px" }}><Actions u={u} /></td>

@@ -2,29 +2,56 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAdminSession } from "@/lib/admin";
 
-// PATCH : change le rôle d'un utilisateur (user <-> admin)
+// PATCH : modifie un utilisateur.
+// Actions supportées (mutuellement non exclusives) :
+//   - role: "user" | "admin"        → change le rôle
+//   - addCredits: number (≠ 0)       → ajoute/retire des crédits (offre / SAV)
+//   - resetFreeDocs: true            → remet le quota gratuit à zéro
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getAdminSession();
   if (!session) return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
 
   const { id } = await params;
   try {
-    const { role } = await req.json();
-    if (role !== "user" && role !== "admin") {
-      return NextResponse.json({ error: "Rôle invalide" }, { status: 400 });
-    }
-    // Un admin ne peut pas se rétrograder lui-même (évite de se verrouiller dehors).
-    if (id === session.user.id && role !== "admin") {
-      return NextResponse.json({ error: "Impossible de retirer ton propre accès admin." }, { status: 400 });
-    }
+    const body = await req.json();
+    const { role, addCredits, resetFreeDocs } = body ?? {};
 
     const user = await prisma.user.findUnique({ where: { id } });
     if (!user) return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 404 });
 
+    const data: { role?: string; credits?: number; freeDocsUsed?: number } = {};
+
+    if (role !== undefined) {
+      if (role !== "user" && role !== "admin") {
+        return NextResponse.json({ error: "Rôle invalide" }, { status: 400 });
+      }
+      // Un admin ne peut pas se rétrograder lui-même (évite de se verrouiller dehors).
+      if (id === session.user.id && role !== "admin") {
+        return NextResponse.json({ error: "Impossible de retirer ton propre accès admin." }, { status: 400 });
+      }
+      data.role = role;
+    }
+
+    if (addCredits !== undefined) {
+      const delta = Number(addCredits);
+      if (!Number.isInteger(delta) || delta === 0) {
+        return NextResponse.json({ error: "Montant de crédits invalide." }, { status: 400 });
+      }
+      data.credits = Math.max(0, user.credits + delta); // jamais négatif
+    }
+
+    if (resetFreeDocs === true) {
+      data.freeDocsUsed = 0;
+    }
+
+    if (Object.keys(data).length === 0) {
+      return NextResponse.json({ error: "Aucune modification fournie." }, { status: 400 });
+    }
+
     const updated = await prisma.user.update({
       where: { id },
-      data: { role },
-      select: { id: true, role: true },
+      data,
+      select: { id: true, role: true, credits: true, freeDocsUsed: true },
     });
     return NextResponse.json(updated);
   } catch (error) {

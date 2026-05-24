@@ -331,9 +331,10 @@ export default function FonderieV2Landing() {
           <div>
             <div style={{ fontFamily: FV.mono, fontSize: 10, color: FV.ember, letterSpacing: '0.18em', marginBottom: 22, textTransform: 'uppercase' }}>Légal</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <a href="#" style={{ fontSize: 14, color: FV.ink2, textDecoration: 'none' }}>Mentions légales</a>
-              <a href="#" style={{ fontSize: 14, color: FV.ink2, textDecoration: 'none' }}>CGU</a>
-              <a href="#" style={{ fontSize: 14, color: FV.ink2, textDecoration: 'none' }}>Confidentialité</a>
+              <Link href="/legal/mentions" style={{ fontSize: 14, color: FV.ink2, textDecoration: 'none' }}>Mentions légales</Link>
+              <Link href="/legal/cgu" style={{ fontSize: 14, color: FV.ink2, textDecoration: 'none' }}>CGU / CGV</Link>
+              <Link href="/legal/confidentialite" style={{ fontSize: 14, color: FV.ink2, textDecoration: 'none' }}>Confidentialité</Link>
+              <Link href="/legal/remboursement" style={{ fontSize: 14, color: FV.ink2, textDecoration: 'none' }}>Remboursement</Link>
             </div>
           </div>
         </div>

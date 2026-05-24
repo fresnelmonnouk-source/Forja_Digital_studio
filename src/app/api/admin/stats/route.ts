@@ -32,6 +32,24 @@ export async function GET() {
       prisma.user.count({ where: { conversations: { some: {} } } }),
     ]);
 
+    // Revenus (table Payment) — tolérant si la table n'existe pas encore.
+    let revenue = { allTime: 0, last30d: 0, paidCount: 0, payingUsers: 0 };
+    try {
+      const [allTime, last30, payers] = await Promise.all([
+        prisma.payment.aggregate({ where: { status: "approved" }, _sum: { amount: true }, _count: true }),
+        prisma.payment.aggregate({ where: { status: "approved", createdAt: { gte: d30 } }, _sum: { amount: true } }),
+        prisma.payment.findMany({ where: { status: "approved" }, distinct: ["userId"], select: { userId: true } }),
+      ]);
+      revenue = {
+        allTime: allTime._sum.amount ?? 0,
+        last30d: last30._sum.amount ?? 0,
+        paidCount: allTime._count ?? 0,
+        payingUsers: payers.length,
+      };
+    } catch {
+      // table Payment absente → revenus à zéro
+    }
+
     // Timeline des inscriptions sur 14 jours
     const recent = await prisma.user.findMany({
       where: { createdAt: { gte: new Date(now.getTime() - 14 * 24 * 3600_000) } },
@@ -52,6 +70,8 @@ export async function GET() {
       NEXTAUTH_SECRET: !!process.env.NEXTAUTH_SECRET,
       NEXTAUTH_URL: !!process.env.NEXTAUTH_URL,
       RESEND_API_KEY: !!process.env.RESEND_API_KEY,
+      FEDAPAY: !!process.env.FEDAPAY_SECRET_KEY,
+      DEEPSEEK: !!process.env.DEEPSEEK_API_KEY,
       UPSTASH_REDIS: !!process.env.UPSTASH_REDIS_REST_URL && !!process.env.UPSTASH_REDIS_REST_TOKEN,
       SENTRY: !!process.env.SENTRY_DSN || !!process.env.NEXT_PUBLIC_SENTRY_DSN,
     };
@@ -60,6 +80,7 @@ export async function GET() {
       {
         users: { total: totalUsers, verified: verifiedUsers, admins, active: activeUsers, new7d: newUsers7d, new30d: newUsers30d },
         content: { conversations: totalConversations, messages: totalMessages },
+        revenue,
         timeline,
         tech: { providers, envHealth },
       },
