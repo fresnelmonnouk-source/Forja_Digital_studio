@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     const { transactionId, url } = await createCheckout({
       amount: pack.amount,
       description: `FORJA — Pack ${pack.label} (${pack.credits} documents)`,
-      customerEmail: session.user.email || "client@forja.fr",
+      customerEmail: session.user.email || "client@myforja.digital",
       customerName: session.user.name,
       callbackUrl: `${appUrl}/chat?payment=done`,
     });

@@ -176,7 +176,7 @@ export function buildWelcomeEmail(name: string | null): string {
       </table>
     </div>
 
-    ${footer("Si tu cales — un seul mail à aide@forja.fr et on te débloque. — L'équipe FORJA")}
+    ${footer("Si tu cales — un seul mail à aide@myforja.digital et on te débloque. — L'équipe FORJA")}
   `);
 }
 
@@ -201,7 +201,7 @@ export function buildPasswordResetEmail(name: string | null, resetLink: string):
     <div style="padding:0 44px 28px">
       <div style="background:rgba(238,90,36,0.06);border:1px solid rgba(238,90,36,0.25);border-radius:10px;padding:16px 18px">
         <div style="font-size:13px;color:${C.ink};font-weight:600;margin-bottom:4px">Tu n'as pas fait cette demande ?</div>
-        <div style="font-size:12px;color:${C.ink2};line-height:1.6">Ignore ce mail — ton mot de passe actuel reste en place. Demandes suspectes : <a href="mailto:securite@forja.fr" style="color:${C.ember};text-decoration:none">securite@forja.fr</a>.</div>
+        <div style="font-size:12px;color:${C.ink2};line-height:1.6">Ignore ce mail — ton mot de passe actuel reste en place. Demandes suspectes : <a href="mailto:securite@myforja.digital" style="color:${C.ember};text-decoration:none">securite@myforja.digital</a>.</div>
       </div>
     </div>
     ${footer()}
@@ -256,7 +256,7 @@ export function buildPaymentEmail(name: string | null, packLabel: string, credit
     <div style="padding:24px 44px 32px;text-align:center">
       ${btn("Forger un document →", `${APP_URL}/chat`)}
     </div>
-    ${footer("Reçu généré automatiquement. Une question ? aide@forja.fr")}
+    ${footer("Reçu généré automatiquement. Une question ? aide@myforja.digital")}
   `);
 }
 
