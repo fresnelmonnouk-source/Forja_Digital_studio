@@ -22,11 +22,12 @@ const OPTIONS = [
   ["Mode imprimeur (haute densité, 300 dpi)", false],
 ] as const;
 
-export default function ExportModal({ onClose, conversation }: { onClose: () => void; conversation: Message[] }) {
+export default function ExportModal({ onClose, conversation, onNeedCredits }: { onClose: () => void; conversation: Message[]; onNeedCredits?: () => void }) {
   const isMobile = useMediaQuery("(max-width: 640px)");
   const [exporting, setExporting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [quotaExceeded, setQuotaExceeded] = useState(false);
   const [docType, setDocType] = useState("ebook");
   const [opts, setOpts] = useState([true, true, false]);
   const [stats, setStats] = useState<{ duration: number; requestId: string } | null>(null);
@@ -62,6 +63,14 @@ export default function ExportModal({ onClose, conversation }: { onClose: () => 
       const requestId = res.headers.get("X-PDF-Request-ID") || "unknown";
       const duration = parseInt(res.headers.get("X-PDF-Duration-MS") || "0");
 
+      if (res.status === 402) {
+        // Quota gratuit épuisé → propose l'achat de crédits.
+        const data = await res.json().catch(() => ({}));
+        setQuotaExceeded(true);
+        setError((data as { message?: string }).message || "Tu as utilisé tes 5 documents gratuits.");
+        setExporting(false);
+        return;
+      }
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         const errorMsg = (data as { error?: string; details?: string }).error || `Erreur ${res.status}`;
@@ -159,7 +168,15 @@ export default function ExportModal({ onClose, conversation }: { onClose: () => 
               </div>
             )}
 
-            {/* CTA */}
+            {/* CTA — achat de crédits si quota épuisé, sinon génération */}
+            {quotaExceeded ? (
+              <button
+                onClick={() => onNeedCredits?.()}
+                style={{ width: '100%', background: FV.ember, color: FV.black, border: 'none', padding: '14px', fontSize: 13, fontWeight: 700, cursor: 'pointer', borderRadius: 8, boxShadow: `0 0 24px ${FV.ember}66`, letterSpacing: '0.04em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
+              >
+                <Sparkles size={16} /> ACHETER DES CRÉDITS →
+              </button>
+            ) : (<>
             <button
               onClick={handleExport}
               disabled={exporting}
@@ -169,6 +186,7 @@ export default function ExportModal({ onClose, conversation }: { onClose: () => 
               {exporting ? "FORJA RÉDIGE LE DOCUMENT…" : "FORGER LE PDF MAINTENANT →"}
             </button>
             <div style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.12em', textAlign: 'center', marginTop: 10 }}>~ 20 SECONDES · FORJA GÉNÈRE UN VRAI LIVRABLE, PAS UN EXPORT</div>
+            </>)}
           </>
         ) : (
           // Success state

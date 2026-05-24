@@ -30,6 +30,7 @@ export async function POST(req: Request) {
     const hashedPassword = await bcrypt.hash(password, 10);
     const otp = generateOtp();
     const otpExpires = new Date(Date.now() + 10 * 60_000);
+    const ip = getIp(req);
 
     const existing = await prisma.user.findUnique({ where: { email } });
 
@@ -37,15 +38,31 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Cet email est déjà utilisé." }, { status: 400 });
     }
 
+    // Anti-fraude (multi-comptes gratuits) : limite le nombre de comptes VÉRIFIÉS
+    // par IP. Seuil volontairement large (les IP mobiles ouest-africaines sont
+    // souvent partagées en NAT) → bloque seulement l'abus manifeste.
+    const MAX_ACCOUNTS_PER_IP = Number(process.env.FREE_ACCOUNTS_PER_IP) || 5;
+    if (!existing && ip && ip !== "unknown") {
+      const sameIpCount = await prisma.user.count({
+        where: { signupIp: ip, emailVerified: { not: null } },
+      });
+      if (sameIpCount >= MAX_ACCOUNTS_PER_IP) {
+        return NextResponse.json(
+          { error: "Trop de comptes ont déjà été créés depuis ce réseau. Contacte le support si besoin." },
+          { status: 429 }
+        );
+      }
+    }
+
     if (existing && !existing.emailVerified) {
       // Compte non vérifié — on régénère le code et le mot de passe
       await prisma.user.update({
         where: { id: existing.id },
-        data: { name: cleanName ?? existing.name, password: hashedPassword, otpCode: otp, otpExpires },
+        data: { name: cleanName ?? existing.name, password: hashedPassword, otpCode: otp, otpExpires, signupIp: ip },
       });
     } else {
       await prisma.user.create({
-        data: { name: cleanName, email, password: hashedPassword, otpCode: otp, otpExpires },
+        data: { name: cleanName, email, password: hashedPassword, otpCode: otp, otpExpires, signupIp: ip },
       });
     }
 

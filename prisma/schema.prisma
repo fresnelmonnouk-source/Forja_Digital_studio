@@ -12,6 +12,9 @@ model User {
   name          String?
   password      String
   role          String         @default("user") // "user" | "admin"
+  freeDocsUsed  Int            @default(0)       // PDF gratuits consommés (quota 5 à vie)
+  credits       Int            @default(0)       // crédits PDF achetés restants
+  signupIp      String?                          // anti-fraude : IP d'inscription
   emailVerified DateTime?
   otpCode       String?
   otpExpires    DateTime?
@@ -20,6 +23,22 @@ model User {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   conversations Conversation[]
+  payments      Payment[]
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fedapayId String?  @unique // id de la transaction FedaPay
+  packId    String              // identifiant du pack acheté
+  amount    Int                 // montant en FCFA (XOF)
+  credits   Int                 // crédits achetés
+  status    String   @default("pending") // pending | approved | declined | canceled
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model Conversation {

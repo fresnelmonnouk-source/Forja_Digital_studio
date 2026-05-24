@@ -13,6 +13,7 @@ import { planAndGenerateImages } from "@/lib/pdf/image-planner";
 import { DOC_PROMPTS } from "@/lib/pdf/prompts";
 import { buildHtmlTemplate } from "@/lib/pdf/template";
 import { sanitizeHtml } from "@/lib/pdf/sanitize";
+import { getUserQuota, consumeDoc } from "@/lib/quota";
 
 export const maxDuration = 60;
 
@@ -33,6 +34,16 @@ export async function POST(req: Request) {
   }
 
   console.log(`[PDF-${requestId}] ✓ Authentification OK`);
+
+  // Quota : 5 documents gratuits à vie, puis crédits achetés.
+  const quota = await getUserQuota(session.user.id);
+  if (!quota.canGenerate) {
+    console.log(`[PDF-${requestId}] ⛔ Quota épuisé (gratuit ${quota.freeUsed}/5, crédits ${quota.credits})`);
+    return NextResponse.json(
+      { error: "QUOTA_EXCEEDED", message: "Tu as utilisé tes 5 documents gratuits. Achète des crédits pour continuer à forger." },
+      { status: 402 }
+    );
+  }
 
   try {
     const { conversation, type, opts } = await req.json();
@@ -136,6 +147,10 @@ export async function POST(req: Request) {
       });
       const puppeteerDuration = Date.now() - puppeteerStartTime;
       console.log(`[PDF-${requestId}] ✓ PDF généré en ${puppeteerDuration}ms (taille: ${pdfBuffer.length} bytes)`);
+
+      // Décompte d'un document (gratuit puis crédit) — seulement après succès,
+      // pour ne pas pénaliser une génération échouée.
+      await consumeDoc(session.user.id);
 
       const totalDuration = Date.now() - startTime;
       console.log(`[PDF-${requestId}] ✅ SUCCÈS - Durée totale: ${totalDuration}ms`);

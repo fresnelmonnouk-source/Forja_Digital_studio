@@ -3,11 +3,12 @@ import { useState, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import MarkdownRenderer from "@/components/chat/MarkdownRenderer";
 import ExportModal from "@/components/chat/ExportModal";
+import CreditsModal from "@/components/chat/CreditsModal";
 import { FV, FVMark } from "@/components/ui/fonderie";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { stripImageData } from "@/lib/strip-images";
 import Link from "next/link";
-import { Menu, X, RotateCcw, LogOut, Sparkles, ArrowRight, CornerDownLeft, GraduationCap, BookOpen, Cog, Bot, Shield, Trash2, Paperclip, type LucideIcon } from "lucide-react";
+import { Menu, X, RotateCcw, LogOut, Sparkles, ArrowRight, CornerDownLeft, GraduationCap, BookOpen, Cog, Bot, Shield, Trash2, Paperclip, Coins, type LucideIcon } from "lucide-react";
 
 interface Message {
   role: string;
@@ -100,6 +101,7 @@ export default function ChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeConv, setActiveConv] = useState<string | null>(null);
   const [showExport, setShowExport] = useState(false);
+  const [showCredits, setShowCredits] = useState(false);
   const [history, setHistory] = useState<Conversation[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
@@ -151,6 +153,15 @@ export default function ChatPage() {
   useEffect(() => {
     setSidebarOpen(!isMobile);
   }, [isMobile]);
+
+  // Retour de paiement FedaPay (callback ?payment=done) → affiche le solde à jour.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (new URLSearchParams(window.location.search).get("payment") === "done") {
+      setShowCredits(true);
+      window.history.replaceState({}, "", "/chat");
+    }
+  }, []);
 
   // Fait défiler le stepper pour centrer l'étape active à chaque changement
   // (sinon les étapes avancées sont hors écran → on ne voit pas la progression).
@@ -419,6 +430,11 @@ export default function ChatPage() {
           })}
         </div>
 
+        {/* Crédits / achat */}
+        <button onClick={() => setShowCredits(true)} style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 10px 6px', padding: '9px 12px', borderRadius: 8, cursor: 'pointer', color: FV.ink2, background: 'rgba(241,233,218,0.04)', border: `1px solid ${FV.rule}`, fontSize: 12, fontWeight: 500, width: 'calc(100% - 20px)', textAlign: 'left' }}>
+          <Coins size={15} color={FV.amber} /> Crédits & forfaits
+        </button>
+
         {/* Lien back office (admins uniquement) */}
         {isAdmin && (
           <Link href="/admin" style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 10px 6px', padding: '9px 12px', borderRadius: 8, textDecoration: 'none', color: FV.ember, background: 'rgba(238,90,36,0.08)', border: '1px solid rgba(238,90,36,0.22)', fontSize: 12, fontWeight: 600 }}>
@@ -662,7 +678,8 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {showExport && <ExportModal onClose={() => setShowExport(false)} conversation={messages} />}
+      {showExport && <ExportModal onClose={() => setShowExport(false)} conversation={messages} onNeedCredits={() => { setShowExport(false); setShowCredits(true); }} />}
+      {showCredits && <CreditsModal onClose={() => setShowCredits(false)} />}
 
       {/* Confirmation de suppression — modale au design FORJA (remplace confirm() natif) */}
       {confirmDelete && (
