@@ -228,7 +228,7 @@ export default function ChatPage() {
             const followup = [
               ...stripMessages(newMessages),
               { role: "assistant", content: "Je consulte le marché en temps réel…" },
-              { role: "user", content: `Résultats de recherche réels (web + Reddit) pour « ${query} » :\n\n${resultsText}\n\nAnalyse ces données et poursuis ta réponse en t'appuyant dessus. Ne réémets PAS de tag [RECHERCHE].` },
+              { role: "user", content: `Résultats de recherche web réels pour « ${query} » :\n\n${resultsText}\n\nAnalyse ces données et poursuis ta réponse en t'appuyant dessus. Ne réémets PAS de tag [RECHERCHE].` },
             ];
             const r2 = await fetch("/api/chat", {
               method: "POST", headers: { "Content-Type": "application/json" },

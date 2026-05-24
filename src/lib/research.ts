@@ -1,20 +1,17 @@
-// Recherche de marché pour FORJA (méthode ORACLE) : web (Tavily) + Reddit.
-// Permet à FORJA de lire de vrais avis, discussions, posts pour valider un signal.
-// Chaque source est gracieuse : sans clé/identifiants → ignorée (pas d'erreur).
+// Recherche de marché pour FORJA (méthode ORACLE) via recherche web (Tavily).
+// Tavily renvoie des résultats web publics indexés (incluant souvent des fils de
+// discussion, avis et forums). On n'utilise PAS l'API Reddit directement : sa
+// "Responsible Builder Policy" interdit l'usage commercial / par IA sans accord écrit.
+// Gracieux : sans clé Tavily → renvoie [] (l'appelant ignore proprement).
 
 export interface ResearchResult {
   title: string;
   snippet: string;
   url: string;
-  source: "web" | "reddit";
+  source: "web";
 }
 
-function timeoutSignal(ms: number) {
-  return AbortSignal.timeout(ms);
-}
-
-// ── Web via Tavily (palier gratuit) ──────────────────────────────
-async function searchWeb(query: string, max = 5): Promise<ResearchResult[]> {
+async function searchWeb(query: string, max = 6): Promise<ResearchResult[]> {
   const key = process.env.TAVILY_API_KEY;
   if (!key) return [];
   try {
@@ -28,7 +25,7 @@ async function searchWeb(query: string, max = 5): Promise<ResearchResult[]> {
         max_results: max,
         include_answer: false,
       }),
-      signal: timeoutSignal(12_000),
+      signal: AbortSignal.timeout(12_000),
     });
     if (!res.ok) {
       console.log(`[RESEARCH] Tavily ${res.status}`);
@@ -47,61 +44,11 @@ async function searchWeb(query: string, max = 5): Promise<ResearchResult[]> {
   }
 }
 
-// ── Reddit via OAuth client-credentials (lecture) ────────────────
-async function getRedditToken(): Promise<string | null> {
-  const id = process.env.REDDIT_CLIENT_ID;
-  const secret = process.env.REDDIT_CLIENT_SECRET;
-  if (!id || !secret) return null;
-  try {
-    const res = await fetch("https://www.reddit.com/api/v1/access_token", {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${Buffer.from(`${id}:${secret}`).toString("base64")}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-        "User-Agent": "forja-research/1.0",
-      },
-      body: "grant_type=client_credentials",
-      signal: timeoutSignal(8_000),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data?.access_token ?? null;
-  } catch {
-    return null;
-  }
-}
-
-async function searchReddit(query: string, max = 4): Promise<ResearchResult[]> {
-  const token = await getRedditToken();
-  if (!token) return [];
-  try {
-    const url = `https://oauth.reddit.com/search?q=${encodeURIComponent(query)}&limit=${max}&sort=relevance&type=link`;
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}`, "User-Agent": "forja-research/1.0" },
-      signal: timeoutSignal(10_000),
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return (data?.data?.children ?? []).slice(0, max).map((c: { data?: Record<string, unknown> }) => {
-      const d = c.data ?? {};
-      return {
-        title: String(d.title ?? "").slice(0, 140),
-        snippet: (String(d.selftext ?? "") || `r/${d.subreddit ?? ""} · ${d.ups ?? 0} upvotes · ${d.num_comments ?? 0} commentaires`).slice(0, 300),
-        url: `https://www.reddit.com${d.permalink ?? ""}`,
-        source: "reddit" as const,
-      };
-    });
-  } catch {
-    return [];
-  }
-}
-
-/** Lance web + Reddit en parallèle, renvoie les résultats fusionnés. */
+/** Recherche de marché (web). */
 export async function research(query: string): Promise<ResearchResult[]> {
-  const [web, reddit] = await Promise.all([searchWeb(query), searchReddit(query)]);
-  return [...web, ...reddit];
+  return searchWeb(query);
 }
 
 export function hasResearchKeys(): boolean {
-  return !!process.env.TAVILY_API_KEY || (!!process.env.REDDIT_CLIENT_ID && !!process.env.REDDIT_CLIENT_SECRET);
+  return !!process.env.TAVILY_API_KEY;
 }
