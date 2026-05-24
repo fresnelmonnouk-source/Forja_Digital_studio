@@ -102,6 +102,7 @@ export default function ChatPage() {
   const [activeConv, setActiveConv] = useState<string | null>(null);
   const [showExport, setShowExport] = useState(false);
   const [showCredits, setShowCredits] = useState(false);
+  const [isStudio, setIsStudio] = useState(false); // abonnés Studio : choix du modèle IA
   const [history, setHistory] = useState<Conversation[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
@@ -163,6 +164,15 @@ export default function ChatPage() {
     }
   }, []);
 
+  // Statut d'abonnement (Studio = choix du modèle IA débloqué).
+  useEffect(() => {
+    if (!session?.user) return;
+    fetch("/api/quota")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d) setIsStudio(!!d.isStudio); })
+      .catch(() => {});
+  }, [session]);
+
   // Fait défiler le stepper pour centrer l'étape active à chaque changement
   // (sinon les étapes avancées sont hors écran → on ne voit pas la progression).
   useEffect(() => {
@@ -196,7 +206,8 @@ export default function ChatPage() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: payloadMessages, provider: selectedProvider })
+        // Seuls les abonnés Studio choisissent le modèle ; les autres → défaut (DeepSeek).
+        body: JSON.stringify({ messages: payloadMessages, provider: isStudio ? selectedProvider : "auto" })
       });
       const data = await response.json();
       if (data.usedProvider) setActiveProvider(data.usedProvider);
@@ -475,8 +486,8 @@ export default function ChatPage() {
               <div style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.08em', marginTop: 1 }}>ÉTAPE {String(activeStep).padStart(2, '0')} · {STEPS[activeStep]?.toUpperCase()}</div>
             </div>
           </div>
-          {/* Provider selector — masqué sur mobile (le défaut AUTO reste actif) */}
-          {!isMobile && <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+          {/* Sélecteur de modèle — réservé aux abonnés Studio (sinon DeepSeek par défaut) */}
+          {!isMobile && isStudio && <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
             {[
               { id: "auto", label: "AUTO" },
               { id: "anthropic", label: "CLAUDE" },

@@ -1,13 +1,13 @@
 export type LLMMessage = { role: "user" | "assistant"; content: string };
 export type LLMResponse = { content: Array<{ text: string }>; usedProvider: string };
 
-// Ordre de fallback : Anthropic → DeepSeek → OpenAI
-const FALLBACK_ORDER = ["anthropic", "deepseek", "openai"] as const;
+// Provider principal = DeepSeek (qualité/coût), fallback Anthropic puis OpenAI.
+const FALLBACK_ORDER = ["deepseek", "anthropic", "openai"] as const;
 
 const DEFAULT_MODELS: Record<string, string> = {
+  deepseek:  process.env.DEEPSEEK_MODEL || "deepseek-chat", // V4 (dernier modèle chat DeepSeek)
   anthropic: process.env.LLM_MODEL || "claude-haiku-4-5-20251101",
   openai:    "gpt-4o-mini",
-  deepseek:  "deepseek-chat",
 };
 
 function getApiKey(provider: string): string | undefined {

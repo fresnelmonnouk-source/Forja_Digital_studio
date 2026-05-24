@@ -11,11 +11,12 @@ export interface Pack {
   highlight?: boolean;
 }
 
-// ⚠️ TODO Fresnel : ajuste les prix/crédits selon ta stratégie.
+// Plans mensuels (prix /mois, renouvellement manuel). Seul "studio" débloque
+// le choix du modèle IA (sinon DeepSeek par défaut).
 export const PACKS: Pack[] = [
-  { id: "starter", label: "Starter", credits: 10, amount: 2000 },
-  { id: "pro", label: "Pro", credits: 30, amount: 5000, highlight: true },
-  { id: "studio", label: "Studio", credits: 100, amount: 12000 },
+  { id: "starter", label: "Starter", credits: 30, amount: 10500 },   // 350 F/doc
+  { id: "pro", label: "Pro", credits: 50, amount: 15000, highlight: true }, // 300 F/doc
+  { id: "studio", label: "Studio", credits: 200, amount: 45000 },    // 225 F/doc · choix du modèle IA
 ];
 
 export function getPack(id: string): Pack | null {
