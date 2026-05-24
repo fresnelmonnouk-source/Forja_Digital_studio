@@ -30,30 +30,6 @@ const QUICK_PROMPTS: { Icon: LucideIcon; label: string; text: string }[] = [
 
 const STEPS = ['Signal', 'Offre', 'Promesse', 'Avatar', 'Douleurs', 'Pédagogie', 'Fil Rouge', 'Outils', 'Auto.', 'Livrables', 'Copy', 'ROI', 'WOW'];
 
-const STEP_KEYWORDS: Record<number, string[]> = {
-  0: ['signal', 'marché', 'oracle', 'valider', 'validation'],
-  1: ['offre', 'core', 'bump', 'upsell', 'prix', 'tarif'],
-  2: ['promesse', 'résultat', 'mesurable', 'transformation'],
-  3: ['avatar', 'cible', 'client idéal', 'persona'],
-  4: ['douleur', 'problème', 'frustration', 'chronophage'],
-  5: ['module', 'pédagogie', 'structure', 'plan de formation'],
-  6: ['fil rouge', 'projet', 'exercice pratique'],
-  7: ['outil', 'stack', 'technologie', 'logiciel'],
-  8: ['automatisation', 'workflow', 'déclencheur', 'make', 'zapier'],
-  9: ['livrable', 'template', 'ressource'],
-  10: ['copywriting', 'page de vente', 'accroche', 'headline'],
-  11: ['roi', 'retour sur investissement', 'résultat chiffré'],
-  12: ['bonus', 'wow', 'surprise'],
-};
-
-function detectStep(text: string): number | null {
-  const lower = text.toLowerCase();
-  for (const [step, keywords] of Object.entries(STEP_KEYWORDS)) {
-    if (keywords.some((kw) => lower.includes(kw))) return Number(step);
-  }
-  return null;
-}
-
 interface OnboardingData {
   name?: string;
   goal?: string;
@@ -300,17 +276,15 @@ export default function ChatPage() {
       if (pdfTagMatch || userWantsPdf) {
         setTimeout(() => setShowExport(true), 800);
       }
-      // Étape courante : tag explicite [ETAPE:n] émis par FORJA (fiable), sinon
-      // détection par mots-clés en repli. Le tag est retiré de l'affichage.
-      const stepTagMatch = reply.match(/\[(?:E|É|É)TAPE\s*:\s*(\d{1,2})\]/i);
+      // Étape courante : pilotée UNIQUEMENT par le tag explicite [ETAPE:n] de FORJA.
+      // (Plus de détection par mots-clés : "transformation", "promesse", "marché"…
+      //  apparaissent partout et faisaient sauter l'indicateur au mauvais endroit.)
+      const stepTagMatch = reply.match(/\[(?:E|É)TAPE\s*:\s*(\d{1,2})\]/i);
       if (stepTagMatch) {
         const n = parseInt(stepTagMatch[1], 10);
-        reply = reply.replace(/\[(?:E|É)TAPE\s*:\s*\d{1,2}\]/gi, "").trim();
         if (n >= 0 && n < STEPS.length) setActiveStep(n);
-      } else {
-        const detected = detectStep(reply);
-        if (detected !== null) setActiveStep(detected);
       }
+      reply = reply.replace(/\[(?:E|É)TAPE\s*:\s*\d{1,2}\]/gi, "").trim();
       const finalMessages: Message[] = [...newMessages, { role: "assistant", content: reply }];
       setMessages(finalMessages);
       if (session?.user) {
@@ -482,7 +456,7 @@ export default function ChatPage() {
               <div style={{ fontSize: 13, color: FV.ink, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {activeConv ? history.find(h => h.id === activeConv)?.title || "Session active" : "Nouvelle session"}
               </div>
-              <div style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.08em', marginTop: 1 }}>ÉTAPE {String(activeStep + 1).padStart(2, '0')} / {STEPS.length}</div>
+              <div style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.08em', marginTop: 1 }}>ÉTAPE {String(activeStep).padStart(2, '0')} · {STEPS[activeStep]?.toUpperCase()}</div>
             </div>
           </div>
           {/* Provider selector — masqué sur mobile (le défaut AUTO reste actif) */}
