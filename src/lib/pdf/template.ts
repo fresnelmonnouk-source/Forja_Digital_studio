@@ -157,6 +157,8 @@ export function buildHtmlTemplate(
               border-radius: 3px;
               font-size: 0.9em;
               color: #A07820;
+              overflow-wrap: break-word;
+              word-break: break-word;
             }
             pre {
               background: #0A0804;
@@ -167,9 +169,17 @@ export function buildHtmlTemplate(
               font-size: 0.85em;
               line-height: 1.5;
               margin-bottom: 15px;
-              overflow-x: auto;
+              /* En PDF il n'y a pas de scroll : on force le retour à la ligne
+                 pour que les longs prompts ne soient pas coupés au bord. */
+              white-space: pre-wrap;
+              overflow-wrap: break-word;
+              word-break: break-word;
+              page-break-inside: avoid;
             }
-            pre code { background: none; color: inherit; padding: 0; }
+            pre code {
+              background: none; color: inherit; padding: 0;
+              white-space: pre-wrap; overflow-wrap: break-word; word-break: break-word;
+            }
             ul, ol { margin-bottom: 15px; padding-left: 20px; }
             li { margin-bottom: 5px; }
             hr { border: 0; border-top: 1px solid #e0e0e0; margin: 30px 0; }

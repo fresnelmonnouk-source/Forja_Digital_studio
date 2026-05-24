@@ -65,7 +65,9 @@ export async function POST(req: Request) {
     console.log(`[PDF-${requestId}] 📝 Messages tronqués: ${llmMessages.length} messages (budget caractères: ${CHAR_BUDGET})`);
 
     const llmStartTime = Date.now();
-    const llmResult = await callLLM(llmMessages, DOC_PROMPTS[type as DocType]);
+    // 8192 tokens de sortie (au lieu de 4096) : un ebook complet de plusieurs
+    // chapitres dépassait 4096 et se faisait couper en pleine phrase.
+    const llmResult = await callLLM(llmMessages, DOC_PROMPTS[type as DocType], undefined, 8192);
     let markdown = llmResult.content.map((b) => b.text).join("");
     // Nettoyage : retire tout préambule conversationnel avant le 1er titre "# ..."
     // (le modèle ajoute parfois "Absolument… Voici ton ebook." malgré la consigne)

@@ -30,7 +30,7 @@ function isQuotaError(status: number, body: unknown): boolean {
   return false;
 }
 
-async function callAnthropic(messages: LLMMessage[], systemPrompt: string): Promise<string> {
+async function callAnthropic(messages: LLMMessage[], systemPrompt: string, maxTokens: number): Promise<string> {
   const apiKey = getApiKey("anthropic")!;
   const model = DEFAULT_MODELS.anthropic;
 
@@ -41,7 +41,7 @@ async function callAnthropic(messages: LLMMessage[], systemPrompt: string): Prom
       "x-api-key": apiKey,
       "anthropic-version": "2023-06-01",
     },
-    body: JSON.stringify({ model, max_tokens: 4096, system: systemPrompt, messages }),
+    body: JSON.stringify({ model, max_tokens: maxTokens, system: systemPrompt, messages }),
   });
 
   const data = await res.json();
@@ -55,7 +55,8 @@ async function callAnthropic(messages: LLMMessage[], systemPrompt: string): Prom
 async function callOpenAICompat(
   provider: "openai" | "deepseek",
   messages: LLMMessage[],
-  systemPrompt: string
+  systemPrompt: string,
+  maxTokens: number
 ): Promise<string> {
   const apiKey = getApiKey(provider)!;
   const model = DEFAULT_MODELS[provider];
@@ -72,7 +73,7 @@ async function callOpenAICompat(
     },
     body: JSON.stringify({
       model,
-      max_tokens: 4096,
+      max_tokens: maxTokens,
       messages: [{ role: "system", content: systemPrompt }, ...messages],
     }),
   });
@@ -92,17 +93,18 @@ class QuotaError extends Error {
   }
 }
 
-async function callProvider(provider: string, messages: LLMMessage[], systemPrompt: string): Promise<string> {
-  if (provider === "anthropic") return callAnthropic(messages, systemPrompt);
+async function callProvider(provider: string, messages: LLMMessage[], systemPrompt: string, maxTokens: number): Promise<string> {
+  if (provider === "anthropic") return callAnthropic(messages, systemPrompt, maxTokens);
   if (provider === "openai" || provider === "deepseek")
-    return callOpenAICompat(provider as "openai" | "deepseek", messages, systemPrompt);
+    return callOpenAICompat(provider as "openai" | "deepseek", messages, systemPrompt, maxTokens);
   throw new Error(`Provider inconnu : ${provider}`);
 }
 
 export async function callLLM(
   messages: LLMMessage[],
   systemPrompt: string,
-  preferredProvider?: string
+  preferredProvider?: string,
+  maxTokens = 4096
 ): Promise<LLMResponse> {
   const available = availableProviders();
   if (available.length === 0) throw new Error("Aucune clé API configurée.");
@@ -118,7 +120,7 @@ export async function callLLM(
     if (!getApiKey(provider)) continue;
     tried.push(provider);
     try {
-      const text = await callProvider(provider, messages, systemPrompt);
+      const text = await callProvider(provider, messages, systemPrompt, maxTokens);
       return { content: [{ text }], usedProvider: provider };
     } catch (err) {
       if (err instanceof QuotaError) {
