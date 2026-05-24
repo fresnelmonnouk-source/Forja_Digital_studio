@@ -97,7 +97,9 @@ export async function planAndGenerateImages(markdown: string, docType: DocType):
   for (const item of results) {
     if (!item) continue;
     const caption = item.credit ? `${item.description} — Photo : ${item.credit} / Unsplash` : item.description;
-    const figure = `\n\n<figure class="ai-figure"><img src="${item.imgData}" alt="${item.description}" /><figcaption>${caption}</figcaption></figure>\n\n`;
+    // alt non vide pour l'accessibilité (repli sur le titre de section).
+    const altText = (item.description?.trim() || item.heading.replace(/^#+\s*/, "").trim() || "Illustration").replace(/"/g, "'");
+    const figure = `\n\n<figure class="ai-figure"><img src="${item.imgData}" alt="${altText}" /><figcaption>${caption}</figcaption></figure>\n\n`;
     result = result.replace(item.heading, item.heading + figure);
   }
 

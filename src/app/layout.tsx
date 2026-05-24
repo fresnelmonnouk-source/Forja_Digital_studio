@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import { SITE_URL, SITE_NAME, SITE_TAGLINE, SITE_DESCRIPTION } from "@/lib/site";
+import JsonLd from "@/components/seo/JsonLd";
+import { organizationSchema, websiteSchema } from "@/lib/seo/structured-data";
 import "./globals.css";
 
 const fraunces = Fraunces({ 
@@ -62,6 +64,7 @@ export default function RootLayout({
   return (
     <html lang="fr" className={`${fraunces.variable} ${inter.variable} ${jetbrains.variable}`}>
       <body className="bg-fv-black text-fv-ink font-sans antialiased">
+        <JsonLd data={[organizationSchema(), websiteSchema()]} />
         {children}
       </body>
     </html>

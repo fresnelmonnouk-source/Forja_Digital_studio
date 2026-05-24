@@ -4,6 +4,8 @@ import Link from "next/link";
 import { FV, FVMark, FVHook, FVOrb } from "@/components/ui/fonderie";
 import { useBreakpoint } from "@/lib/use-media-query";
 import DemoModal from "@/components/DemoModal";
+import JsonLd from "@/components/seo/JsonLd";
+import { softwareAppSchema, faqSchema, FAQ_ITEMS } from "@/lib/seo/structured-data";
 
 export default function FonderieV2Landing() {
   const { isMobile, isTablet } = useBreakpoint();
@@ -16,6 +18,9 @@ export default function FonderieV2Landing() {
 
   return (
     <div style={{ width: '100%', minHeight: isMobile ? 'auto' : 3900, background: FV.black, fontFamily: FV.sans, color: FV.ink, position: 'relative', overflow: 'hidden' }}>
+      {/* Données structurées : application + offres + FAQ */}
+      <JsonLd data={[softwareAppSchema(), faqSchema()]} />
+
       {/* Ambient glows */}
       <div style={{ position: 'absolute', top: -200, right: -200, width: 900, height: 900, background: `radial-gradient(circle, ${FV.ember}22 0%, transparent 60%)`, pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', bottom: 800, left: -300, width: 700, height: 700, background: `radial-gradient(circle, ${FV.amber}11 0%, transparent 60%)`, pointerEvents: 'none' }} />
@@ -262,6 +267,24 @@ export default function FonderieV2Landing() {
         </div>
       </div>
 
+      {/* FAQ (ancre "faq") — alimente aussi le schéma FAQPage (JSON-LD) */}
+      <div id="faq" style={{ padding: `20px ${padX}px 80px`, position: 'relative', maxWidth: 1400, margin: '0 auto', scrollMarginTop: 80 }}>
+        <div style={{ marginBottom: isMobile ? 28 : 40 }}>
+          <FVHook tag="✦" label="Questions fréquentes" />
+          <h2 style={{ fontFamily: FV.serif, fontWeight: 500, fontSize: isMobile ? 32 : 48, color: FV.ink, margin: '20px 0 0', letterSpacing: '-0.02em', lineHeight: 1.05 }}>
+            Tout ce qu'il faut savoir<br />avant d'allumer le four.
+          </h2>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 12 : 20 }}>
+          {FAQ_ITEMS.map((item, idx) => (
+            <div key={idx} style={{ background: FV.black2, border: `1px solid ${FV.rule}`, borderRadius: 14, padding: isMobile ? '20px 22px' : '26px 28px' }}>
+              <h3 style={{ fontFamily: FV.serif, fontWeight: 500, fontSize: isMobile ? 18 : 20, color: FV.ink, margin: '0 0 10px', letterSpacing: '-0.01em' }}>{item.question}</h3>
+              <p style={{ fontSize: 15, color: FV.ink2, lineHeight: 1.65, margin: 0 }}>{item.answer}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Final CTA — full bleed (ancre "Forge") */}
       <div id="forge" style={{ position: 'relative', background: `radial-gradient(ellipse 70% 60% at 50% 50%, ${FV.emberDeep}30 0%, ${FV.black} 70%)`, padding: `${isMobile ? 64 : 100}px ${padX}px`, textAlign: 'center', borderTop: `1px solid ${FV.ruleStrong}`, scrollMarginTop: 80 }}>
         <div style={{ position: 'absolute', top: -40, left: '50%', transform: 'translateX(-50%)', zIndex: 1 }}>
@@ -321,9 +344,9 @@ export default function FonderieV2Landing() {
           <div>
             <div style={{ fontFamily: FV.mono, fontSize: 10, color: FV.ember, letterSpacing: '0.18em', marginBottom: 22, textTransform: 'uppercase' }}>Support</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <a href="#" style={{ fontSize: 14, color: FV.ink2, textDecoration: 'none' }}>Documentation</a>
-              <a href="#" style={{ fontSize: 14, color: FV.ink2, textDecoration: 'none' }}>Contact</a>
-              <a href="#" style={{ fontSize: 14, color: FV.ink2, textDecoration: 'none' }}>FAQ</a>
+              <a href="#apropos" style={{ fontSize: 14, color: FV.ink2, textDecoration: 'none' }}>Documentation</a>
+              <a href="mailto:aide@myforja.digital" style={{ fontSize: 14, color: FV.ink2, textDecoration: 'none' }}>Contact</a>
+              <a href="#faq" style={{ fontSize: 14, color: FV.ink2, textDecoration: 'none' }}>FAQ</a>
             </div>
           </div>
 
