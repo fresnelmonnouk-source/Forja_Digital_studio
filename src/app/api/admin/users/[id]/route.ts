@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAdminSession } from "@/lib/admin";
+import { creditExpiryDate } from "@/lib/plans";
 
 // PATCH : modifie un utilisateur.
 // Actions supportées (mutuellement non exclusives) :
@@ -19,7 +20,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const user = await prisma.user.findUnique({ where: { id } });
     if (!user) return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 404 });
 
-    const data: { role?: string; credits?: number; freeDocsUsed?: number } = {};
+    const data: { role?: string; credits?: number; freeDocsUsed?: number; creditsExpireAt?: Date } = {};
 
     if (role !== undefined) {
       if (role !== "user" && role !== "admin") {
@@ -38,6 +39,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         return NextResponse.json({ error: "Montant de crédits invalide." }, { status: 400 });
       }
       data.credits = Math.max(0, user.credits + delta); // jamais négatif
+      // Ajout de crédits → (re)cale la fenêtre de validité à 31 jours.
+      if (delta > 0) data.creditsExpireAt = creditExpiryDate();
     }
 
     if (resetFreeDocs === true) {
@@ -48,11 +51,23 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       return NextResponse.json({ error: "Aucune modification fournie." }, { status: 400 });
     }
 
-    const updated = await prisma.user.update({
-      where: { id },
-      data,
-      select: { id: true, role: true, credits: true, freeDocsUsed: true },
-    });
+    let updated;
+    try {
+      updated = await prisma.user.update({
+        where: { id },
+        data,
+        select: { id: true, role: true, credits: true, freeDocsUsed: true },
+      });
+    } catch {
+      // colonne creditsExpireAt absente → on rejoue sans ce champ
+      const { creditsExpireAt: _drop, ...rest } = data;
+      void _drop;
+      updated = await prisma.user.update({
+        where: { id },
+        data: rest,
+        select: { id: true, role: true, credits: true, freeDocsUsed: true },
+      });
+    }
     return NextResponse.json(updated);
   } catch (error) {
     console.error("Erreur admin user PATCH:", error);

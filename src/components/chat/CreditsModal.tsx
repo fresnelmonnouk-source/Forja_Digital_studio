@@ -10,6 +10,7 @@ interface QuotaData {
   freeRemaining: number;
   credits: number;
   freeLimit: number;
+  creditsExpireAt: string | null;
 }
 
 export default function CreditsModal({ onClose }: { onClose: () => void }) {
@@ -71,6 +72,11 @@ export default function CreditsModal({ onClose }: { onClose: () => void }) {
               ? <>Il te reste <strong style={{ color: FV.ember }}>{quota.freeRemaining}</strong> document{quota.freeRemaining > 1 ? "s" : ""} gratuit{quota.freeRemaining > 1 ? "s" : ""} (sur {quota.freeLimit}).</>
               : <>Tes <strong style={{ color: FV.ember }}>{quota.freeLimit}</strong> documents gratuits sont utilisés.</>}
             {quota.credits > 0 && <> · Crédits : <strong style={{ color: FV.ember }}>{quota.credits}</strong>.</>}
+            {quota.credits > 0 && quota.creditsExpireAt && (
+              <div style={{ fontSize: 11, color: FV.smoke, marginTop: 4 }}>
+                Valables jusqu&apos;au {new Date(quota.creditsExpireAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })}.
+              </div>
+            )}
           </div>
         )}
 

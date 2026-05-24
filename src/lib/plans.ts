@@ -3,6 +3,16 @@
 
 export const FREE_DOC_LIMIT = 5; // documents PDF gratuits À VIE par compte
 
+// Durée de validité des crédits achetés (packs mensuels). Les crédits expirent
+// 31 jours après le dernier rechargement → ils ne s'accumulent pas indéfiniment.
+// Les documents gratuits, eux, ne sont jamais affectés (quota à vie).
+export const CREDIT_VALIDITY_DAYS = 31;
+
+/** Date d'expiration des crédits à partir d'une date de rechargement. */
+export function creditExpiryDate(from: Date = new Date()): Date {
+  return new Date(from.getTime() + CREDIT_VALIDITY_DAYS * 24 * 3600_000);
+}
+
 export interface Pack {
   id: string;
   label: string;

@@ -14,6 +14,7 @@ model User {
   role          String         @default("user") // "user" | "admin"
   freeDocsUsed  Int            @default(0)       // PDF gratuits consommés (quota 5 à vie)
   credits       Int            @default(0)       // crédits PDF achetés restants
+  creditsExpireAt DateTime?                      // expiration des crédits (31j depuis le dernier achat)
   signupIp      String?                          // anti-fraude : IP d'inscription
   emailVerified DateTime?
   otpCode       String?

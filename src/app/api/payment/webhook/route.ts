@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getTransaction } from "@/lib/fedapay";
 import { getPack } from "@/lib/plans";
+import { grantCredits } from "@/lib/quota";
 import { sendPaymentEmail } from "@/lib/email";
 
 // Webhook FedaPay. On NE FAIT PAS confiance au corps reçu : on extrait l'id de
@@ -30,10 +31,8 @@ export async function POST(req: Request) {
         data: { status: "approved" },
       });
       if (flipped.count > 0) {
-        await prisma.user.update({
-          where: { id: payment.userId },
-          data: { credits: { increment: payment.credits } },
-        });
+        // Crédite + (re)cale la fenêtre de validité à 31 jours.
+        await grantCredits(payment.userId, payment.credits);
         console.log(`[PAYMENT] +${payment.credits} crédits → user ${payment.userId} (tx ${id})`);
         // Email de confirmation (non bloquant)
         const u = await prisma.user.findUnique({
