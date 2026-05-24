@@ -65,6 +65,12 @@ export async function POST(req: Request) {
     const llmStartTime = Date.now();
     const llmResult = await callLLM(llmMessages, DOC_PROMPTS[type as DocType]);
     let markdown = llmResult.content.map((b) => b.text).join("");
+    // Nettoyage : retire tout préambule conversationnel avant le 1er titre "# ..."
+    // (le modèle ajoute parfois "Absolument… Voici ton ebook." malgré la consigne)
+    // et les éventuelles clôtures de bloc de code markdown autour du document.
+    markdown = markdown.replace(/^```(?:markdown)?\s*/i, "").replace(/\s*```\s*$/i, "");
+    const h1Idx = markdown.search(/^#\s+/m);
+    if (h1Idx > 0) markdown = markdown.slice(h1Idx);
     const llmDuration = Date.now() - llmStartTime;
     console.log(`[PDF-${requestId}] ✓ LLM #1 terminé en ${llmDuration}ms (markdown: ${markdown.length} chars)`);
 

@@ -40,7 +40,9 @@ export function buildHtmlTemplate(
             /* Les marges réelles (haut/bas/gauche/droite) sont imposées par Puppeteer
                (option margin de page.pdf) → uniformes sur CHAQUE page. Le body ne met
                donc plus de padding (sinon double marge sur la 1re page uniquement). */
-            @page { margin: 0; size: A4; }
+            /* PAS de margin:0 ici — sinon ça écrase les marges Puppeteer (page.pdf
+               margin) et le pied de page se dessine PAR-DESSUS le contenu. */
+            @page { size: A4; }
 
             body {
               font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
