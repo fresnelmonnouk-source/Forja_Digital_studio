@@ -30,10 +30,10 @@ export default function FonderieV2Landing() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: isTablet ? 16 : 32, fontSize: 13, color: FV.ink2 }}>
           {!isTablet && <>
-            <span style={{ cursor: 'pointer' }}>Méthode</span>
-            <span style={{ cursor: 'pointer' }}>Forge</span>
-            <span style={{ cursor: 'pointer' }}>Témoignages</span>
-            <span style={{ cursor: 'pointer' }}>Journal</span>
+            <a href="#methode" style={{ color: FV.ink2, textDecoration: 'none', cursor: 'pointer' }}>Méthode</a>
+            <a href="#temoignages" style={{ color: FV.ink2, textDecoration: 'none', cursor: 'pointer' }}>Témoignages</a>
+            <a href="#apropos" style={{ color: FV.ink2, textDecoration: 'none', cursor: 'pointer' }}>À propos</a>
+            <a href="#forge" style={{ color: FV.ink2, textDecoration: 'none', cursor: 'pointer' }}>Forge</a>
           </>}
           {!isMobile && <Link href="/login" style={{ background: 'transparent', border: `1px solid ${FV.ruleStrong}`, color: FV.ink, padding: '9px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: 'pointer', textDecoration: 'none' }}>Connexion</Link>}
           <Link href="/register" style={{ background: FV.ember, color: FV.black, border: 'none', padding: '9px 18px', borderRadius: 8, fontSize: 12, fontWeight: 700, letterSpacing: '0.02em', cursor: 'pointer', boxShadow: `0 0 24px ${FV.ember}55`, textDecoration: 'none', whiteSpace: 'nowrap' }}>{isMobile ? 'Démarrer →' : 'Allumer le four →'}</Link>
@@ -117,7 +117,7 @@ export default function FonderieV2Landing() {
       </div>
 
       {/* Methods */}
-      <div style={{ position: 'relative', padding: sectionPad(100, 60), maxWidth: 1400, margin: '0 auto' }}>
+      <div id="methode" style={{ position: 'relative', padding: sectionPad(100, 60), maxWidth: 1400, margin: '0 auto', scrollMarginTop: 80 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: isMobile ? 36 : 56, gap: 16, flexWrap: 'wrap' }}>
           <div>
             <FVHook tag="02" label="L'arsenal" />
@@ -167,7 +167,7 @@ export default function FonderieV2Landing() {
       </div>
 
       {/* Testimonials */}
-      <div style={{ position: 'relative', padding: `60px ${padX}px 80px`, maxWidth: 1400, margin: '0 auto' }}>
+      <div id="temoignages" style={{ position: 'relative', padding: `60px ${padX}px 80px`, maxWidth: 1400, margin: '0 auto', scrollMarginTop: 80 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 48, gap: 16, flexWrap: 'wrap' }}>
           <div>
             <FVHook tag="03" label="Cahier de l'atelier" />
@@ -245,8 +245,8 @@ export default function FonderieV2Landing() {
         </div>
       </div>
 
-      {/* Big quote — principe fondamental */}
-      <div style={{ padding: `40px ${padX}px 80px`, position: 'relative', maxWidth: 1400, margin: '0 auto' }}>
+      {/* Big quote — principe fondamental (ancre "À propos") */}
+      <div id="apropos" style={{ padding: `40px ${padX}px 80px`, position: 'relative', maxWidth: 1400, margin: '0 auto', scrollMarginTop: 80 }}>
         <div style={{ background: FV.black2, border: `1px solid ${FV.ruleStrong}`, borderRadius: 16, padding: isMobile ? '36px 28px' : '56px 64px', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: -40, right: -40, width: 240, height: 240, borderRadius: '50%', background: `radial-gradient(circle, ${FV.ember}33 0%, transparent 70%)` }} />
           <div style={{ position: 'relative' }}>
@@ -262,8 +262,8 @@ export default function FonderieV2Landing() {
         </div>
       </div>
 
-      {/* Final CTA — full bleed */}
-      <div style={{ position: 'relative', background: `radial-gradient(ellipse 70% 60% at 50% 50%, ${FV.emberDeep}30 0%, ${FV.black} 70%)`, padding: `${isMobile ? 64 : 100}px ${padX}px`, textAlign: 'center', borderTop: `1px solid ${FV.ruleStrong}` }}>
+      {/* Final CTA — full bleed (ancre "Forge") */}
+      <div id="forge" style={{ position: 'relative', background: `radial-gradient(ellipse 70% 60% at 50% 50%, ${FV.emberDeep}30 0%, ${FV.black} 70%)`, padding: `${isMobile ? 64 : 100}px ${padX}px`, textAlign: 'center', borderTop: `1px solid ${FV.ruleStrong}`, scrollMarginTop: 80 }}>
         <div style={{ position: 'absolute', top: -40, left: '50%', transform: 'translateX(-50%)', zIndex: 1 }}>
           <FVOrb size={120} />
         </div>
