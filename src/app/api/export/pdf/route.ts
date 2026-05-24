@@ -58,7 +58,9 @@ export async function POST(req: Request) {
         content: m.content,
       }));
 
-    const CHAR_BUDGET = (1_048_576 - 12_000) * 4;
+    // Contexte borné (~20k tokens) : on garde la conversation récente pertinente.
+    // Inutile d'envoyer des Mo au LLM — ça ralentit la génération et coûte cher.
+    const CHAR_BUDGET = 80_000;
     const llmMessages = truncateToCharBudget(allMessages, CHAR_BUDGET);
     console.log(`[PDF-${requestId}] 📝 Messages tronqués: ${llmMessages.length} messages (budget caractères: ${CHAR_BUDGET})`);
 

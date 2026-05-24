@@ -53,7 +53,7 @@ export async function generatePollinations(prompt: string): Promise<string | nul
   try {
     const encoded = encodeURIComponent(prompt.slice(0, 500));
     const url = `https://image.pollinations.ai/prompt/${encoded}?width=768&height=512&model=flux-schnell&nologo=true&seed=${Date.now() % 10000}`;
-    const res = await fetchWithTimeout(url, { method: "GET" }, 18_000);
+    const res = await fetchWithTimeout(url, { method: "GET" }, 9_000);
     if (!res.ok) return null;
     const buf = await res.arrayBuffer();
     const ct = res.headers.get("content-type") || "image/jpeg";
@@ -76,7 +76,8 @@ async function generateByProvider(provider: string, prompt: string): Promise<str
 
 export async function generateImage(prompt: string, quality: ImageQuality = "standard"): Promise<string | null> {
   const providers = PROVIDER_ORDER[quality];
-  const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 18_000));
+  // Budget court : mieux vaut une image manquante qu'un timeout de toute la requête PDF.
+  const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 10_000));
   try {
     const result = await Promise.race([
       Promise.any(
