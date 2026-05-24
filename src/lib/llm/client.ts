@@ -41,7 +41,15 @@ async function callAnthropic(messages: LLMMessage[], systemPrompt: string, maxTo
       "x-api-key": apiKey,
       "anthropic-version": "2023-06-01",
     },
-    body: JSON.stringify({ model, max_tokens: maxTokens, system: systemPrompt, messages }),
+    // Prompt caching : le gros prompt système (~9k tokens) est mis en cache côté
+    // Anthropic et n'est re-facturé qu'à ~10% sur les appels suivants (TTL ~5 min).
+    // Le system devient un bloc avec cache_control (au lieu d'une simple string).
+    body: JSON.stringify({
+      model,
+      max_tokens: maxTokens,
+      system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
+      messages,
+    }),
   });
 
   const data = await res.json();
