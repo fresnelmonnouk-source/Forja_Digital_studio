@@ -54,7 +54,7 @@ export default function FonderieV2Landing() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
           <FVMark size={isMobile ? 26 : 30} />
           <div style={{ fontFamily: FV.serif, fontSize: isMobile ? 18 : 22, fontWeight: 700, letterSpacing: '0.18em', color: FV.ink }}>FORJA</div>
-          {!isMobile && <span style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.2em', marginLeft: 8, padding: '2px 8px', border: `1px solid ${FV.rule}`, borderRadius: 999 }}>v.4 — LIVE</span>}
+          {!isMobile && <span style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.2em', marginLeft: 8, padding: '2px 8px', border: `1px solid ${FV.rule}`, borderRadius: 999 }}>v.1 — LIVE</span>}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: isTablet ? 16 : 32, fontSize: 13, color: FV.ink2 }}>
           {!isTablet && <>
@@ -70,7 +70,7 @@ export default function FonderieV2Landing() {
       {/* Hero */}
       <div style={{ position: 'relative', padding: sectionPad(100, 80), display: 'grid', gridTemplateColumns: isTablet ? '1fr' : '1.4fr 1fr', gap: isMobile ? 40 : 56, alignItems: 'center', maxWidth: 1400, margin: '0 auto', zIndex: 5 }}>
         <div>
-          <FVHook tag="00:01" label="Édition v.4 — Manuel du forgeron numérique" />
+          <FVHook tag="00:01" label="Édition v.1 — Manuel du forgeron numérique" />
           <h1 style={{ fontFamily: FV.serif, fontWeight: 500, fontSize: isMobile ? 46 : isTablet ? 72 : 96, lineHeight: 0.95, letterSpacing: '-0.035em', color: FV.ink, margin: '36px 0 0' }}>
             <span style={{ display: 'block' }}>De l&apos;idée floue</span>
             <span style={{ display: 'block', fontStyle: 'italic', fontWeight: 400, background: `linear-gradient(180deg, ${FV.amber} 0%, ${FV.ember} 60%, ${FV.emberDeep} 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>au produit qui se vend.</span>
@@ -83,7 +83,7 @@ export default function FonderieV2Landing() {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 44, flexWrap: 'wrap' }}>
             <Link href="/register" style={{ background: FV.ember, color: FV.black, border: 'none', padding: '16px 28px', borderRadius: 10, fontSize: 14, fontWeight: 700, letterSpacing: '0.02em', cursor: 'pointer', boxShadow: `0 0 32px ${FV.ember}66, inset 0 1px 0 rgba(255,255,255,0.2)`, textDecoration: 'none' }}>
-              Forger gratuitement →
+              Forger mon produit — gratuit →
             </Link>
             <button onClick={() => setShowDemo(true)} style={{ background: 'rgba(241,233,218,0.04)', color: FV.ink, border: `1px solid ${FV.ruleStrong}`, padding: '16px 24px', borderRadius: 10, fontSize: 14, fontWeight: 500, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 10 }}>
               <span style={{ width: 18, height: 18, borderRadius: '50%', background: FV.ember, color: FV.black, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 9 }}>▶</span>
@@ -131,7 +131,7 @@ export default function FonderieV2Landing() {
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 1, background: FV.rule, border: `1px solid ${FV.rule}` }}>
             {[
               ['01', 'Au feu', 'Le marché parle', "On lit le signal avant de créer : qui achète, pourquoi, à quel prix. Pas d'idée lancée à l'aveugle."],
-              ['02', "À l'enclume", 'La méthode façonne', "Le framework 12 étapes structure ton idée brute en offre claire — promesse, transformation, prix tenu."],
+              ['02', "À l'enclume", 'La méthode façonne', "Une méthode en 12 étapes structure ton idée brute en offre claire — promesse, transformation, prix tenu."],
               ['03', 'Au marteau', 'Le produit sort', "FORJA livre un vrai PDF professionnel, prêt à vendre. Pas un conseil. Un livrable."],
             ].map(([n, title, sub, desc], i) => (
               <div key={i} style={{ background: FV.black, padding: '28px 26px', position: 'relative', minHeight: 180 }}>
@@ -186,7 +186,7 @@ export default function FonderieV2Landing() {
             ['Matrice', 'Valider sec.', 'Utile, simple, livrable. Trois oui — on forge. Un seul non — on retourne au feu.'],
             ['4 Piliers', "Bâtir l'offre.", 'Douleur miroir, transformation, réduction du risque, valeur disproportionnée.'],
             ['12 Étapes', 'Produire.', "Du signal de marché à l'effet WOW final. La trajectoire complète d'un produit qui se vend."],
-            ['Flywheel', 'Scaler.', 'Contenu → offre → publicité → automatisation. La roue qui tourne sans toi.'],
+            ['Flywheel', 'Faire grandir.', 'Contenu → offre → publicité → automatisation. La roue qui tourne, et qui ramène des clients sans toi.'],
           ].map(([title, hook, desc], i) => (
             <div key={i} style={{ background: FV.black, padding: '32px 28px', position: 'relative', minHeight: 220 }}>
               <div style={{ fontFamily: FV.mono, fontSize: 10, color: FV.smoke, letterSpacing: '0.18em', marginBottom: 16 }}>0{i + 1}</div>
@@ -250,7 +250,7 @@ export default function FonderieV2Landing() {
             <div style={{ fontFamily: FV.mono, fontSize: 10, color: FV.smoke, letterSpacing: '0.1em', marginTop: 4 }}>À VIE</div>
             <div style={{ fontSize: 13, color: FV.ink2, fontStyle: 'italic', fontFamily: FV.serif, marginTop: 14 }}>Pour juger sur pièce.</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 18, flexGrow: 1 }}>
-              {['5 documents PDF gratuits, à vie', 'Sans carte bancaire', 'Accès au framework 12 étapes', 'Génération PDF professionnelle'].map((b, i) => (
+              {['5 documents PDF gratuits, à vie', 'Sans carte bancaire', 'Accès à la méthode en 12 étapes', 'Génération PDF professionnelle'].map((b, i) => (
                 <div key={i} style={{ fontSize: 13, color: FV.ink2, display: 'flex', gap: 8, lineHeight: 1.45 }}><span style={{ color: FV.ember }}>✦</span><span>{b}</span></div>
               ))}
             </div>
@@ -335,7 +335,7 @@ export default function FonderieV2Landing() {
             </div>
             <div style={{ marginTop: 28, display: 'flex', alignItems: 'center', gap: 14 }}>
               <div style={{ width: 32, height: 1, background: FV.ember }} />
-              <div style={{ fontFamily: FV.mono, fontSize: 11, color: FV.brass, letterSpacing: '0.15em' }}>PRINCIPE FONDAMENTAL — FORJA v.4</div>
+              <div style={{ fontFamily: FV.mono, fontSize: 11, color: FV.brass, letterSpacing: '0.15em' }}>PRINCIPE FONDAMENTAL — FORJA v.1</div>
             </div>
           </div>
         </div>

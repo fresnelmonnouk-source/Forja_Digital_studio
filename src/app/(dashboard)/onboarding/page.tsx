@@ -6,18 +6,18 @@ import { FV, FVMark, FVHook, FVOrb, FVSGrid } from "@/components/ui/fonderie";
 import { useBreakpoint } from "@/lib/use-media-query";
 
 const GOALS: { id: string; Icon: LucideIcon; label: string; desc: string }[] = [
-  { id: "formation", Icon: GraduationCap, label: "Créer une formation", desc: "Programme pédagogique · 12 étapes" },
-  { id: "ebook", Icon: BookOpen, label: "Lancer un ebook", desc: "Document structuré · prêt à vendre" },
-  { id: "saas", Icon: Cog, label: "Lancer un SaaS", desc: "MVP · validation marché · roadmap" },
-  { id: "vente", Icon: Wallet, label: "Construire une offre", desc: "Copywriting · page de vente · prix" },
-  { id: "automatisation", Icon: Bot, label: "Automatisation IA", desc: "Workflows · Make · systèmes" },
-  { id: "marque", Icon: Sparkles, label: "Bâtir ma marque", desc: "Positionnement · audience · contenu" },
+  { id: "formation", Icon: GraduationCap, label: "Créer une formation", desc: "Un cours structuré, prêt à vendre" },
+  { id: "ebook", Icon: BookOpen, label: "Lancer un ebook", desc: "Un livre numérique prêt à vendre" },
+  { id: "saas", Icon: Cog, label: "Créer un outil en ligne", desc: "Une appli ou un service web qui rapporte" },
+  { id: "vente", Icon: Wallet, label: "Construire une offre", desc: "Trouver le bon prix et le bon argumentaire" },
+  { id: "automatisation", Icon: Bot, label: "Automatiser mon travail", desc: "Gagner du temps grâce à l'IA" },
+  { id: "marque", Icon: Sparkles, label: "Bâtir ma marque", desc: "Te faire connaître et attirer ton public" },
 ];
 
 const LEVELS = [
   { id: "debutant", label: "Débutant", desc: "Je commence de zéro" },
   { id: "intermediaire", label: "Intermédiaire", desc: "J'ai déjà lancé quelque chose" },
-  { id: "avance", label: "Avancé", desc: "Je veux scaler ou optimiser" },
+  { id: "avance", label: "Avancé", desc: "Je veux faire grandir ce que j'ai déjà" },
 ];
 
 export default function OnboardingPage() {
@@ -95,7 +95,7 @@ export default function OnboardingPage() {
                 disabled={!name.trim()}
                 style={{ background: name.trim() ? FV.ember : FV.smokeDim, color: name.trim() ? FV.black : FV.smoke, border: 'none', padding: '16px 36px', borderRadius: 10, fontSize: 14, fontWeight: 700, letterSpacing: '0.04em', cursor: name.trim() ? 'pointer' : 'not-allowed', boxShadow: name.trim() ? `0 0 28px ${FV.ember}66` : 'none', textTransform: 'uppercase', transition: 'all 0.2s' }}
               >
-                Entrer à la forge →
+                Continuer →
               </button>
             </div>
           )}
@@ -183,7 +183,7 @@ export default function OnboardingPage() {
                   disabled={!selectedLevel}
                   style={{ background: selectedLevel ? FV.ember : FV.smokeDim, color: selectedLevel ? FV.black : FV.smoke, border: 'none', padding: '14px 32px', borderRadius: 10, fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', cursor: selectedLevel ? 'pointer' : 'not-allowed', boxShadow: selectedLevel ? `0 0 24px ${FV.ember}88, inset 0 1px 0 rgba(255,255,255,0.15)` : 'none', textTransform: 'uppercase', transition: 'all 0.2s' }}
                 >
-                  Allumer le four →
+                  Lancer ma première session →
                 </button>
               </div>
             </div>
