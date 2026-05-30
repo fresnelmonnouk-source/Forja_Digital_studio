@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { FV, FVMark, FVHook, FVOrb } from "@/components/ui/fonderie";
 import { useBreakpoint } from "@/lib/use-media-query";
@@ -7,6 +7,7 @@ import DemoModal from "@/components/DemoModal";
 import JsonLd from "@/components/seo/JsonLd";
 import { softwareAppSchema, faqSchema, FAQ_ITEMS } from "@/lib/seo/structured-data";
 import { PACKS } from "@/lib/plans";
+import { track } from "@/lib/analytics";
 
 // Copie marketing par pack (la donnée prix/credits vient de plans.ts — source unique).
 const PACK_COPY: Record<string, { accroche: string; unite: string; bullets: string[]; cta: string }> = {
@@ -33,6 +34,11 @@ const PACK_COPY: Record<string, { accroche: string; unite: string; bullets: stri
 export default function FonderieV2Landing() {
   const { isMobile, isTablet } = useBreakpoint();
   const [showDemo, setShowDemo] = useState(false);
+
+  // Analytics : event d'acquisition au chargement de la landing.
+  // No-op tant que l'utilisateur n'a pas accepté le bandeau de consentement.
+  // TODO : câbler pack_selected sur les CTA des cartes tarifs en passe suivante.
+  useEffect(() => { track("landing_viewed"); }, []);
 
   // Variables responsive partagées
   const padX = isMobile ? 20 : isTablet ? 36 : 56;

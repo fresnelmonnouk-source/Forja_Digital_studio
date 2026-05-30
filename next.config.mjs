@@ -7,14 +7,17 @@ const isDev = process.env.NODE_ENV !== "production";
 //   Next injecte des scripts d'hydratation inline (pas de nonce en place).
 // - 'unsafe-eval' uniquement en dev (HMR / React Refresh).
 // - images en data:/blob: (génération d'images + téléchargement PDF).
-// - connect-src : même origine + Sentry. Les appels LLM se font côté serveur.
+// - connect-src : même origine + Sentry + PostHog EU + Microsoft Clarity.
+//   (PostHog & Clarity sont chargés UNIQUEMENT après consentement utilisateur ;
+//    cf. src/components/Analytics.tsx + ConsentBanner.tsx.)
+// - script-src : autorise les SDK analytics tiers (chargés conditionnellement).
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://eu.i.posthog.com https://eu-assets.i.posthog.com https://www.clarity.ms https://*.clarity.ms`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  `connect-src 'self' https://*.sentry.io https://*.ingest.sentry.io${isDev ? " ws:" : ""}`,
+  `connect-src 'self' https://*.sentry.io https://*.ingest.sentry.io https://eu.i.posthog.com https://eu-assets.i.posthog.com https://www.clarity.ms https://*.clarity.ms${isDev ? " ws:" : ""}`,
   "frame-ancestors 'none'",
   "object-src 'none'",
   "base-uri 'self'",

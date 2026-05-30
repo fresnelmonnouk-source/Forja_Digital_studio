@@ -1,9 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { GraduationCap, BookOpen, Cog, Wallet, Bot, Sparkles, Check, type LucideIcon } from "lucide-react";
 import { FV, FVMark, FVHook, FVOrb, FVSGrid } from "@/components/ui/fonderie";
 import { useBreakpoint } from "@/lib/use-media-query";
+import { track } from "@/lib/analytics";
 
 const GOALS: { id: string; Icon: LucideIcon; label: string; desc: string }[] = [
   { id: "formation", Icon: GraduationCap, label: "Créer une formation", desc: "Programme pédagogique · 12 étapes" },
@@ -28,6 +29,10 @@ export default function OnboardingPage() {
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
   const [name, setName] = useState("");
 
+  // Analytics : arrivée sur l'onboarding = proxy "signup réussi" (utilisateur authentifié).
+  // No-op tant que le bandeau de consentement n'est pas accepté.
+  useEffect(() => { track("signup_completed"); }, []);
+
   const handleFinish = () => {
     if (typeof window !== "undefined") {
       localStorage.setItem(
@@ -35,6 +40,7 @@ export default function OnboardingPage() {
         JSON.stringify({ name, goal: selectedGoal, level: selectedLevel })
       );
     }
+    track("onboarding_completed", { goal: selectedGoal ?? "unknown", level: selectedLevel ?? "unknown" });
     router.push("/chat");
   };
 
