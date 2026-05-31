@@ -141,7 +141,7 @@ export function buildWelcomeEmail(name: string | null): string {
     ["01", "Lis l'Oracle",             "Six lectures pour repérer le signal sous le bruit."],
     ["02", "Trouve ton Triangle d'Or", "L'intersection de ce que tu sais, aimes, et qu'on te demande."],
     ["03", "Forge ton offre",          "Promesse mesurable, transformation, prix tenu. Tout ça en conversation, gratuit."],
-    ["04", "Exporte ton PDF",          "Quand ton offre est prête, un pack à partir de 3 500 F suffit."],
+    ["04", "Crée ton premier produit digital", "Un pack à partir de 3 500 F suffit."],
   ];
   const stepBoxes = steps.map(([n, t, s], i) => `
     <td style="width:50%;padding:18px;vertical-align:top;background:${C.black2};${i === 1 ? `border-left:1px solid ${C.rule};border-right:1px solid ${C.rule}` : ""};${i === 3 ? `border-left:1px solid ${C.rule}` : ""}">

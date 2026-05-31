@@ -14,13 +14,13 @@ const PACK_COPY: Record<string, { accroche: string; unite: string; bullets: stri
   essai: {
     accroche: "Pour démarrer en douceur.",
     unite: "10 documents · 350 F le document",
-    bullets: ["10 documents PDF", "Crédits valables 31 jours", "Paiement mobile money (FedaPay)", "Accès complet à la méthode FORJA"],
+    bullets: ["10 documents PDF", "Crédits valables 31 jours", "Paiement mobile money (FedaPay)", "Accès complet à FORJA"],
     cta: "Choisir Essai",
   },
   starter: {
     accroche: "Pour lancer tes premiers produits.",
     unite: "30 documents · 350 F le document",
-    bullets: ["30 documents PDF", "Crédits valables 31 jours", "Paiement mobile money (FedaPay)", "Accès complet à la méthode FORJA"],
+    bullets: ["30 documents PDF", "Crédits valables 31 jours", "Paiement mobile money (FedaPay)", "Accès complet à FORJA"],
     cta: "Choisir Starter",
   },
   pro: {
@@ -109,7 +109,7 @@ export default function FonderieV2Landing() {
           <p style={{ fontSize: isMobile ? 16 : 18, lineHeight: 1.55, color: FV.ink2, marginTop: 32, maxWidth: 560, fontWeight: 400 }}>
             Tu as un savoir, une compétence, une idée. FORJA la transforme en vrai produit digital — ebook, formation, page de vente — et te le livre fini, prêt à vendre et à <span style={{ color: FV.brass, fontFamily: FV.serif, fontStyle: 'italic' }}>encaisser en mobile money</span>.
             <br /><br />
-            Discussion gratuite et illimitée. Tu ne paies qu&apos;au moment d&apos;exporter. Au feu, à l&apos;enclume, au marteau.
+            Discussion gratuite avec FORJA. Tu ne paies qu&apos;au moment d&apos;exporter ton produit. Au feu, à l&apos;enclume, au marteau.
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 44, flexWrap: 'wrap' }}>
