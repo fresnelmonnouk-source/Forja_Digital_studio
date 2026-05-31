@@ -12,6 +12,7 @@ interface QuotaData {
   credits: number;
   freeLimit: number;
   creditsExpireAt: string | null;
+  purchasedPackIds?: string[]; // packs déjà achetés (status approved) — pour griser "Essai" si déjà utilisé
 }
 
 export default function CreditsModal({ onClose }: { onClose: () => void }) {
@@ -96,29 +97,36 @@ export default function CreditsModal({ onClose }: { onClose: () => void }) {
 
         {/* Packs */}
         <div style={{ display: "grid", gap: 10, marginBottom: 16 }}>
-          {PACKS.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => buy(p.id)}
-              disabled={!!busy}
-              style={{ textAlign: "left", display: "flex", alignItems: "center", gap: 14, background: p.highlight ? "rgba(238,90,36,0.08)" : FV.black, border: `1px solid ${p.highlight ? "rgba(238,90,36,0.4)" : FV.rule}`, borderRadius: 12, padding: "16px 18px", cursor: busy ? "not-allowed" : "pointer", opacity: busy && busy !== p.id ? 0.5 : 1, transition: "all 0.15s" }}
-            >
-              <div style={{ width: 40, height: 40, borderRadius: 8, background: `linear-gradient(135deg, ${FV.amber}, ${FV.emberDeep})`, color: FV.black, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                {busy === p.id ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontFamily: FV.serif, fontSize: 17, fontWeight: 600, color: FV.ink }}>{p.label}</span>
-                  {p.highlight && <span style={{ fontFamily: FV.mono, fontSize: 8, letterSpacing: "0.12em", color: FV.black, background: FV.ember, padding: "2px 7px", borderRadius: 999 }}>POPULAIRE</span>}
+          {PACKS.map((p) => {
+            // Le pack Essai est limité à 1 achat par compte (palier d'entrée).
+            const essaiAlreadyUsed = p.id === "essai" && (quota?.purchasedPackIds?.includes("essai") ?? false);
+            const disabled = !!busy || essaiAlreadyUsed;
+            return (
+              <button
+                key={p.id}
+                onClick={() => !essaiAlreadyUsed && buy(p.id)}
+                disabled={disabled}
+                title={essaiAlreadyUsed ? "Pack Essai déjà utilisé — disponible une seule fois par compte" : undefined}
+                style={{ textAlign: "left", display: "flex", alignItems: "center", gap: 14, background: essaiAlreadyUsed ? "rgba(241,233,218,0.02)" : (p.highlight ? "rgba(238,90,36,0.08)" : FV.black), border: `1px solid ${p.highlight ? "rgba(238,90,36,0.4)" : FV.rule}`, borderRadius: 12, padding: "16px 18px", cursor: disabled ? "not-allowed" : "pointer", opacity: essaiAlreadyUsed ? 0.45 : (busy && busy !== p.id ? 0.5 : 1), transition: "all 0.15s" }}
+              >
+                <div style={{ width: 40, height: 40, borderRadius: 8, background: essaiAlreadyUsed ? FV.ruleStrong : `linear-gradient(135deg, ${FV.amber}, ${FV.emberDeep})`, color: FV.black, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  {busy === p.id ? <Loader2 size={18} className="animate-spin" /> : essaiAlreadyUsed ? <Check size={18} color={FV.smoke} /> : <Sparkles size={18} />}
                 </div>
-                <div style={{ fontSize: 12, color: FV.smoke, marginTop: 2 }}>{p.credits} documents</div>
-              </div>
-              <div style={{ textAlign: "right", flexShrink: 0 }}>
-                <div style={{ fontFamily: FV.serif, fontSize: 18, color: FV.ember, fontWeight: 600 }}>{fmt(p.amount)} F</div>
-                <div style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smokeDim }}>{Math.round(p.amount / p.credits)} F / doc</div>
-              </div>
-            </button>
-          ))}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <span style={{ fontFamily: FV.serif, fontSize: 17, fontWeight: 600, color: essaiAlreadyUsed ? FV.smoke : FV.ink }}>{p.label}</span>
+                    {p.highlight && !essaiAlreadyUsed && <span style={{ fontFamily: FV.mono, fontSize: 8, letterSpacing: "0.12em", color: FV.black, background: FV.ember, padding: "2px 7px", borderRadius: 999 }}>POPULAIRE</span>}
+                    {essaiAlreadyUsed && <span style={{ fontFamily: FV.mono, fontSize: 8, letterSpacing: "0.12em", color: FV.smoke, background: "rgba(241,233,218,0.05)", border: `1px solid ${FV.rule}`, padding: "2px 7px", borderRadius: 999 }}>DÉJÀ UTILISÉ</span>}
+                  </div>
+                  <div style={{ fontSize: 12, color: FV.smoke, marginTop: 2 }}>{p.credits} documents{essaiAlreadyUsed ? " · passe à Starter pour continuer" : ""}</div>
+                </div>
+                <div style={{ textAlign: "right", flexShrink: 0 }}>
+                  <div style={{ fontFamily: FV.serif, fontSize: 18, color: essaiAlreadyUsed ? FV.smoke : FV.ember, fontWeight: 600 }}>{fmt(p.amount)} F</div>
+                  <div style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smokeDim }}>{Math.round(p.amount / p.credits)} F / doc</div>
+                </div>
+              </button>
+            );
+          })}
         </div>
 
         {error && (

@@ -18,8 +18,17 @@ export async function GET() {
     select: { id: true },
   });
 
+  // Packs déjà achetés (tous statuts approuvés, sans filtre de date) — utilisé
+  // pour griser le pack Essai dans la UI s'il a déjà été acheté (1×/compte).
+  const approvedPayments = await prisma.payment.findMany({
+    where: { userId: session.user.id, status: "approved" },
+    select: { packId: true },
+    distinct: ["packId"],
+  });
+  const purchasedPackIds = approvedPayments.map((p) => p.packId);
+
   return NextResponse.json(
-    { ...quota, freeLimit: FREE_DOC_LIMIT, isStudio: !!studio },
+    { ...quota, freeLimit: FREE_DOC_LIMIT, isStudio: !!studio, purchasedPackIds },
     { headers: { "Cache-Control": "private, no-store" } }
   );
 }
