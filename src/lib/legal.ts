@@ -102,7 +102,7 @@ Nous collectons : email, nom, mot de passe (chiffré), adresse IP d'inscription 
 
 ## Sous-traitants
 
-Vos données peuvent transiter par : Supabase (base de données), Vercel (hébergement), Resend (emails transactionnels), FedaPay (paiements) et les fournisseurs de modèles d'IA pour le traitement des requêtes.
+Vos données peuvent transiter par : Supabase (base de données), Vercel (hébergement), Resend (emails transactionnels), FedaPay (paiements), les fournisseurs de modèles d'IA pour le traitement des requêtes, ainsi que — **uniquement après votre consentement explicite** — PostHog (mesure d'audience produit, hébergement UE) et Microsoft Clarity (heatmaps et enregistrements d'usage anonymisés).
 
 ## Conservation
 
@@ -112,9 +112,16 @@ Les données sont conservées le temps de la relation contractuelle puis archiv�
 
 Vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Pour l'exercer, écrivez à **${COMPANY.privacyContact}**.
 
-## Cookies
+## Cookies et mesure d'audience
 
-Le site utilise uniquement les cookies strictement nécessaires à l'authentification et au bon fonctionnement du service.
+Le site utilise par défaut **uniquement les cookies strictement nécessaires** à l'authentification et au bon fonctionnement du service. Aucun cookie analytique ou de mesure n'est posé sans votre accord.
+
+Si vous l'acceptez via le bandeau de consentement, deux outils peuvent être activés :
+
+- **PostHog** (hébergement UE) — mesure d'audience produit (pages vues, parcours d'usage). Permet d'améliorer le service. Stockage local côté navigateur.
+- **Microsoft Clarity** — heatmaps et enregistrements d'usage anonymisés (les champs sensibles comme les mots de passe sont automatiquement masqués).
+
+Vous pouvez retirer votre consentement à tout moment : votre choix est conservé en local sur votre appareil, et l'arrêt de la collecte est immédiat. Pour exercer ce droit ou toute question, écrivez à **${COMPANY.privacyContact}**.
 
 ${today}`,
 
