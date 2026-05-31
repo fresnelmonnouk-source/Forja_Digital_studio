@@ -11,9 +11,15 @@ import { track } from "@/lib/analytics";
 
 // Copie marketing par pack (la donnée prix/credits vient de plans.ts — source unique).
 const PACK_COPY: Record<string, { accroche: string; unite: string; bullets: string[]; cta: string }> = {
+  essai: {
+    accroche: "Pour démarrer en douceur.",
+    unite: "10 documents · 350 F le document",
+    bullets: ["10 documents PDF", "Crédits valables 31 jours", "Paiement mobile money (FedaPay)", "Accès complet à la méthode FORJA"],
+    cta: "Choisir Essai",
+  },
   starter: {
     accroche: "Pour lancer tes premiers produits.",
-    unite: "30 documents · ~350 F le document",
+    unite: "30 documents · 350 F le document",
     bullets: ["30 documents par mois", "Crédits valables 31 jours", "Paiement mobile money (FedaPay)"],
     cta: "Choisir Starter",
   },
@@ -108,7 +114,7 @@ export default function FonderieV2Landing() {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 44, flexWrap: 'wrap' }}>
             <Link href="/register" style={{ background: FV.ember, color: FV.black, border: 'none', padding: '16px 28px', borderRadius: 10, fontSize: 14, fontWeight: 700, letterSpacing: '0.02em', cursor: 'pointer', boxShadow: `0 0 32px ${FV.ember}66, inset 0 1px 0 rgba(255,255,255,0.2)`, textDecoration: 'none' }}>
-              Forger mon produit — gratuit →
+              Essayer FORJA — c&apos;est gratuit →
             </Link>
             <button onClick={() => setShowDemo(true)} style={{ background: 'rgba(241,233,218,0.04)', color: FV.ink, border: `1px solid ${FV.ruleStrong}`, padding: '16px 24px', borderRadius: 10, fontSize: 14, fontWeight: 500, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 10 }}>
               <span style={{ width: 18, height: 18, borderRadius: '50%', background: FV.ember, color: FV.black, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 9 }}>▶</span>
@@ -118,9 +124,9 @@ export default function FonderieV2Landing() {
 
           {/* Micro-réassurance (remplace l'ancien faux social proof) */}
           <div style={{ marginTop: 32, display: 'flex', alignItems: 'center', gap: isMobile ? 14 : 22, flexWrap: 'wrap', fontFamily: FV.mono, fontSize: 11, color: FV.smoke, letterSpacing: '0.08em' }}>
-            <span><span style={{ color: FV.ember }}>✦</span> 5 documents gratuits</span>
+            <span><span style={{ color: FV.ember }}>✦</span> Conversation gratuite</span>
             <span><span style={{ color: FV.ember }}>✦</span> Sans carte</span>
-            <span><span style={{ color: FV.ember }}>✦</span> Mobile money (FCFA)</span>
+            <span><span style={{ color: FV.ember }}>✦</span> PDF dès 3 500 F (mobile money)</span>
           </div>
         </div>
 
@@ -257,32 +263,15 @@ export default function FonderieV2Landing() {
         <div style={{ marginBottom: isMobile ? 32 : 48 }}>
           <FVHook tag="04" label="Tarifs" />
           <h2 style={{ fontFamily: FV.serif, fontWeight: 500, fontSize: isMobile ? 34 : 56, color: FV.ink, margin: '20px 0 0', letterSpacing: '-0.025em', lineHeight: 1.05 }}>
-            Commence gratuitement.<br /><span style={{ fontStyle: 'italic', color: FV.ember }}>Paie quand tu vends.</span>
+            Discute librement.<br /><span style={{ fontStyle: 'italic', color: FV.ember }}>Paie ton livrable.</span>
           </h2>
           <p style={{ fontSize: isMobile ? 15 : 17, lineHeight: 1.6, color: FV.ink2, margin: '18px 0 0', maxWidth: 620 }}>
-            Cinq documents offerts, à vie, sans carte. Ensuite, tu recharges en FCFA par mobile money — quand tu en as besoin, pas avant.
+            La conversation avec FORJA est gratuite et illimitée — explore ton idée autant que tu veux. Pour exporter ton produit en PDF, choisis le pack qui te correspond. Paiement mobile money en FCFA, sans engagement.
           </p>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 16, alignItems: 'stretch' }}>
-          {/* Carte Gratuit */}
-          <div style={{ background: FV.black2, border: `1px solid ${FV.ruleStrong}`, borderRadius: 14, padding: '28px 24px', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontFamily: FV.serif, fontSize: 22, color: FV.ink, fontWeight: 500 }}>Gratuit</div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 14 }}>
-              <span style={{ fontFamily: FV.serif, fontSize: 40, color: FV.ember, fontWeight: 500, fontStyle: 'italic' }}>0</span>
-              <span style={{ fontSize: 13, color: FV.ink2 }}>FCFA</span>
-            </div>
-            <div style={{ fontFamily: FV.mono, fontSize: 10, color: FV.smoke, letterSpacing: '0.1em', marginTop: 4 }}>À VIE</div>
-            <div style={{ fontSize: 13, color: FV.ink2, fontStyle: 'italic', fontFamily: FV.serif, marginTop: 14 }}>Pour juger sur pièce.</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 18, flexGrow: 1 }}>
-              {['5 documents PDF gratuits, à vie', 'Sans carte bancaire', 'Accès à la méthode en 12 étapes', 'Génération PDF professionnelle'].map((b, i) => (
-                <div key={i} style={{ fontSize: 13, color: FV.ink2, display: 'flex', gap: 8, lineHeight: 1.45 }}><span style={{ color: FV.ember }}>✦</span><span>{b}</span></div>
-              ))}
-            </div>
-            <Link href="/register" style={{ marginTop: 22, background: 'transparent', color: FV.ink, border: `1px solid ${FV.ruleStrong}`, padding: '12px 16px', borderRadius: 9, fontSize: 13, fontWeight: 600, textDecoration: 'none', textAlign: 'center' }}>Forger gratuitement →</Link>
-          </div>
-
-          {/* Cartes payantes depuis PACKS */}
+          {/* Cartes packs depuis PACKS (Essai → Starter → Pro → Studio) */}
           {PACKS.map((p) => {
             const copy = PACK_COPY[p.id];
             if (!copy) return null;
@@ -312,7 +301,7 @@ export default function FonderieV2Landing() {
         <div style={{ marginTop: 36, padding: isMobile ? '24px' : '28px 32px', background: FV.black2, border: `1px solid ${FV.rule}`, borderRadius: 14 }}>
           <div style={{ fontFamily: FV.serif, fontSize: isMobile ? 18 : 20, color: FV.ink, fontWeight: 500, marginBottom: 8 }}>Aucun risque de ton côté.</div>
           <p style={{ fontSize: 14, color: FV.ink2, lineHeight: 1.6, margin: 0 }}>
-            Satisfait ou remboursé sur les packs — notre équipe s&apos;en occupe, au cas par cas. Les crédits achetés sont valables 31 jours. Tes 5 documents gratuits, eux, n&apos;expirent jamais.
+            Satisfait ou remboursé sur les packs — notre équipe s&apos;en occupe, au cas par cas. Les crédits achetés sont valables 31 jours. La discussion avec FORJA, elle, reste gratuite et sans limite.
           </p>
           <div style={{ marginTop: 18, display: 'flex', gap: isMobile ? 12 : 24, flexWrap: 'wrap', fontFamily: FV.mono, fontSize: 10, color: FV.smoke, letterSpacing: '0.1em' }}>
             <span><span style={{ color: FV.ember }}>✦</span> FCFA</span>
@@ -407,10 +396,10 @@ export default function FonderieV2Landing() {
             </button>
           </div>
           <div style={{ marginTop: 36, display: 'flex', justifyContent: 'center', gap: isMobile ? 14 : 28, fontFamily: FV.mono, fontSize: 10, color: FV.smoke, letterSpacing: '0.12em', flexWrap: 'wrap' }}>
-            <span>✦ 5 DOCS GRATUITS</span>
+            <span>✦ CHAT GRATUIT</span>
             <span>✦ AUCUNE CARTE</span>
+            <span>✦ PDF DÈS 3 500 F</span>
             <span>✦ MOBILE MONEY</span>
-            <span>✦ EN FCFA</span>
           </div>
         </div>
       </div>

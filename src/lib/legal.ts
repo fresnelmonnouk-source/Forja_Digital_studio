@@ -68,10 +68,10 @@ Les présentes conditions régissent l'accès et l'utilisation de la plateforme 
 
 La création d'un compte nécessite une adresse email vérifiée. Chaque personne ne peut détenir qu'un seul compte gratuit. Toute tentative de contournement de cette limite peut entraîner la suspension du compte.
 
-## 3. Offre gratuite et offres payantes
+## 3. Conversation gratuite et offres payantes
 
-- **Gratuit** : un nombre limité de documents offerts à la création du compte.
-- **Offres payantes** (Starter, Pro, Studio) : crédits de documents valables selon les modalités affichées au moment de l'achat. Les prix sont indiqués en FCFA (XOF).
+- **Conversation avec FORJA** : entièrement gratuite et illimitée. Tu peux explorer ton idée, valider ton marché et construire ton offre sans rien dépenser.
+- **Offres payantes** (Essai, Starter, Pro, Studio) : packs de crédits requis pour exporter ton produit en PDF. Le pack le plus accessible est **Essai** (10 documents pour 3 500 FCFA). Les crédits sont valables 31 jours après l'achat. Les prix sont indiqués en FCFA (XOF).
 
 Les paiements sont traités par notre prestataire **FedaPay**. FORJA ne stocke aucune coordonnée bancaire.
 

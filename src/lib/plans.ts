@@ -1,11 +1,17 @@
-// Plan gratuit + packs de crédits payants (modèle : achat ponctuel de documents).
+// Packs de crédits payants (modèle : achat ponctuel de documents).
 // Devise : FCFA (XOF) — marché ouest-africain (FedaPay).
+//
+// IMPORTANT — Pivot pricing 2026-05-31 :
+//   La discussion avec l'agent FORJA est désormais 100% gratuite et illimitée.
+//   En revanche, l'EXPORT PDF nécessite un pack payant (palier d'entrée = "Essai"
+//   à 3 500 F / 10 docs). Donc FREE_DOC_LIMIT = 0 (plus aucun PDF gratuit).
+//   La logique quota.ts gère nativement ce cas (max(0, 0 - freeDocsUsed) = 0).
+//   Les anciens comptes qui avaient des freeDocsUsed historiques voient leur
+//   quota gratuit à 0 (aligné avec la nouvelle politique).
+export const FREE_DOC_LIMIT = 0;
 
-export const FREE_DOC_LIMIT = 5; // documents PDF gratuits À VIE par compte
-
-// Durée de validité des crédits achetés (packs mensuels). Les crédits expirent
-// 31 jours après le dernier rechargement → ils ne s'accumulent pas indéfiniment.
-// Les documents gratuits, eux, ne sont jamais affectés (quota à vie).
+// Durée de validité des crédits achetés. Les crédits expirent 31 jours après
+// le dernier rechargement → ils ne s'accumulent pas indéfiniment.
 export const CREDIT_VALIDITY_DAYS = 31;
 
 /** Date d'expiration des crédits à partir d'une date de rechargement. */
@@ -24,6 +30,7 @@ export interface Pack {
 // Plans mensuels (prix /mois, renouvellement manuel). Seul "studio" débloque
 // le choix du modèle IA (sinon DeepSeek par défaut).
 export const PACKS: Pack[] = [
+  { id: "essai", label: "Essai", credits: 10, amount: 3500 },        // 350 F/doc · palier d'entrée
   { id: "starter", label: "Starter", credits: 30, amount: 10500 },   // 350 F/doc
   { id: "pro", label: "Pro", credits: 50, amount: 15000, highlight: true }, // 300 F/doc
   { id: "studio", label: "Studio", credits: 200, amount: 45000 },    // 225 F/doc · choix du modèle IA
