@@ -4,6 +4,7 @@ import { FV, FVHook } from "@/components/ui/fonderie";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { PACKS, FREE_DOC_LIMIT } from "@/lib/plans";
 import { X, Check, Sparkles, Loader2, ArrowRight, AlertTriangle } from "lucide-react";
+import { track } from "@/lib/analytics";
 
 interface QuotaData {
   freeUsed: number;
@@ -27,6 +28,8 @@ export default function CreditsModal({ onClose }: { onClose: () => void }) {
   }, [onClose]);
 
   const buy = async (packId: string) => {
+    // Analytics : pack_selected = intent de paiement (clic). No-op sans consentement.
+    track("pack_selected", { pack_id: packId, source: "credits_modal" });
     setBusy(packId);
     setError(null);
     try {
@@ -39,6 +42,8 @@ export default function CreditsModal({ onClose }: { onClose: () => void }) {
         setBusy(null);
         return;
       }
+      // payment_initiated = on a une URL FedaPay valide, on s'apprête à rediriger.
+      track("payment_initiated", { pack_id: packId });
       window.location.href = data.url; // redirection vers le checkout FedaPay
     } catch {
       setError("Erreur réseau. Réessaie.");

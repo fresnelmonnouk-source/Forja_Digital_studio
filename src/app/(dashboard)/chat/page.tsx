@@ -7,6 +7,7 @@ import CreditsModal from "@/components/chat/CreditsModal";
 import { FV, FVMark } from "@/components/ui/fonderie";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { stripImageData } from "@/lib/strip-images";
+import { track } from "@/lib/analytics";
 import Link from "next/link";
 import { Menu, X, RotateCcw, LogOut, Sparkles, ArrowRight, CornerDownLeft, GraduationCap, BookOpen, Cog, Bot, Shield, Trash2, Paperclip, Coins, type LucideIcon } from "lucide-react";
 
@@ -156,9 +157,12 @@ export default function ChatPage() {
   }, [isMobile]);
 
   // Retour de paiement FedaPay (callback ?payment=done) → affiche le solde à jour.
+  // Analytics : fire payment_success côté client (le webhook serveur a déjà fulfilled la commande,
+  // FedaPay ne redirige avec ?payment=done que si tout a réussi). No-op sans consentement.
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (new URLSearchParams(window.location.search).get("payment") === "done") {
+      track("payment_success");
       setShowCredits(true);
       window.history.replaceState({}, "", "/chat");
     }

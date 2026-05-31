@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { FV, FVMark, FVHook, FVOrb } from "@/components/ui/fonderie";
 import { useBreakpoint } from "@/lib/use-media-query";
@@ -37,8 +37,27 @@ export default function FonderieV2Landing() {
 
   // Analytics : event d'acquisition au chargement de la landing.
   // No-op tant que l'utilisateur n'a pas accepté le bandeau de consentement.
-  // TODO : câbler pack_selected sur les CTA des cartes tarifs en passe suivante.
   useEffect(() => { track("landing_viewed"); }, []);
+
+  // Analytics : pricing_viewed déclenché UNE SEULE FOIS quand la section #tarifs
+  // devient visible (≥40% du bloc en viewport). Mesure le "intent" tarifs sans
+  // exiger un clic. No-op sans consentement.
+  const tarifsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!tarifsRef.current) return;
+    let fired = false;
+    const obs = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (!fired && e.isIntersecting && e.intersectionRatio >= 0.4) {
+          fired = true;
+          track("pricing_viewed");
+          obs.disconnect();
+        }
+      }
+    }, { threshold: [0.4] });
+    obs.observe(tarifsRef.current);
+    return () => obs.disconnect();
+  }, []);
 
   // Variables responsive partagées
   const padX = isMobile ? 20 : isTablet ? 36 : 56;
@@ -234,7 +253,7 @@ export default function FonderieV2Landing() {
       </div>
 
       {/* Tarifs */}
-      <div id="tarifs" style={{ position: 'relative', padding: sectionPad(60, 70), maxWidth: 1400, margin: '0 auto', scrollMarginTop: 80 }}>
+      <div ref={tarifsRef} id="tarifs" style={{ position: 'relative', padding: sectionPad(60, 70), maxWidth: 1400, margin: '0 auto', scrollMarginTop: 80 }}>
         <div style={{ marginBottom: isMobile ? 32 : 48 }}>
           <FVHook tag="04" label="Tarifs" />
           <h2 style={{ fontFamily: FV.serif, fontWeight: 500, fontSize: isMobile ? 34 : 56, color: FV.ink, margin: '20px 0 0', letterSpacing: '-0.025em', lineHeight: 1.05 }}>
@@ -283,7 +302,7 @@ export default function FonderieV2Landing() {
                     <div key={i} style={{ fontSize: 13, color: FV.ink2, display: 'flex', gap: 8, lineHeight: 1.45 }}><span style={{ color: FV.ember }}>✦</span><span>{b}</span></div>
                   ))}
                 </div>
-                <Link href="/register" style={{ marginTop: 22, background: hl ? FV.ember : 'transparent', color: hl ? FV.black : FV.ink, border: hl ? 'none' : `1px solid ${FV.ruleStrong}`, padding: '12px 16px', borderRadius: 9, fontSize: 13, fontWeight: 700, textDecoration: 'none', textAlign: 'center', boxShadow: hl ? `0 0 24px ${FV.ember}55` : 'none' }}>{copy.cta}</Link>
+                <Link href="/register" onClick={() => track("pack_selected", { pack_id: p.id, source: "landing" })} style={{ marginTop: 22, background: hl ? FV.ember : 'transparent', color: hl ? FV.black : FV.ink, border: hl ? 'none' : `1px solid ${FV.ruleStrong}`, padding: '12px 16px', borderRadius: 9, fontSize: 13, fontWeight: 700, textDecoration: 'none', textAlign: 'center', boxShadow: hl ? `0 0 24px ${FV.ember}55` : 'none' }}>{copy.cta}</Link>
               </div>
             );
           })}
