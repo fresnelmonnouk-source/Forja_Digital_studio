@@ -1,16 +1,53 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import prisma from "@/lib/prisma";
 import { SYSTEM_PROMPT } from "@/lib/llm/prompts";
 import { callLLM, LLMMessage } from "@/lib/llm/client";
-import { rateLimit, getIp } from "@/lib/rate-limit";
+import { rateLimit } from "@/lib/rate-limit";
+import {
+  checkAndIncrementDailyChat,
+  buildQuotaExceededMessage,
+  PER_HOUR_LIMIT,
+  CONVERSATION_CAP,
+} from "@/lib/chat-quota";
 
 export async function POST(req: Request) {
-  if (!(await rateLimit(getIp(req), 20, 60_000))) {
-    return NextResponse.json({ error: "Trop de requêtes. Attends une minute." }, { status: 429 });
-  }
-
+  // ── COUCHE 0 : auth (on a besoin de l'userId pour les limites suivantes)
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  const userId = session.user.id;
+
+  // ── COUCHE 1 : rate-limit utilisateur (anti-burst) — 30 messages/heure
+  const burstOk = await rateLimit(`chat-user:${userId}`, PER_HOUR_LIMIT, 60 * 60_000);
+  if (!burstOk) {
+    return NextResponse.json(
+      {
+        error: "RATE_LIMITED",
+        message: `Tu envoies beaucoup de messages d'un coup (max ${PER_HOUR_LIMIT}/heure). Reprends ton souffle et réessaie dans quelques minutes.`,
+      },
+      { status: 429 }
+    );
+  }
+
+  // ── COUCHE 2 : quota quotidien (50 non-payeur / 300 payeur)
+  // isCustomer = l'utilisateur a au moins un Payment approuvé (à vie).
+  // Une fois acheté un pack, il garde le quota plus large même après expiration des crédits.
+  const customerPayment = await prisma.payment.findFirst({
+    where: { userId, status: "approved" },
+    select: { id: true },
+  });
+  const isCustomer = !!customerPayment;
+  const quota = await checkAndIncrementDailyChat(userId, isCustomer);
+  if (!quota.allowed) {
+    return NextResponse.json(
+      {
+        error: "QUOTA_EXCEEDED",
+        message: buildQuotaExceededMessage(isCustomer, quota.limit),
+        quota: { count: quota.count, limit: quota.limit, isCustomer },
+      },
+      { status: 429 }
+    );
+  }
 
   try {
     const body = await req.json();
@@ -20,6 +57,19 @@ export async function POST(req: Request) {
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ error: "Messages invalides" }, { status: 400 });
+    }
+
+    // ── COUCHE 3 : cap par conversation — limite la longueur d'historique transmis.
+    // Force l'utilisateur à clôturer / exporter au-delà de 80 messages, sinon
+    // les conversations infinies coûtent cher en LLM et la qualité se dégrade.
+    if (messages.length > CONVERSATION_CAP) {
+      return NextResponse.json(
+        {
+          error: "CONVERSATION_TOO_LONG",
+          message: `Cette conversation a atteint sa limite (${CONVERSATION_CAP} messages). Exporte ton produit en PDF ou démarre une nouvelle session pour continuer à forger.`,
+        },
+        { status: 429 }
+      );
     }
 
     const validMessages: LLMMessage[] = messages

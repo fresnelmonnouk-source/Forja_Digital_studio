@@ -22,6 +22,25 @@ export async function POST(req: Request) {
     const pack = getPack(typeof packId === "string" ? packId : "");
     if (!pack) return NextResponse.json({ error: "Pack invalide." }, { status: 400 });
 
+    // Pack "Essai" = palier d'entrée, achetable UNE SEULE FOIS par utilisateur.
+    // Sans cette garde, quelqu'un peut acheter Essai 3× = 30 docs / 10 500 F
+    // (exactement Starter) sans jamais monter en gamme — la value ladder se casse.
+    if (pack.id === "essai") {
+      const existing = await prisma.payment.findFirst({
+        where: { userId: session.user.id, packId: "essai", status: "approved" },
+        select: { id: true },
+      });
+      if (existing) {
+        return NextResponse.json(
+          {
+            error: "ESSAI_ALREADY_USED",
+            message: "Le pack Essai est disponible une seule fois. Passe à Starter (30 documents) pour continuer.",
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     const appUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
     const { transactionId, url } = await createCheckout({
       amount: pack.amount,
