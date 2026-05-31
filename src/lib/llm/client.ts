@@ -6,7 +6,7 @@ const FALLBACK_ORDER = ["deepseek", "anthropic", "openai"] as const;
 
 const DEFAULT_MODELS: Record<string, string> = {
   deepseek:  process.env.DEEPSEEK_MODEL || "deepseek-chat", // V4 (dernier modèle chat DeepSeek)
-  anthropic: process.env.LLM_MODEL || "claude-haiku-4-5-20251101",
+  anthropic: process.env.LLM_MODEL || "claude-sonnet-4-5-20250929",
   openai:    "gpt-4o-mini",
 };
 
