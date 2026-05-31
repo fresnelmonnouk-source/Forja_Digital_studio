@@ -41,7 +41,7 @@ export async function POST(req: Request) {
   if (!quota.canGenerate) {
     console.log(`[PDF-${requestId}] ⛔ Quota épuisé (gratuit ${quota.freeUsed}/${FREE_DOC_LIMIT}, crédits ${quota.credits})`);
     return NextResponse.json(
-      { error: "QUOTA_EXCEEDED", message: "Pour exporter ton produit en PDF, il te faut un pack. Le plus accessible démarre à 3 500 FCFA (10 documents)." },
+      { error: "QUOTA_EXCEEDED", message: "Pour exporter ton produit en PDF, il te faut un pack de crédits. Le plus accessible : Essai à 3 500 FCFA (10 documents PDF, achetable une fois)." },
       { status: 402 }
     );
   }

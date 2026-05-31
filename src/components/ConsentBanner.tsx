@@ -63,8 +63,7 @@ export default function ConsentBanner() {
       </div>
       <p style={{ fontSize: 13, lineHeight: 1.55, color: C.ink2, margin: "0 0 16px" }}>
         Pour comprendre comment FORJA est utilisé et l&apos;améliorer, on aimerait activer deux outils
-        de mesure (PostHog &amp; Microsoft Clarity). <strong style={{ color: C.ink }}>Aucune donnée
-        n&apos;est envoyée tant que tu n&apos;as pas accepté.</strong> Ton choix reste en local sur ton appareil.{" "}
+        de mesure d&apos;audience (PostHog &amp; Microsoft Clarity, hébergés en UE). <strong style={{ color: C.ink }}>Rien n&apos;est envoyé tant que tu n&apos;as pas accepté.</strong> Ton choix reste sur ton appareil — tu peux changer d&apos;avis à tout moment.{" "}
         <Link href="/legal/confidentialite" style={{ color: C.ember, textDecoration: "underline" }}>
           En savoir plus
         </Link>

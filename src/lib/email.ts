@@ -140,8 +140,8 @@ export function buildWelcomeEmail(name: string | null): string {
   const steps = [
     ["01", "Lis l'Oracle",             "Six lectures pour repérer le signal sous le bruit."],
     ["02", "Trouve ton Triangle d'Or", "L'intersection de ce que tu sais, aimes, et qu'on te demande."],
-    ["03", "Forge ta première offre",  "Promesse mesurable, transformation, prix tenu."],
-    ["04", "Sors ton premier PDF",     "Tes conclusions, propres et signées FORJA."],
+    ["03", "Forge ton offre",          "Promesse mesurable, transformation, prix tenu. Tout ça en conversation, gratuit."],
+    ["04", "Exporte ton PDF",          "Quand ton offre est prête, un pack à partir de 3 500 F suffit."],
   ];
   const stepBoxes = steps.map(([n, t, s], i) => `
     <td style="width:50%;padding:18px;vertical-align:top;background:${C.black2};${i === 1 ? `border-left:1px solid ${C.rule};border-right:1px solid ${C.rule}` : ""};${i === 3 ? `border-left:1px solid ${C.rule}` : ""}">
@@ -161,7 +161,7 @@ export function buildWelcomeEmail(name: string | null): string {
     <div style="padding:28px 44px 8px;text-align:center">
       ${hook("00:00", "Édition v.1 · première session")}
       ${title(`Bienvenue à<br><em style="font-style:italic;color:${C.ember}">l'enclume</em>, ${displayName}.`, 42)}
-      ${lead(`Le four est allumé. Ton compte est créé.<br>FORJA, c'est ton atelier pour transformer une idée en vrai produit digital — un ebook, une formation, une offre — et le livrer fini, prêt à vendre.`)}
+      ${lead(`Le four est allumé. Ton compte est créé.<br><br>FORJA, c'est ton atelier pour transformer une idée en vrai produit digital — un ebook, une formation, une offre.<br><br><strong style="color:${C.ink}">Discute autant que tu veux — c'est gratuit.</strong> Tu paies seulement quand tu veux exporter ton PDF prêt à vendre.`)}
     </div>
 
     <div style="padding:28px 44px 8px;text-align:center">
@@ -244,7 +244,7 @@ export function buildPaymentEmail(name: string | null, packLabel: string, credit
     <div style="padding:36px 44px 8px">
       ${hook("✓", "Paiement confirmé")}
       ${title(`Tes crédits sont <em style="font-style:italic;color:${C.ember}">chargés</em>.`)}
-      ${lead(`Bonjour ${displayName},<br><br>Merci ! Ton paiement a bien été reçu et tes documents ont été ajoutés à ton compte.`)}
+      ${lead(`Bonjour ${displayName},<br><br>Merci ! Ton paiement a bien été reçu et tes documents ont été ajoutés à ton compte. Tu as 31 jours pour les utiliser.`)}
     </div>
     <div style="padding:24px 44px 8px">
       <table style="width:100%;border-collapse:collapse;background:${C.black2};border:1px solid ${C.strong};border-radius:12px">

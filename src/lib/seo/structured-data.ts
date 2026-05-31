@@ -13,7 +13,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Qu'est-ce que FORJA ?",
     answer:
-      "FORJA est un studio digital piloté par une intelligence artificielle qui te guide pas à pas pour transformer une idée en produit digital prêt à vendre (ebook, guide, kit) et génère un PDF professionnel en quelques minutes.",
+      "FORJA est ton atelier pour transformer une idée en vrai produit digital — ebook, formation, page de vente. Tu discutes gratuitement avec lui pour construire ton offre, et quand tu es prêt, il te livre un PDF professionnel prêt à vendre.",
   },
   {
     question: "FORJA est-il gratuit ?",

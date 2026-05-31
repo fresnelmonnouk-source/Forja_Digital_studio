@@ -66,7 +66,7 @@ Les présentes conditions régissent l'accès et l'utilisation de la plateforme 
 
 ## 2. Compte et accès
 
-La création d'un compte nécessite une adresse email vérifiée. Chaque personne ne peut détenir qu'un seul compte gratuit. Toute tentative de contournement de cette limite peut entraîner la suspension du compte.
+La création d'un compte nécessite une adresse email vérifiée. Chaque personne ne peut détenir qu'**un seul compte**. L'utilisation de FORJA est soumise à des quotas anti-abus (limite de messages par heure et par jour). Toute tentative de contournement (multi-comptes, automatisation) peut entraîner la suspension.
 
 ## 3. Conversation gratuite et offres payantes
 
@@ -127,15 +127,21 @@ ${today}`,
 
   remboursement: `## Principe
 
-Les crédits achetés débloquent la génération de documents. En raison de la nature numérique et immédiate du service, **les crédits déjà consommés ne sont pas remboursables**.
+La discussion avec FORJA est gratuite et illimitée — tu peux juger sur pièce avant tout achat. Pour l'export en PDF, tu paies un pack de crédits (Essai, Starter, Pro ou Studio). Chaque crédit débloque un document PDF.
+
+En raison de la nature numérique et immédiate du service, **les crédits déjà consommés ne sont pas remboursables**.
 
 ## Crédits non utilisés
 
-Une demande de remboursement portant sur des **crédits non consommés** peut être étudiée dans un délai de 14 jours après l'achat, sur demande écrite à **${COMPANY.contact}**.
+Si tu n'es pas satisfait, écris-nous à **${COMPANY.contact}**. Notre équipe étudie chaque demande au cas par cas et te répond personnellement.
 
 ## Problème technique
 
 En cas d'échec de génération imputable à un dysfonctionnement de notre service, le crédit correspondant est recrédité automatiquement ou sur demande.
+
+## Pack Essai
+
+Le pack Essai (3 500 FCFA, 10 documents) est un palier d'entrée disponible **une seule fois par compte**. Au-delà, les autres packs (Starter, Pro, Studio) restent ouverts.
 
 ## Traitement
 

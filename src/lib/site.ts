@@ -7,6 +7,6 @@ export const SITE_URL = (
 ).replace(/\/$/, "");
 
 export const SITE_NAME = "FORJA — Digital Studio";
-export const SITE_TAGLINE = "L'agent qui transforme l'idée brute en produit qui se vend.";
+export const SITE_TAGLINE = "De l'idée brute au produit qui se vend.";
 export const SITE_DESCRIPTION =
-  "FORJA est l'agent IA qui vous guide pas à pas pour créer des produits digitaux prêts à vendre — ebooks, guides, kits — et génère des PDF professionnels en quelques minutes.";
+  "FORJA transforme ton idée en produit digital prêt à vendre — ebook, formation, page de vente. Discussion gratuite et illimitée, PDF pro dès 3 500 FCFA. Paiement mobile money.";
