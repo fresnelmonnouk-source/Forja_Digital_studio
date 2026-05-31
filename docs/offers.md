@@ -11,7 +11,7 @@
 
 ### 📌 Vue d'ensemble
 - **Nom commercial** : Discussion libre / « Forger gratuitement avec FORJA »
-- **Type** : palier gratuit à vie, **avec quotas anti-abus invisibles**
+- **Type** : palier gratuit illimité, **avec quotas anti-abus invisibles**
 - **Statut** : actif (pivot du 2026-05-31)
 
 ### 💵 Prix
@@ -33,7 +33,7 @@
 - **0 document PDF.** Pour exporter, voir Pack Essai (3 500 F) ou supérieur.
 
 ### 🎯 Rôle dans le tunnel
-**Cœur du nouveau positionnement** : "discute autant que tu veux avant d'investir un franc". C'est la nouvelle preuve sociale — l'utilisateur juge la qualité de l'agent **avant** toute transaction. Remplace l'ancien "5 docs gratuits à vie".
+**Cœur du positionnement** : "discute autant que tu veux avant d'investir un franc". C'est la preuve sociale principale — l'utilisateur juge la qualité de l'agent **avant** toute transaction.
 
 ---
 
@@ -138,7 +138,7 @@ Gros producteur / agence / créateur qui industrialise sa production de produits
 
 ## 🛡️ GARANTIE / RÉASSURANCE (décision Fresnel 2026-05-24, mise à jour 2026-05-31)
 
-1. **La conversation gratuite et illimitée comme essai sans risque** : tu peux discuter, valider ton idée, construire ton offre avec FORJA — entièrement gratuit. La meilleure preuve, c'est l'expérience que tu vis dans la conversation. C'est la **nouvelle preuve principale**, remplaçante de "5 documents gratuits".
+1. **La conversation gratuite et illimitée comme essai sans risque** : tu peux discuter, valider ton idée, construire ton offre avec FORJA — entièrement gratuit. La meilleure preuve, c'est l'expérience que tu vis dans la conversation. C'est la **preuve principale** : juger la qualité de l'agent avant toute transaction.
 2. **Satisfait ou remboursé** sur les packs payés.
    - **Modalités (décision Fresnel 2026-05-24)** : toute demande de remboursement est **gérée par l'équipe SAV**, au cas par cas, via le contact (aide@myforja.digital). **NE PAS afficher de délai chiffré** ni de conditions chiffrées dans la copie. Formuler la réassurance simplement : « satisfait ou remboursé — notre équipe s'en occupe ».
    - Une page `/legal/remboursement` existe (éditable depuis le back office) : aligner le ton, sans promettre de délai précis.

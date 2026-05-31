@@ -118,7 +118,7 @@ fier, qui lui rapporte un revenu en ligne — et la **méthode** pour en refaire
 ### Objection 1 : PRIX
 - Forme typique : « C'est trop cher pour moi en ce moment. »
 - Vraie raison : pouvoir d'achat réel limité + doute sur le retour (« est-ce que ça va vraiment m'aider à vendre ? »).
-- Réponse stratégique : mettre en avant le **gratuit (5 documents à vie, sans carte)** comme essai sans risque, et le calcul de ROI (un seul produit vendu rembourse largement un pack). Prix en FCFA, paiement mobile money.
+- Réponse stratégique : mettre en avant la **discussion gratuite et illimitée avec FORJA, sans carte** comme essai sans risque (juger la qualité avant d'investir un franc), et le calcul de ROI (un seul produit vendu rembourse largement un pack Essai à 3 500 F). Prix en FCFA, paiement mobile money.
 
 ### Objection 2 : TEMPS
 - Forme typique : « Je n'ai pas le temps de me lancer là-dedans. »

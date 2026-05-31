@@ -30,7 +30,7 @@ Présents aujourd'hui dans `src/app/page.tsx`, à supprimer/remplacer :
 
 Tant qu'il n'y a pas de vrais clients, Marcus s'appuie sur des leviers de confiance **honnêtes** :
 
-1. **L'essai sans risque** : « 5 documents gratuits, sans carte » → la meilleure preuve, c'est que le visiteur teste lui-même.
+1. **L'essai sans risque** : « Discussion gratuite et illimitée avec FORJA, sans carte » → la meilleure preuve, c'est que le visiteur teste lui-même la qualité de l'agent avant d'investir un franc dans un pack export.
 2. **La preuve par la démonstration** : la démo interactive (DemoModal) et un exemple de PDF généré.
 3. **La méthode comme preuve d'autorité** : détailler le mécanisme (Oracle, 12 étapes…) montre le sérieux sans mentir sur des résultats.
 4. **Le livrable comme preuve** : montrer la qualité réelle d'un document FORJA (extrait, mockup).
