@@ -67,7 +67,7 @@ function footer(note?: string): string {
   <div style="padding:24px 36px 26px;border-top:1px solid ${C.rule};background:${C.black2}">
     ${note ? `<p style="font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:13px;color:${C.ink2};line-height:1.6;margin:0 0 20px">${note}</p>` : ""}
     <div style="padding-top:16px;border-top:1px solid ${C.rule};display:flex;align-items:center;justify-content:space-between">
-      <span style="font-family:Consolas,'Courier New',monospace;font-size:10px;color:${C.dim};letter-spacing:0.15em">FORJA · v.4</span>
+      <span style="font-family:Consolas,'Courier New',monospace;font-size:10px;color:${C.dim};letter-spacing:0.15em">FORJA · v.1</span>
       <span>
         <a href="#" style="font-size:11px;color:${C.smoke};text-decoration:none;margin-left:12px">Aide</a>
         <a href="#" style="font-size:11px;color:${C.smoke};text-decoration:none;margin-left:12px">Confidentialité</a>
@@ -159,9 +159,9 @@ export function buildWelcomeEmail(name: string | null): string {
     </div>
 
     <div style="padding:28px 44px 8px;text-align:center">
-      ${hook("00:00", "Édition v.4 · première session")}
+      ${hook("00:00", "Édition v.1 · première session")}
       ${title(`Bienvenue à<br><em style="font-style:italic;color:${C.ember}">l'enclume</em>, ${displayName}.`, 42)}
-      ${lead(`Le four est allumé. Ton compte est créé.<br>Toute l'expertise du terrain — produits digitaux, SaaS, automatisation IA — condensée en un agent qui te guide, du signal de marché à l'effet WOW.`)}
+      ${lead(`Le four est allumé. Ton compte est créé.<br>FORJA, c'est ton atelier pour transformer une idée en vrai produit digital — un ebook, une formation, une offre — et le livrer fini, prêt à vendre.`)}
     </div>
 
     <div style="padding:28px 44px 8px;text-align:center">

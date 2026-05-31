@@ -23,10 +23,10 @@ interface Conversation {
 }
 
 const QUICK_PROMPTS: { Icon: LucideIcon; label: string; text: string }[] = [
-  { Icon: GraduationCap, label: "Créer une formation", text: "Je veux créer une formation en ligne. Guide-moi à travers les 12 étapes." },
-  { Icon: BookOpen, label: "Créer un Ebook", text: "Je veux créer un ebook rentable. Aide-moi à trouver le bon sujet, la structure et l'offre." },
-  { Icon: Cog, label: "Lancer un SaaS", text: "J'ai une idée de SaaS. Aide-moi à valider le marché, définir le MVP et construire le plan de lancement." },
-  { Icon: Bot, label: "Automatisation IA", text: "Je veux automatiser des processus avec l'IA. Guide-moi avec la logique d'automatisation." },
+  { Icon: GraduationCap, label: "Créer une formation", text: "Je veux créer une formation en ligne. Aide-moi à choisir le sujet, à la construire et à la vendre, pas à pas." },
+  { Icon: BookOpen, label: "Créer un ebook", text: "Je veux créer un ebook qui se vend. Aide-moi à trouver le bon sujet, à le structurer et à fixer le prix." },
+  { Icon: Cog, label: "Créer un outil en ligne", text: "J'ai une idée d'outil ou d'application en ligne. Aide-moi à vérifier que des gens en veulent, à définir la première version simple, et à préparer le lancement." },
+  { Icon: Bot, label: "Automatiser mon travail", text: "Je veux gagner du temps en automatisant des tâches répétitives avec l'IA. Montre-moi par où commencer." },
 ];
 
 const STEPS = ['Signal', 'Offre', 'Promesse', 'Avatar', 'Douleurs', 'Pédagogie', 'Fil Rouge', 'Outils', 'Auto.', 'Livrables', 'Copy', 'ROI', 'WOW'];
@@ -40,21 +40,21 @@ interface OnboardingData {
 const GOAL_LABELS: Record<string, string> = {
   formation: "créer une formation en ligne",
   ebook: "lancer un ebook",
-  saas: "lancer un SaaS",
-  vente: "construire une offre/page de vente",
-  automatisation: "mettre en place de l'automatisation IA",
-  marque: "bâtir ma marque personnelle",
+  saas: "créer un outil en ligne",
+  vente: "construire une offre et sa page de vente",
+  automatisation: "automatiser ton travail grâce à l'IA",
+  marque: "bâtir ta marque personnelle",
 };
 
 const LEVEL_LABELS: Record<string, string> = {
   debutant: "débutant (je commence de zéro)",
   intermediaire: "intermédiaire (j'ai déjà lancé quelque chose)",
-  avance: "avancé (je veux scaler ou optimiser)",
+  avance: "avancé (je veux faire grandir ce que j'ai déjà)",
 };
 
 function buildWelcomeMessage(onboarding: OnboardingData | null): string {
   if (!onboarding?.goal && !onboarding?.level) {
-    return "Bonjour, je suis **FORJA** — toute l'expertise du terrain en produits digitaux, SaaS et automatisation IA, condensée en un agent.\n\nMon rôle : transformer ton idée en produit concret, rentable et bien construit.\n\nMéthodes disponibles : **ORACLE** · **Triangle d'Or** · **Matrice de Valeur** · **Framework 12 Étapes** · **Flywheel Digitale**\n\n**Sur quoi travaillons-nous aujourd'hui ?**";
+    return "Bonjour, je suis **FORJA**, ton atelier pour transformer une idée en vrai produit digital — un ebook, une formation, une offre — prêt à vendre.\n\nMon rôle : on valide ensemble que ton idée a un marché, on la construit pas à pas, et tu repars avec un livrable fini (un PDF pro). Pas un conseil de plus.\n\n**Dis-moi : c'est quoi, ton idée ?** (Même floue, on part de là.)";
   }
   const goalLabel = onboarding.goal ? GOAL_LABELS[onboarding.goal] ?? onboarding.goal : null;
   const levelLabel = onboarding.level ? LEVEL_LABELS[onboarding.level] ?? onboarding.level : null;
@@ -400,7 +400,7 @@ export default function ChatPage() {
             <FVMark size={28} />
             <div>
               <div style={{ fontFamily: FV.serif, fontSize: 17, fontWeight: 700, letterSpacing: '0.16em' }}>FORJA</div>
-              <div style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.12em' }}>v.4 · LIBRE</div>
+              <div style={{ fontFamily: FV.mono, fontSize: 9, color: FV.smoke, letterSpacing: '0.12em' }}>v.1 · LIBRE</div>
             </div>
           </div>
           <button onClick={() => setSidebarOpen(false)} title="Fermer" style={{ background: 'transparent', border: 'none', color: FV.smoke, cursor: 'pointer', padding: 4, lineHeight: 1, display: 'flex', alignItems: 'center' }}><X size={18} /></button>
