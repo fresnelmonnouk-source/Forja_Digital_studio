@@ -18,12 +18,12 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "FORJA est-il gratuit ?",
     answer:
-      "Oui. Tu peux créer un compte et générer 5 documents gratuitement, à vie, sans carte bancaire. Des packs payants (Starter, Pro, Studio) débloquent davantage de documents quand tu en as besoin.",
+      "La conversation avec FORJA est entièrement gratuite et illimitée — tu peux explorer ton idée, valider ton marché et construire ton offre sans rien dépenser. Pour exporter ton produit en PDF prêt à vendre, choisis un pack à partir de 3 500 FCFA (pack Essai, 10 documents).",
   },
   {
     question: "Combien coûtent les packs FORJA ?",
     answer:
-      "Le pack Starter offre 30 documents par mois pour 10 500 FCFA, le pack Pro 50 documents pour 15 000 FCFA, et le pack Studio 200 documents pour 45 000 FCFA avec en plus le choix du modèle d'IA.",
+      "Le pack Essai démarre à 3 500 FCFA pour 10 documents (palier d'entrée). Le pack Starter offre 30 documents pour 10 500 FCFA, le pack Pro 50 documents pour 15 000 FCFA, et le pack Studio 200 documents pour 45 000 FCFA avec en plus le choix du modèle d'IA.",
   },
   {
     question: "Comment se passe le paiement ?",
@@ -48,7 +48,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Et si je ne suis pas satisfait ?",
     answer:
-      "Commence par le gratuit : 5 documents sans carte, pour juger sur pièce avant de payer. Sur les packs payants, c'est satisfait ou remboursé — notre équipe traite chaque demande au cas par cas, par email à aide@myforja.digital.",
+      "La discussion avec FORJA est gratuite et illimitée — tu peux juger sur pièce avant d'investir dans un pack. Sur les packs payants, c'est satisfait ou remboursé : notre équipe traite chaque demande au cas par cas, par email à aide@myforja.digital.",
   },
 ];
 
@@ -94,8 +94,8 @@ export function softwareAppSchema(): JsonLdObject {
       name: `Pack ${p.label}`,
       price: String(p.amount),
       priceCurrency: "XOF",
-      category: "subscription",
-      description: `${p.credits} documents par mois`,
+      category: "PaymentService",
+      description: `${p.credits} documents PDF (achat ponctuel, crédits valables 31 jours)`,
     })),
   };
 }

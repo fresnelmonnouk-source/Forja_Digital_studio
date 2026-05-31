@@ -70,13 +70,22 @@ export default function CreditsModal({ onClose }: { onClose: () => void }) {
           <button onClick={onClose} title="Fermer" style={{ width: 32, height: 32, background: "rgba(241,233,218,0.04)", border: `1px solid ${FV.rule}`, borderRadius: 7, color: FV.smoke, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><X size={16} /></button>
         </div>
 
-        {/* État du quota */}
+        {/* État du quota — gère 3 cas :
+            1. freeLimit > 0 (ancien modèle freemium) → affiche reste/utilisé sur N gratuits
+            2. freeLimit = 0 + credits > 0 → affiche le solde de crédits
+            3. freeLimit = 0 + credits = 0 → invite à acheter un pack */}
         {quota && (
           <div style={{ background: FV.black, border: `1px solid ${FV.rule}`, borderRadius: 10, padding: "12px 16px", marginBottom: 20, fontSize: 13, color: FV.ink2 }}>
-            {quota.freeRemaining > 0
-              ? <>Il te reste <strong style={{ color: FV.ember }}>{quota.freeRemaining}</strong> document{quota.freeRemaining > 1 ? "s" : ""} gratuit{quota.freeRemaining > 1 ? "s" : ""} (sur {quota.freeLimit}).</>
-              : <>Tes <strong style={{ color: FV.ember }}>{quota.freeLimit}</strong> documents gratuits sont utilisés.</>}
-            {quota.credits > 0 && <> · Crédits : <strong style={{ color: FV.ember }}>{quota.credits}</strong>.</>}
+            {quota.freeLimit > 0 ? (
+              quota.freeRemaining > 0
+                ? <>Il te reste <strong style={{ color: FV.ember }}>{quota.freeRemaining}</strong> document{quota.freeRemaining > 1 ? "s" : ""} gratuit{quota.freeRemaining > 1 ? "s" : ""} (sur {quota.freeLimit}).</>
+                : <>Tes <strong style={{ color: FV.ember }}>{quota.freeLimit}</strong> documents gratuits sont utilisés.</>
+            ) : (
+              quota.credits > 0
+                ? <>Tu disposes de <strong style={{ color: FV.ember }}>{quota.credits}</strong> crédit{quota.credits > 1 ? "s" : ""} pour exporter en PDF.</>
+                : <>Pour exporter ton produit en PDF, choisis un pack ci-dessous. La discussion avec FORJA, elle, reste gratuite et illimitée.</>
+            )}
+            {quota.freeLimit > 0 && quota.credits > 0 && <> · Crédits : <strong style={{ color: FV.ember }}>{quota.credits}</strong>.</>}
             {quota.credits > 0 && quota.creditsExpireAt && (
               <div style={{ fontSize: 11, color: FV.smoke, marginTop: 4 }}>
                 Valables jusqu&apos;au {new Date(quota.creditsExpireAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })}.

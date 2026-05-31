@@ -14,6 +14,7 @@ import { DOC_PROMPTS } from "@/lib/pdf/prompts";
 import { buildHtmlTemplate } from "@/lib/pdf/template";
 import { sanitizeHtml } from "@/lib/pdf/sanitize";
 import { getUserQuota, consumeDoc } from "@/lib/quota";
+import { FREE_DOC_LIMIT } from "@/lib/plans";
 
 export const maxDuration = 60;
 
@@ -35,12 +36,12 @@ export async function POST(req: Request) {
 
   console.log(`[PDF-${requestId}] ✓ Authentification OK`);
 
-  // Quota : 5 documents gratuits à vie, puis crédits achetés.
+  // Quota : conversation gratuite, export PDF payant (packs Essai → Studio).
   const quota = await getUserQuota(session.user.id);
   if (!quota.canGenerate) {
-    console.log(`[PDF-${requestId}] ⛔ Quota épuisé (gratuit ${quota.freeUsed}/5, crédits ${quota.credits})`);
+    console.log(`[PDF-${requestId}] ⛔ Quota épuisé (gratuit ${quota.freeUsed}/${FREE_DOC_LIMIT}, crédits ${quota.credits})`);
     return NextResponse.json(
-      { error: "QUOTA_EXCEEDED", message: "Tu as utilisé tes 5 documents gratuits. Achète des crédits pour continuer à forger." },
+      { error: "QUOTA_EXCEEDED", message: "Pour exporter ton produit en PDF, il te faut un pack. Le plus accessible démarre à 3 500 FCFA (10 documents)." },
       { status: 402 }
     );
   }
