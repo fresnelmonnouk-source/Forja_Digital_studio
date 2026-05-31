@@ -12,8 +12,8 @@ interface Message {
 const TYPES: { id: string; Icon: LucideIcon; label: string; desc: string }[] = [
   { id: "ebook", Icon: BookOpen, label: "Ebook", desc: "Document structuré prêt à vendre" },
   { id: "formation", Icon: GraduationCap, label: "Formation", desc: "Plan pédagogique complet, 12 étapes" },
-  { id: "vente", Icon: Wallet, label: "Page de vente", desc: "Copywriting prêt à publier" },
-  { id: "blueprint", Icon: Cog, label: "Blueprint", desc: "Roadmap & architecture technique" },
+  { id: "vente", Icon: Wallet, label: "Page de vente", desc: "Argumentaire de vente prêt à publier" },
+  { id: "blueprint", Icon: Cog, label: "Plan technique", desc: "Feuille de route & architecture du produit" },
 ];
 
 const OPTIONS = [
@@ -64,10 +64,10 @@ export default function ExportModal({ onClose, conversation, onNeedCredits }: { 
       const duration = parseInt(res.headers.get("X-PDF-Duration-MS") || "0");
 
       if (res.status === 402) {
-        // Quota gratuit épuisé → propose l'achat de crédits.
+        // Pas (assez) de crédits → propose l'achat d'un pack.
         const data = await res.json().catch(() => ({}));
         setQuotaExceeded(true);
-        setError((data as { message?: string }).message || "Tu as utilisé tes 5 documents gratuits.");
+        setError((data as { message?: string }).message || "Pour exporter ton produit en PDF, il te faut un pack. Le plus accessible démarre à 3 500 FCFA (10 documents).");
         setExporting(false);
         return;
       }

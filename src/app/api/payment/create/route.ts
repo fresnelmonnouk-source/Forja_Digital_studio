@@ -34,7 +34,7 @@ export async function POST(req: Request) {
         return NextResponse.json(
           {
             error: "ESSAI_ALREADY_USED",
-            message: "Le pack Essai est disponible une seule fois. Passe à Starter (30 documents) pour continuer.",
+            message: "Tu as déjà utilisé ton pack Essai (palier d'entrée à 3 500 F, disponible une fois). Pour continuer à exporter, passe à Starter (30 documents · 10 500 F) ou plus.",
           },
           { status: 403 }
         );

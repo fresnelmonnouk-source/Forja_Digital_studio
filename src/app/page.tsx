@@ -20,19 +20,19 @@ const PACK_COPY: Record<string, { accroche: string; unite: string; bullets: stri
   starter: {
     accroche: "Pour lancer tes premiers produits.",
     unite: "30 documents · 350 F le document",
-    bullets: ["30 documents par mois", "Crédits valables 31 jours", "Paiement mobile money (FedaPay)"],
+    bullets: ["30 documents PDF", "Crédits valables 31 jours", "Paiement mobile money (FedaPay)", "Accès complet à la méthode FORJA"],
     cta: "Choisir Starter",
   },
   pro: {
     accroche: "Le meilleur rapport pour produire chaque semaine.",
     unite: "50 documents · 300 F le document",
-    bullets: ["50 documents par mois", "Meilleur prix au document", "Crédits valables 31 jours", "Paiement mobile money (FedaPay)"],
+    bullets: ["50 documents PDF", "Meilleur prix au document", "Crédits valables 31 jours", "Paiement mobile money (FedaPay)"],
     cta: "Choisir Pro →",
   },
   studio: {
     accroche: "Pour industrialiser ta production.",
     unite: "200 documents · 225 F le document",
-    bullets: ["200 documents par mois", "Le tarif le plus bas au document", "Choix du modèle d'IA", "Crédits valables 31 jours"],
+    bullets: ["200 documents PDF", "Le tarif le plus bas au document", "Choix du modèle d'IA", "Crédits valables 31 jours"],
     cta: "Choisir Studio",
   },
 };
@@ -109,7 +109,7 @@ export default function FonderieV2Landing() {
           <p style={{ fontSize: isMobile ? 16 : 18, lineHeight: 1.55, color: FV.ink2, marginTop: 32, maxWidth: 560, fontWeight: 400 }}>
             Tu as un savoir, une compétence, une idée. FORJA la transforme en vrai produit digital — ebook, formation, page de vente — et te le livre fini, prêt à vendre et à <span style={{ color: FV.brass, fontFamily: FV.serif, fontStyle: 'italic' }}>encaisser en mobile money</span>.
             <br /><br />
-            Pas dans six mois. En quelques sessions, au feu, à l&apos;enclume, au marteau.
+            Discussion gratuite et illimitée. Tu ne paies qu&apos;au moment d&apos;exporter. Au feu, à l&apos;enclume, au marteau.
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 44, flexWrap: 'wrap' }}>
@@ -299,9 +299,9 @@ export default function FonderieV2Landing() {
 
         {/* Réassurance */}
         <div style={{ marginTop: 36, padding: isMobile ? '24px' : '28px 32px', background: FV.black2, border: `1px solid ${FV.rule}`, borderRadius: 14 }}>
-          <div style={{ fontFamily: FV.serif, fontSize: isMobile ? 18 : 20, color: FV.ink, fontWeight: 500, marginBottom: 8 }}>Aucun risque de ton côté.</div>
+          <div style={{ fontFamily: FV.serif, fontSize: isMobile ? 18 : 20, color: FV.ink, fontWeight: 500, marginBottom: 8 }}>Le risque, c&apos;est nous qui le portons.</div>
           <p style={{ fontSize: 14, color: FV.ink2, lineHeight: 1.6, margin: 0 }}>
-            Satisfait ou remboursé sur les packs — notre équipe s&apos;en occupe, au cas par cas. Les crédits achetés sont valables 31 jours. La discussion avec FORJA, elle, reste gratuite et sans limite.
+            Discute autant que tu veux avec FORJA — c&apos;est gratuit et illimité. Tu n&apos;investis qu&apos;au moment d&apos;exporter ton PDF. Et même là : satisfait ou remboursé sur les packs, notre équipe s&apos;en occupe au cas par cas. Les crédits achetés restent valables 31 jours.
           </p>
           <div style={{ marginTop: 18, display: 'flex', gap: isMobile ? 12 : 24, flexWrap: 'wrap', fontFamily: FV.mono, fontSize: 10, color: FV.smoke, letterSpacing: '0.1em' }}>
             <span><span style={{ color: FV.ember }}>✦</span> FCFA</span>
@@ -325,7 +325,7 @@ export default function FonderieV2Landing() {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 20 }}>
           {[
-            ['Teste, ne crois pas', 'Cinq documents gratuits, sans carte. La meilleure preuve, c\'est le PDF que tu tiens en main à la fin.'],
+            ['Discute, ne paie pas en aveugle', "La conversation avec FORJA est gratuite et illimitée. Explore ton idée, valide ton marché, construis ton offre — sans sortir un franc. Quand tu vois la qualité, tu décides."],
             ['La méthode est l\'autorité', 'Oracle, Triangle d\'Or, 12 étapes : une méthode de terrain, détaillée et vérifiable. Pas de promesse magique.'],
             ['Le livrable parle', 'Regarde la démo. Vois la qualité réelle d\'un document FORJA avant même de créer ton compte.'],
           ].map(([title, desc], i) => (
@@ -389,7 +389,7 @@ export default function FonderieV2Landing() {
           </p>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 14, flexWrap: 'wrap' }}>
             <Link href="/register" style={{ background: FV.ember, color: FV.black, border: 'none', padding: '20px 32px', borderRadius: 12, fontSize: 15, fontWeight: 700, letterSpacing: '0.02em', cursor: 'pointer', boxShadow: `0 0 40px ${FV.ember}88, inset 0 1px 0 rgba(255,255,255,0.25)`, textDecoration: 'none' }}>
-              Allumer mon four — gratuit →
+              Allumer mon four — inscription gratuite →
             </Link>
             <button onClick={() => setShowDemo(true)} style={{ background: 'rgba(241,233,218,0.04)', color: FV.ink, border: `1px solid ${FV.ruleStrong}`, padding: '20px 28px', borderRadius: 12, fontSize: 15, fontWeight: 500, cursor: 'pointer' }}>
               Voir la démo

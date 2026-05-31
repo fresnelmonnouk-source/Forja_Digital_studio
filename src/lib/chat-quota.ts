@@ -80,7 +80,7 @@ export async function checkAndIncrementDailyChat(
 /** Helper pur (testable sans I/O) : message d'erreur adapté au profil. */
 export function buildQuotaExceededMessage(isCustomer: boolean, limit: number): string {
   if (isCustomer) {
-    return `Tu as atteint la limite quotidienne (${limit} messages). Reviens demain — ou écris-nous à aide@myforja.digital si c'est bloquant.`;
+    return `Tu as atteint ta limite quotidienne de ${limit} messages. Reviens demain — ou écris-nous à aide@myforja.digital si c'est urgent.`;
   }
-  return `Tu as atteint la limite quotidienne de ${limit} messages gratuits. Prends un pack (à partir de 3 500 FCFA) pour discuter sans limite et exporter ton produit en PDF.`;
+  return `Tu as atteint la limite quotidienne (${limit} messages). Reviens demain pour continuer gratuitement — ou prends un pack (dès 3 500 FCFA, 10 documents) pour discuter sans limite et exporter ton PDF.`;
 }
